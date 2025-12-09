@@ -1,8 +1,26 @@
 @echo off
+setlocal
+chcp 65001 >nul
 cd /d "%~dp0"
+
 echo Generating Visual Studio 2022 project...
-tools\premake5.exe vs2022
-if errorlevel 1 (
+
+:: テンポラリフォルダ用にGUIDを取得（日本語パス対策）
+for /f %%a in ('powershell -command "$([guid]::NewGuid().ToString())"') do ( set GUID=%%a )
+
+:: ジャンクション作成
+mklink /j "%TEMP%\%GUID%" "%~dp0" > nul
+
+:: Temp内からプロジェクト生成
+pushd "%TEMP%\%GUID%"
+    tools\premake5.exe vs2022
+    set PREMAKE_RESULT=%errorlevel%
+popd
+
+:: ジャンクション削除
+rmdir "%TEMP%\%GUID%"
+
+if %PREMAKE_RESULT% neq 0 (
     echo [ERROR] Generation failed
     exit /b 1
 )

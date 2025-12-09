@@ -1,7 +1,8 @@
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
 if not exist "build\HEW2026.sln" (
-    echo Project not found. Run @make_project.bat first.
+    echo Project not found. Run @make_project.cmd first.
     exit /b 1
 )
 set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"

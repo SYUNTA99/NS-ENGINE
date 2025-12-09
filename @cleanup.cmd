@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
 echo Cleaning build artifacts...
 if exist "build" rmdir /s /q "build" && echo   Removed: build/
