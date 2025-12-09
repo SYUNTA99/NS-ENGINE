@@ -1,0 +1,21 @@
+# ビルド成果物
+build/
+bin/
+obj/
+
+# Visual Studio
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+.vs/
+
+# その他
+*.log
+*.bak
+*~
+
+# Claude Code設定
+CLAUDE.md
