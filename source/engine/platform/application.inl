@@ -4,8 +4,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include "dx11/platform/renderer.h"
-#include "dx11/logging/logging.h"
+#include "renderer.h"
+#include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 template<typename TGame>

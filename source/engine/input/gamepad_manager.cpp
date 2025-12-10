@@ -1,4 +1,4 @@
-#include "dx11/Input/GamepadManager.h"
+#include "gamepad_manager.h"
 
 GamepadManager::GamepadManager() noexcept
 {

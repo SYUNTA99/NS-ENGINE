@@ -1,4 +1,4 @@
-#include "dx11/Input/Gamepad.h"
+#include "gamepad.h"
 #include <cmath>
 #include <algorithm>
 

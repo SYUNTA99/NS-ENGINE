@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 GraphicsDevice& GraphicsDevice::Get() noexcept
@@ -49,10 +49,10 @@ bool GraphicsDevice::Initialize(bool enableDebug)
     RETURN_FALSE_IF_FAILED(hr, "[GraphicsDevice] ID3D11Device5へのアップグレードに失敗しました");
 
     // GraphicsContext を初期化
-    if (!GraphicsContext::Get().Initialize()) {
-        device_.Reset();
-        RETURN_FALSE_IF_FALSE(false, "[GraphicsDevice] GraphicsContextの初期化に失敗しました");
-    }
+  //  if (!GraphicsContext::Get().Initialize()) {
+  //      device_.Reset();
+  //      RETURN_FALSE_IF_FALSE(false, "[GraphicsDevice] GraphicsContextの初期化に失敗しました");
+  //  }
 
     return true;
 }

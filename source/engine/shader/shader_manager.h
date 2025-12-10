@@ -6,8 +6,8 @@
 
 #include "dx11/gpu_common.h"
 #include "dx11/gpu/gpu.h"
-#include "shader_type.h"
-#include "shader_types_fwd.h"
+#include "dx11/compile/shader_type.h"
+#include "dx11/compile/shader_types_fwd.h"
 #include <string>
 #include <vector>
 #include <unordered_map>

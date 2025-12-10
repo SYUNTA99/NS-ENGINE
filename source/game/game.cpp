@@ -3,14 +3,14 @@
 //! @brief  ゲームクラス実装
 //----------------------------------------------------------------------------
 #include "game.h"
-#include "dx11/platform/application.h"
-#include "dx11/fs/file_system_manager.h"
-#include "dx11/fs/host_file_system.h"
-#include "dx11/texture/texture_manager.h"
-#include "dx11/graphics/shader_manager.h"
-#include "dx11/graphics/compile/shader_compiler.h"
-#include "dx11/Input/InputManager.h"
-#include "dx11/logging/logging.h"
+#include "engine/platform/application.h"
+#include "engine/fs/file_system_manager.h"
+#include "engine/fs/host_file_system.h"
+#include "engine/texture/texture_manager.h"
+#include "engine/shader/shader_manager.h"
+#include "dx11/compile/shader_compiler.h"
+#include "engine/input/input_manager.h"
+#include "common/logging/logging.h"
 #include "engine/scene/scene_manager.h"
 
 #include "scenes/test_scene.h"

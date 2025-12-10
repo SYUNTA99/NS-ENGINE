@@ -5,8 +5,8 @@
 #include "shader_program.h"
 #include "dx11/graphics_context.h"
 #include "dx11/graphics_device.h"
-#include "dx11/utility/hash.h"
-#include "dx11/logging/logging.h"
+#include "common/utility/hash.h"
+#include "common/logging/logging.h"
 
 //============================================================================
 // ShaderProgram 実装

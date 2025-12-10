@@ -8,7 +8,7 @@
 #include "dx11/state/depth_stencil_state.h"
 #include "dx11/state/rasterizer_state.h"
 #include "dx11/state/sampler_state.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 #include <cstring>
 
 //===========================================================================

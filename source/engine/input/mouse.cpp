@@ -1,4 +1,4 @@
-#include "dx11/Input/Mouse.h"
+#include "mouse.h"
 
 bool Mouse::IsButtonPressed(MouseButton button) const noexcept
 {

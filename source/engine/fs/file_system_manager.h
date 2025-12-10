@@ -5,7 +5,7 @@
 #pragma once
 
 #include "file_system.h"
-#include "dx11/utility/non_copyable.h"
+#include "common/utility/non_copyable.h"
 #include <memory>
 #include <optional>
 #include <string>

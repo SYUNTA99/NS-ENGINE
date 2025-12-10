@@ -2,10 +2,10 @@
 //! @file   renderer.cpp
 //! @brief  レンダラー管理クラス 実装
 //----------------------------------------------------------------------------
-#include "dx11/platform/renderer.h"
+#include "renderer.h"
 #include "dx11/graphics_context.h"
-#include "dx11/texture/texture_manager.h"
-#include "dx11/logging/logging.h"
+#include "engine/texture/texture_manager.h"
+#include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 // シングルトン

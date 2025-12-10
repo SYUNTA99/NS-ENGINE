@@ -3,7 +3,7 @@
 //! @brief  テクスチャローダー実装（WIC + DDS）
 //----------------------------------------------------------------------------
 #include "texture_loader.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 #include <DirectXTex.h>
 #include <algorithm>
 

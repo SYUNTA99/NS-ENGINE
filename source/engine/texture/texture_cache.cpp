@@ -3,7 +3,7 @@
 //! @brief  テクスチャキャッシュ実装
 //----------------------------------------------------------------------------
 #include "texture_cache.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 
 //============================================================================
 // LRUTextureCache 実装

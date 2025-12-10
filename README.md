@@ -44,26 +44,28 @@ build\bin\Debug-windows-x86_64\game\game.exe
 
 ```
 source/
+├── common/                 # 共通ユーティリティ（ヘッダーオンリー）
+│   ├── logging/            # ログ出力（LOG_*マクロ）
+│   └── utility/            # ユーティリティ（non_copyable, hash）
+│
 ├── dx11/                   # DirectX 11 ラッパーライブラリ
-│   ├── gpu_common.h        # 共通ヘッダー（ComPtr, NonCopyable等）
+│   ├── gpu_common.h        # 共通ヘッダー（ComPtr等）
 │   ├── graphics_device     # D3D11デバイス管理（シングルトン）
 │   ├── graphics_context    # D3D11コンテキスト管理
 │   ├── swap_chain          # スワップチェーン
 │   ├── gpu/                # GPUリソース（Buffer, Texture, Shader）
-│   ├── graphics/           # シェーダーシステム
-│   │   └── compile/        # シェーダーコンパイラ・キャッシュ
-│   ├── texture/            # テクスチャ管理（ローダー、キャッシュ）
 │   ├── view/               # リソースビュー（SRV, RTV, DSV, UAV）
 │   ├── state/              # パイプラインステート
 │   ├── format/             # DXGIフォーマットユーティリティ
-│   ├── fs/                 # ファイルシステム抽象化
-│   ├── platform/           # アプリケーションフレームワーク
-│   ├── Input/              # 入力システム（キーボード、マウス、ゲームパッド）
-│   ├── logging/            # ログ出力
-│   └── utility/            # ユーティリティ
+│   └── compile/            # シェーダーコンパイラ・キャッシュ
 │
 ├── engine/                 # ゲームエンジン層
 │   ├── engine.h            # エンジン初期化
+│   ├── fs/                 # ファイルシステム抽象化
+│   ├── input/              # 入力システム（キーボード、マウス、ゲームパッド）
+│   ├── platform/           # アプリケーションフレームワーク
+│   ├── shader/             # シェーダー管理
+│   ├── texture/            # テクスチャ管理（ローダー、キャッシュ）
 │   ├── scene/              # シーン管理
 │   ├── component/          # コンポーネント（Transform2D, SpriteRenderer等）
 │   └── graphics2d/         # 2D描画（SpriteBatch）

@@ -1,4 +1,4 @@
-#include "dx11/Input/InputManager.h"
+#include "input_manager.h"
 
 // 静的メンバの定義
 InputManager* InputManager::instance_ = nullptr;

@@ -159,8 +159,7 @@ project "dx11"
 
     -- 除外ファイル
     removefiles {
-        "source/dx11/graphics/compile/shader_reflection.cpp",
-        "source/dx11/graphics/platform/**"
+        "source/dx11/compile/shader_reflection.cpp"
     }
 
     includedirs {
@@ -296,6 +295,7 @@ project "tests"
     }
 
     links {
+        "engine",
         "dx11",
         "DirectXTex",
         "DirectXTK",

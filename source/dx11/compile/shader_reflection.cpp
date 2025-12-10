@@ -3,7 +3,7 @@
 //! @brief  シェーダーリフレクション実装
 //----------------------------------------------------------------------------
 #include "shader_reflection.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 std::unique_ptr<ShaderReflection> ShaderReflection::Create(ID3DBlob* bytecode)

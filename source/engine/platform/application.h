@@ -6,7 +6,7 @@
 
 #include "dx11/gpu_common.h"
 #include "dx11/swap_chain.h"
-#include "dx11/platform/window.h"
+#include "window.h"
 #include <memory>
 #include <cstdint>
 #include <chrono>
@@ -136,4 +136,4 @@ private:
 };
 
 // テンプレート実装
-#include "dx11/platform/application.inl"
+#include "application.inl"

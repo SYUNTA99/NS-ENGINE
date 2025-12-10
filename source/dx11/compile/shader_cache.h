@@ -5,7 +5,7 @@
 #pragma once
 
 #include "dx11/gpu_common.h"
-#include "dx11/graphics/shader_types_fwd.h"
+#include "dx11/compile/shader_types_fwd.h"
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>

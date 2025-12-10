@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dx11/Input/Gamepad.h"
+#include "gamepad.h"
 #include <memory>
 #include <array>
 

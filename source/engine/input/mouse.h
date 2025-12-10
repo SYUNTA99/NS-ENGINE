@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dx11/Input/Key.h"
+#include "key.h"
 #include <array>
 
 /// @brief マウス入力管理クラス

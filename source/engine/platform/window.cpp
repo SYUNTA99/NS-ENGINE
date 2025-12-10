@@ -2,8 +2,8 @@
 //! @file   window.cpp
 //! @brief  Win32ウィンドウ管理クラス 実装
 //----------------------------------------------------------------------------
-#include "dx11/platform/window.h"
-#include "dx11/logging/logging.h"
+#include "window.h"
+#include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 // コンストラクタ・デストラクタ

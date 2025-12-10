@@ -2,10 +2,10 @@
 //! @file   application.cpp
 //! @brief  アプリケーション管理クラス 実装
 //----------------------------------------------------------------------------
-#include "dx11/platform/application.h"
+#include "application.h"
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
-#include "dx11/logging/logging.h"
+#include "common/logging/logging.h"
 #include <algorithm>
 
 //----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ void Application::OnResize(uint32_t width, uint32_t height) noexcept
 // 入力処理
 //----------------------------------------------------------------------------
 
-#include "dx11/Input/InputManager.h"
+#include "engine/input/input_manager.h"
 
 void Application::ProcessInput()
 {

@@ -1,10 +1,23 @@
 @echo off
+::============================================================================
+:: @open_project.cmd
+:: 必要に応じてビルドし、Visual Studioを起動するスクリプト
+::
+:: 処理内容:
+::   1. UTF-8モード設定 & 作業ディレクトリ移動 (:init)
+::   2. ソリューションが無ければ生成 (:generate_project)
+::   3. game.exeが無ければDebugビルド実行
+::   4. Visual Studioでソリューションを開く
+::
+:: 用途:
+::   開発開始時にダブルクリックで環境を準備
+::============================================================================
 call tools\_common.cmd :init
 
 echo 現在のディレクトリ: %CD%
 echo.
 
-:: Generate project if needed
+:: ソリューションが無ければ生成
 if not exist "build\HEW2026.sln" (
     echo プロジェクト生成中...
     call tools\_common.cmd :generate_project
@@ -16,7 +29,7 @@ if not exist "build\HEW2026.sln" (
     echo [OK] build\HEW2026.sln 確認済み
 )
 
-:: Build if exe doesn't exist
+:: game.exeが存在すればビルドをスキップ
 if exist "bin\Debug-windows-x86_64\game\game.exe" goto :skip_build
 
 echo.

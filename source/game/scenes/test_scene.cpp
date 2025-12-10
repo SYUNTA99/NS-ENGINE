@@ -4,10 +4,10 @@
 //----------------------------------------------------------------------------
 #include "test_scene.h"
 #include "dx11/graphics_context.h"
-#include "dx11/platform/renderer.h"
-#include "dx11/platform/application.h"
-#include "dx11/texture/texture_manager.h"
-#include "dx11/Input/InputManager.h"
+#include "engine/platform/renderer.h"
+#include "engine/platform/application.h"
+#include "engine/texture/texture_manager.h"
+#include "engine/input/input_manager.h"
 #include "engine/graphics2d/sprite_batch.h"
 #include "engine/color.h"
 #include <cmath>

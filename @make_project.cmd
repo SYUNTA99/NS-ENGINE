@@ -1,4 +1,18 @@
 @echo off
+::============================================================================
+:: @make_project.cmd
+:: プロジェクト生成 + Debugビルドを一括実行するスクリプト
+::
+:: 処理内容:
+::   1. UTF-8モード設定 & 作業ディレクトリ移動 (:init)
+::   2. Premake5でVisual Studio 2022ソリューション生成 (:generate_project)
+::   3. VsDevCmd.batでMSBuild環境をセットアップ (:setup_msbuild)
+::   4. MSBuildでDebugビルド実行
+::
+:: 出力:
+::   - build/HEW2026.sln (Visual Studioソリューション)
+::   - bin/Debug-windows-x64/game/game.exe (ゲーム実行ファイル)
+::============================================================================
 call tools\_common.cmd :init
 
 echo Visual Studio 2022 プロジェクトを生成中...

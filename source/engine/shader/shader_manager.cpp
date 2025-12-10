@@ -5,12 +5,12 @@
 #include "shader_manager.h"
 #include "shader_program.h"
 #include "global_shader.h"
-#include "compile/shader_compiler.h"
-#include "compile/shader_cache.h"
-#include "dx11/fs/file_system.h"
+#include "dx11/compile/shader_compiler.h"
+#include "dx11/compile/shader_cache.h"
+#include "engine/fs/file_system.h"
 #include "dx11/graphics_device.h"
-#include "dx11/logging/logging.h"
-#include "dx11/utility/hash.h"
+#include "common/logging/logging.h"
+#include "common/utility/hash.h"
 
 namespace
 {

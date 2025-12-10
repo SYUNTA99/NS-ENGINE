@@ -7,8 +7,8 @@
 #include "engine/component/camera2d.h"
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
-#include "dx11/graphics/shader_manager.h"
-#include "dx11/logging/logging.h"
+#include "engine/shader/shader_manager.h"
+#include "common/logging/logging.h"
 #include <algorithm>
 
 //============================================================================

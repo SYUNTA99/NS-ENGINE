@@ -1,8 +1,8 @@
 #pragma once
 
-#include "dx11/Input/Keyboard.h"
-#include "dx11/Input/Mouse.h"
-#include "dx11/Input/GamepadManager.h"
+#include "keyboard.h"
+#include "mouse.h"
+#include "gamepad_manager.h"
 #include <memory>
 
 /// @brief 入力管理クラス（シングルトン）

@@ -1,4 +1,4 @@
-#include "dx11/Input/Keyboard.h"
+#include "keyboard.h"
 #include <Windows.h>
 
 bool Keyboard::IsKeyPressed(Key key) const noexcept
