@@ -117,6 +117,14 @@ git push -u origin feature/作業内容
 
 ※ `assets` ブランチは定期的にmasterへマージされます。
 
+### デザイナー向け（ゲーム実行）
+
+Visual Studioがなくてもゲームを実行できます。
+
+1. [Releases](https://github.com/HEW2026-Nihonium113/HEW2026/releases) ページを開く
+2. 最新のzipをダウンロード
+3. 展開して `game.exe` を実行
+
 ### AI（Claude Code / Gemini CLI）にPRを任せる
 
 以下のプロンプトをコピペして使用してください。
