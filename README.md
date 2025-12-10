@@ -82,18 +82,13 @@ git push -u origin feature/作業内容
 
 ### デザイナー向け（アセット追加）
 
-`assets` ブランチには直接pushできます。
+`assets` ブランチには直接pushできます。[GitHub Desktop](https://desktop.github.com/) を使用してください。
 
-```bash
-# assetsブランチに切り替え
-git checkout assets
-git pull
-
-# アセットを追加してpush
-git add .
-git commit -m "テクスチャ追加"
-git push
-```
+1. **ブランチ切り替え**: 上部の「Current Branch」→ `assets` を選択
+2. **最新を取得**: 「Fetch origin」→「Pull origin」
+3. **ファイル追加**: エクスプローラーでアセットを追加
+4. **コミット**: 左下にメッセージを入力して「Commit to assets」
+5. **プッシュ**: 「Push origin」
 
 ※ `assets` ブランチは定期的にmasterへマージされます。
 
