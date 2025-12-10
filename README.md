@@ -49,6 +49,52 @@ source/
 └── game/     # ゲーム本体
 ```
 
+## 開発の流れ
+
+**masterへの直接pushは禁止されています。** 必ずPR（Pull Request）を作成してください。
+
+### 1. ブランチを作成
+
+```bash
+git checkout master
+git pull
+git checkout -b feature/作業内容
+```
+
+ブランチ名の例：
+- `feature/player-movement` - 新機能
+- `fix/collision-bug` - バグ修正
+- `refactor/shader-manager` - リファクタリング
+
+### 2. 作業してコミット
+
+```bash
+git add .
+git commit -m "変更内容を日本語で書く"
+```
+
+### 3. pushしてPR作成
+
+```bash
+git push -u origin feature/作業内容
+```
+
+pushしたらGitHubでPRを作成：
+1. [リポジトリ](https://github.com/HEW2026-Nihonium113/HEW2026) にアクセス
+2. 「Compare & pull request」ボタンをクリック
+3. タイトルと説明を書いて「Create pull request」
+
+### 4. レビュー → マージ
+
+- **CodeRabbit**が自動でコードレビューします
+- 問題なければマージしてください
+- マージ後、ローカルのmasterを更新：
+
+```bash
+git checkout master
+git pull
+```
+
 ## チーム
 
 Nihonium113
