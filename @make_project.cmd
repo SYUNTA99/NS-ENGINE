@@ -14,7 +14,6 @@
 ::   - build/bin/Debug-windows-x86_64/game/game.exe (ゲーム実行ファイル)
 ::============================================================================
 call tools\_common.cmd :init
-call tools\_common.cmd :check_submodules || exit /b 1
 
 echo Visual Studio 2022 プロジェクトを生成中...
 call tools\_common.cmd :generate_project
