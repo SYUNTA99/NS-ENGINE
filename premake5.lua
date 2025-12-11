@@ -119,6 +119,7 @@ project "engine"
     includedirs {
         "source",
         "source/engine",
+        "external/DirectXTex/DirectXTex",
         "external/DirectXTK/Inc"
     }
 
@@ -129,6 +130,7 @@ project "engine"
 
     links {
         "dx11",
+        "DirectXTex",
         "DirectXTK"
     }
 
