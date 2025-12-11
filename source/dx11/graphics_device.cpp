@@ -60,7 +60,8 @@ bool GraphicsDevice::Initialize(bool enableDebug)
 //----------------------------------------------------------------------------
 void GraphicsDevice::Shutdown() noexcept
 {
-    GraphicsContext::Get().Shutdown();
+    // GraphicsContextは既にApplication::Shutdown()で解放済み
+    // ここでは冗長な呼び出しは行わない
 
 #ifdef _DEBUG
     // デバッグビルド時、解放前にライブオブジェクトをレポート
@@ -68,7 +69,9 @@ void GraphicsDevice::Shutdown() noexcept
         ComPtr<ID3D11Debug> debug;
         if (SUCCEEDED(device_.As(&debug))) {
             LOG_INFO("[GraphicsDevice] ライブオブジェクトレポート:");
-            debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+            // RLDO_IGNORE_INTERNAL: デバッグレイヤーの内部オブジェクトを除外
+            debug->ReportLiveDeviceObjects(
+                static_cast<D3D11_RLDO_FLAGS>(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL));
         }
     }
 #endif
