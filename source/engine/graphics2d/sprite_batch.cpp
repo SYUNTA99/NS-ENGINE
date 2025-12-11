@@ -75,10 +75,8 @@ bool SpriteBatch::Initialize() {
         return false;
     }
 
-    // デフォルトの正射影行列を設定
-    SetScreenSize(1280.0f, 720.0f);
-
     spriteQueue_.reserve(MaxSpritesPerBatch);
+    sortIndices_.reserve(MaxSpritesPerBatch);
     initialized_ = true;
     LOG_INFO("SpriteBatch: 初期化完了");
     return true;
@@ -154,15 +152,10 @@ void SpriteBatch::Shutdown() {
     rasterizerState_.reset();
     depthStencilState_.reset();
     spriteQueue_.clear();
+    sortIndices_.clear();
 
     initialized_ = false;
     LOG_INFO("SpriteBatch: シャットダウン完了");
-}
-
-void SpriteBatch::SetScreenSize(float width, float height) {
-    // 左上が(0,0)、右下が(width, height)の2D座標系
-    Matrix ortho = Matrix::CreateOrthographicOffCenter(0.0f, width, height, 0.0f, 0.0f, 1.0f);
-    cbufferData_.viewProjection = ortho.Transpose();
 }
 
 void SpriteBatch::SetCamera(Camera2D& camera) {
@@ -305,12 +298,22 @@ void SpriteBatch::End() {
 }
 
 void SpriteBatch::SortSprites() {
-    std::stable_sort(spriteQueue_.begin(), spriteQueue_.end(),
-        [](const SpriteInfo& a, const SpriteInfo& b) {
-            if (a.sortingLayer != b.sortingLayer) {
-                return a.sortingLayer < b.sortingLayer;
+    // インデックス配列を初期化
+    uint32_t count = static_cast<uint32_t>(spriteQueue_.size());
+    sortIndices_.resize(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        sortIndices_[i] = i;
+    }
+
+    // インデックスをソート（SpriteInfo自体は移動しない）
+    std::stable_sort(sortIndices_.begin(), sortIndices_.end(),
+        [this](uint32_t a, uint32_t b) {
+            const SpriteInfo& sa = spriteQueue_[a];
+            const SpriteInfo& sb = spriteQueue_[b];
+            if (sa.sortingLayer != sb.sortingLayer) {
+                return sa.sortingLayer < sb.sortingLayer;
             }
-            return a.orderInLayer < b.orderInLayer;
+            return sa.orderInLayer < sb.orderInLayer;
         });
 }
 
@@ -351,7 +354,9 @@ void SpriteBatch::FlushBatch() {
         return;
     }
 
-    for (const auto& sprite : spriteQueue_) {
+    for (uint32_t idx : sortIndices_) {
+        const SpriteInfo& sprite = spriteQueue_[idx];
+
         // テクスチャが変わったらフラッシュ
         if (currentTexture && sprite.texture != currentTexture) {
             ctx.UnmapBuffer(vertexBuffer_.get());
