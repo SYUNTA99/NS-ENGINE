@@ -150,6 +150,7 @@ private:
 
     // スプライトキュー
     std::vector<SpriteInfo> spriteQueue_;
+    std::vector<uint32_t> sortIndices_;  //!< ソート用インデックス配列
 
     // 定数バッファデータ
     struct alignas(16) CBufferData {
