@@ -122,6 +122,27 @@ bool SpriteBatch::CreateShaders() {
 void SpriteBatch::Shutdown() {
     if (!initialized_) return;
 
+    // パイプラインからステートをアンバインドしてから解放
+    // これにより、パイプラインが保持する参照が解放される
+    auto& ctx = GraphicsContext::Get();
+    auto* d3dCtx = ctx.GetContext();
+    if (d3dCtx) {
+        // 使用していたステートをnullでアンバインド
+        d3dCtx->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+        d3dCtx->OMSetDepthStencilState(nullptr, 0);
+        d3dCtx->RSSetState(nullptr);
+        ID3D11SamplerState* nullSamplers[1] = { nullptr };
+        d3dCtx->PSSetSamplers(0, 1, nullSamplers);
+        d3dCtx->VSSetShader(nullptr, nullptr, 0);
+        d3dCtx->PSSetShader(nullptr, nullptr, 0);
+        d3dCtx->IASetInputLayout(nullptr);
+        ID3D11Buffer* nullBuffers[1] = { nullptr };
+        UINT strides[1] = { 0 };
+        UINT offsets[1] = { 0 };
+        d3dCtx->IASetVertexBuffers(0, 1, nullBuffers, strides, offsets);
+        d3dCtx->IASetIndexBuffer(nullptr, DXGI_FORMAT_R16_UINT, 0);
+    }
+
     vertexBuffer_.reset();
     indexBuffer_.reset();
     constantBuffer_.reset();
