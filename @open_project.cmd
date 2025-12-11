@@ -13,6 +13,11 @@
 ::   開発開始時にダブルクリックで環境を準備
 ::============================================================================
 call tools\_common.cmd :init
+call tools\_common.cmd :check_submodules
+if errorlevel 1 (
+    pause
+    exit /b 1
+)
 
 echo 現在のディレクトリ: %CD%
 echo.
