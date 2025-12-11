@@ -8,6 +8,7 @@
 :: 利用可能な関数:
 ::   :init             - UTF-8モード設定、作業ディレクトリをリポジトリルートに移動
 ::   :check_project    - build/HEW2026.sln の存在確認
+::   :check_submodules - サブモジュール(external/)の存在確認、なければ自動取得
 ::   :setup_msbuild    - VsDevCmd.bat を実行してMSBuild環境を構築
 ::   :find_msbuild_exe - MSBuild.exe のパスを MSBUILD_PATH に設定
 ::   :generate_project - Premake5でVisual Studio 2022ソリューションを生成
@@ -34,6 +35,27 @@ goto %~1
         echo プロジェクトが見つかりません。先に @make_project.cmd を実行してください。
         exit /b 1
     )
+    exit /b 0
+
+::----------------------------------------------------------------------------
+:: :check_submodules
+:: サブモジュール(DirectXTex, DirectXTK)の存在を確認
+:: 存在しなければ自動で git submodule update --init --recursive を実行
+::----------------------------------------------------------------------------
+:check_submodules
+    if exist "external\DirectXTex\DirectXTex\DirectXTex.h" (
+        if exist "external\DirectXTK\Inc\SimpleMath.h" (
+            exit /b 0
+        )
+    )
+    echo サブモジュールが見つかりません。取得中...
+    git submodule update --init --recursive
+    if errorlevel 1 (
+        echo [ERROR] サブモジュールの取得に失敗しました
+        echo         git がインストールされているか確認してください
+        exit /b 1
+    )
+    echo [OK] サブモジュールを取得しました
     exit /b 0
 
 ::----------------------------------------------------------------------------
