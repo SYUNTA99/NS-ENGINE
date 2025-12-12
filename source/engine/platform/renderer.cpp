@@ -63,7 +63,7 @@ bool Renderer::Initialize(
     desc.Scaling = DXGI_SCALING_STRETCH;
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-    desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;  // 可変リフレッシュレート対応
+    desc.Flags = 0;  // VSync有効（ALLOW_TEARINGはVSyncを無効化する環境がある）
 
     // スワップチェーンを作成
     swapChain_ = std::make_unique<SwapChain>(hwnd, desc);
