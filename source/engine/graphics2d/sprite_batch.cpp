@@ -492,11 +492,12 @@ void SpriteBatch::FlushBatch() {
 //----------------------------------------------------------------------------
 
 float SpriteBatch::CalculateDepth(int sortingLayer, int orderInLayer) const noexcept {
-    // sortingLayer: 大きいほど手前（Z値が小さい）
-    // orderInLayer: 大きいほど手前（Z値が小さい）
+    // sortingLayer: 大きいほど手前
+    // orderInLayer: 大きいほど手前
     //
-    // 深度バッファ範囲: 0.0（手前）～ 1.0（奥）
-    // スプライト用に 0.1 ～ 0.9 を使用（0.0/1.0は3D用に予約）
+    // DirectXTK右手系投影行列では大きいZ値ほど小さいNDC Zになる
+    // そのため、手前のスプライト（大きいsortingLayer）には大きいZ値を設定
+    // スプライト用Z値範囲: 0.1 ～ 0.9（0.0/1.0は3D用に予約）
 
     constexpr float minDepth = 0.1f;
     constexpr float maxDepth = 0.9f;
@@ -505,14 +506,14 @@ float SpriteBatch::CalculateDepth(int sortingLayer, int orderInLayer) const noex
     constexpr int maxLayer = 100;      // sortingLayerの想定範囲: -100 ～ 100
     constexpr int maxOrder = 1000;     // orderInLayerの想定範囲: -1000 ～ 1000
 
-    // sortingLayerを正規化（大きいほど0に近い = 手前）
+    // sortingLayerを正規化（大きいほど1に近い = 大きいZ値 = 手前）
     // Note: Windowsのmax/minマクロとの衝突を避けるため括弧を使用
     int clampedLayer = (std::max)(-maxLayer, (std::min)(maxLayer, sortingLayer));
-    float layerNorm = static_cast<float>(maxLayer - clampedLayer) / static_cast<float>(2 * maxLayer);
+    float layerNorm = static_cast<float>(clampedLayer + maxLayer) / static_cast<float>(2 * maxLayer);
 
     // orderInLayerを正規化（レイヤー内の細かい順序）
     int clampedOrder = (std::max)(-maxOrder, (std::min)(maxOrder, orderInLayer));
-    float orderNorm = static_cast<float>(maxOrder - clampedOrder) / static_cast<float>(2 * maxOrder);
+    float orderNorm = static_cast<float>(clampedOrder + maxOrder) / static_cast<float>(2 * maxOrder);
 
     // layerNormが主要、orderNormは微調整（0.001倍）
     float normalizedDepth = layerNorm + orderNorm * 0.001f;
