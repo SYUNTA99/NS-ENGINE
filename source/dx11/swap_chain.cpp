@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "swap_chain.h"
 #include "graphics_device.h"
+#include "format/format.h"
 #include "common/logging/logging.h"
 
 namespace
@@ -19,8 +20,14 @@ namespace
         ID3D11Device* device = GetD3D11Device();
         RETURN_NULL_IF_NULL(device, "[SwapChain] D3D11Deviceがnullです");
 
+        // sRGBフォーマットでRTVを作成（ガンマ補正を有効化）
+        D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+        rtvDesc.Format = Format(desc.Format).addSrgb();
+        rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+        rtvDesc.Texture2D.MipSlice = 0;
+
         ComPtr<ID3D11RenderTargetView> rtv;
-        HRESULT hr = device->CreateRenderTargetView(texture.Get(), nullptr, &rtv);
+        HRESULT hr = device->CreateRenderTargetView(texture.Get(), &rtvDesc, &rtv);
         RETURN_NULL_IF_FAILED(hr, "[SwapChain] RTV作成失敗");
 
         TextureDesc mutraDesc;

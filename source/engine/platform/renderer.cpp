@@ -54,7 +54,7 @@ bool Renderer::Initialize(
     DXGI_SWAP_CHAIN_DESC1 desc = {};
     desc.Width = windowWidth;
     desc.Height = windowHeight;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;  // FLIP_DISCARDはsRGBを直接サポートしない
     desc.Stereo = FALSE;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
