@@ -13,6 +13,7 @@
 #include "engine/color.h"
 #include "common/logging/logging.h"
 #include <cmath>
+#include <algorithm>
 
 //----------------------------------------------------------------------------
 void TestScene::OnEnter()
@@ -42,6 +43,16 @@ void TestScene::OnEnter()
 
     // プレイヤー用スプライトシートをロード
     playerTexture_ = TextureManager::Get().LoadTexture2D("elf_sprite.png");
+
+    // 矢用テクスチャを作成（細長い白：32x8）
+    std::vector<uint32_t> arrowPixels(32 * 8, 0xFFFFFFFF);
+    arrowTexture_ = TextureManager::Get().Create2D(
+        32, 8,
+        DXGI_FORMAT_R8G8B8A8_UNORM,
+        D3D11_BIND_SHADER_RESOURCE,
+        arrowPixels.data(),
+        32 * sizeof(uint32_t)
+    );
 
     // 背景作成（最背面に描画、画面全体に表示）
     background_ = std::make_unique<GameObject>("Background");
@@ -160,6 +171,7 @@ void TestScene::OnEnter()
 //----------------------------------------------------------------------------
 void TestScene::OnExit()
 {
+    arrows_.clear();
     objects_.clear();
     player_.reset();
     background_.reset();
@@ -167,6 +179,7 @@ void TestScene::OnExit()
     testTexture_.reset();
     playerTexture_.reset();
     backgroundTexture_.reset();
+    arrowTexture_.reset();
 }
 
 //----------------------------------------------------------------------------
@@ -190,7 +203,7 @@ void TestScene::Update()
 
     Mouse& mouse = inputMgr->GetMouse();
 
-    // クリックで攻撃開始
+    // クリックで攻撃開始＆矢を発射
     if (mouse.IsButtonDown(MouseButton::Left) && !isAttacking_) {
         isAttacking_ = true;
         playerAnimator_->SetRow(2);  // Attack
@@ -205,6 +218,25 @@ void TestScene::Update()
         } else {
             playerAnimator_->SetMirror(true);   // 右向き
         }
+
+        // 矢を発射
+        Vector2 mouseWorld = camera_->ScreenToWorld(mousePos);
+        Vector2 playerPos = playerTransform_->GetPosition();
+        Vector2 direction = mouseWorld - playerPos;
+        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        if (length > 0.001f) {
+            direction.x /= length;
+            direction.y /= length;
+        }
+        float arrowSpeed = 800.0f;
+        float rotation = std::atan2(direction.y, direction.x);
+
+        Arrow arrow;
+        arrow.position = playerPos;
+        arrow.velocity = Vector2(direction.x * arrowSpeed, direction.y * arrowSpeed);
+        arrow.rotation = rotation;
+        arrow.lifetime = 3.0f;
+        arrows_.push_back(arrow);
     }
 
     // 攻撃アニメーション終了チェック
@@ -260,6 +292,19 @@ void TestScene::Update()
 
     // 衝突判定実行（固定タイムステップ）
     CollisionManager::Get().Update(dt);
+
+    // 矢の更新
+    for (Arrow& arrow : arrows_) {
+        arrow.position.x += arrow.velocity.x * dt;
+        arrow.position.y += arrow.velocity.y * dt;
+        arrow.lifetime -= dt;
+    }
+    // 寿命切れの矢を削除
+    arrows_.erase(
+        std::remove_if(arrows_.begin(), arrows_.end(),
+            [](const Arrow& a) { return a.lifetime <= 0.0f; }),
+        arrows_.end()
+    );
 }
 
 //----------------------------------------------------------------------------
@@ -302,6 +347,20 @@ void TestScene::Render()
     // プレイヤー描画（Animator使用）
     if (playerTransform_ && playerSprite_ && playerAnimator_) {
         spriteBatch.Draw(*playerSprite_, *playerTransform_, *playerAnimator_);
+    }
+
+    // 矢を描画
+    for (const Arrow& arrow : arrows_) {
+        spriteBatch.Draw(
+            arrowTexture_.get(),
+            arrow.position,
+            Colors::White,
+            arrow.rotation,
+            Vector2(16.0f, 4.0f),  // origin: テクスチャ中心（32x8の半分）
+            Vector2::One,
+            false, false,
+            50, 0  // sortingLayer: プレイヤーより下
+        );
     }
 
     // デバッグ：コライダー枠描画
