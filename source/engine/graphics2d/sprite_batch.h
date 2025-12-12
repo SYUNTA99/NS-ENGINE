@@ -133,6 +133,12 @@ private:
     void FlushBatch();
     void SortSprites();
 
+    //! @brief sortingLayer/orderInLayerから深度値を計算
+    //! @param sortingLayer ソーティングレイヤー（大きいほど手前）
+    //! @param orderInLayer レイヤー内の順序（大きいほど手前）
+    //! @return 深度値（0.0=手前, 1.0=奥）
+    [[nodiscard]] float CalculateDepth(int sortingLayer, int orderInLayer) const noexcept;
+
     // GPUリソース（dx11/gpu/）
     BufferPtr vertexBuffer_;
     BufferPtr indexBuffer_;
