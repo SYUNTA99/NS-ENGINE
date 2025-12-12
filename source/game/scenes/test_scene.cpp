@@ -314,16 +314,19 @@ void TestScene::Render()
     Renderer& renderer = Renderer::Get();
 
     Texture* backBuffer = renderer.GetBackBuffer();
+    Texture* depthBuffer = renderer.GetDepthBuffer();
     if (!backBuffer) return;
 
-    ctx.SetRenderTarget(backBuffer, nullptr);
+    // 深度バッファをバインド
+    ctx.SetRenderTarget(backBuffer, depthBuffer);
     ctx.SetViewport(0, 0,
         static_cast<float>(backBuffer->Width()),
         static_cast<float>(backBuffer->Height()));
 
-    // 背景クリア（暗い青）
+    // 背景クリア（暗い青）＋深度バッファクリア
     float clearColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
     ctx.ClearRenderTarget(backBuffer, clearColor);
+    ctx.ClearDepthStencil(depthBuffer, 1.0f, 0);
 
     // SpriteBatchで描画
     SpriteBatch& spriteBatch = SpriteBatch::Get();

@@ -69,7 +69,7 @@ bool SpriteBatch::Initialize() {
     blendState_ = BlendState::CreateAlphaBlend();
     samplerState_ = SamplerState::CreateDefault();
     rasterizerState_ = RasterizerState::CreateNoCull();
-    depthStencilState_ = DepthStencilState::CreateDisabled();
+    depthStencilState_ = DepthStencilState::CreateLessEqual();
 
     if (!blendState_ || !samplerState_ || !rasterizerState_ || !depthStencilState_) {
         LOG_ERROR("SpriteBatch: パイプラインステート作成失敗");
@@ -248,10 +248,13 @@ void SpriteBatch::Draw(
     Vector2 p2 = rotatePoint(x0, y1);
     Vector2 p3 = rotatePoint(x1, y1);
 
-    info.vertices[0] = { Vector3(p0.x, p0.y, 0.0f), Vector2(u0, v0), color };
-    info.vertices[1] = { Vector3(p1.x, p1.y, 0.0f), Vector2(u1, v0), color };
-    info.vertices[2] = { Vector3(p2.x, p2.y, 0.0f), Vector2(u0, v1), color };
-    info.vertices[3] = { Vector3(p3.x, p3.y, 0.0f), Vector2(u1, v1), color };
+    // sortingLayer/orderInLayerから深度値を計算
+    float z = CalculateDepth(sortingLayer, orderInLayer);
+
+    info.vertices[0] = { Vector3(p0.x, p0.y, z), Vector2(u0, v0), color };
+    info.vertices[1] = { Vector3(p1.x, p1.y, z), Vector2(u1, v0), color };
+    info.vertices[2] = { Vector3(p2.x, p2.y, z), Vector2(u0, v1), color };
+    info.vertices[3] = { Vector3(p3.x, p3.y, z), Vector2(u1, v1), color };
 
     spriteQueue_.push_back(info);
 }
@@ -362,10 +365,13 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transf
     Vector2 p2 = rotatePoint(x0, y1);
     Vector2 p3 = rotatePoint(x1, y1);
 
-    info.vertices[0] = { Vector3(p0.x, p0.y, 0.0f), Vector2(u0, v0), renderer.GetColor() };
-    info.vertices[1] = { Vector3(p1.x, p1.y, 0.0f), Vector2(u1, v0), renderer.GetColor() };
-    info.vertices[2] = { Vector3(p2.x, p2.y, 0.0f), Vector2(u0, v1), renderer.GetColor() };
-    info.vertices[3] = { Vector3(p3.x, p3.y, 0.0f), Vector2(u1, v1), renderer.GetColor() };
+    // sortingLayer/orderInLayerから深度値を計算
+    float z = CalculateDepth(info.sortingLayer, info.orderInLayer);
+
+    info.vertices[0] = { Vector3(p0.x, p0.y, z), Vector2(u0, v0), renderer.GetColor() };
+    info.vertices[1] = { Vector3(p1.x, p1.y, z), Vector2(u1, v0), renderer.GetColor() };
+    info.vertices[2] = { Vector3(p2.x, p2.y, z), Vector2(u0, v1), renderer.GetColor() };
+    info.vertices[3] = { Vector3(p3.x, p3.y, z), Vector2(u1, v1), renderer.GetColor() };
 
     spriteQueue_.push_back(info);
 }
@@ -479,4 +485,37 @@ void SpriteBatch::FlushBatch() {
         ctx.DrawIndexed(indexCount, batchStart * 6, 0);
         ++drawCallCount_;
     }
+}
+
+//----------------------------------------------------------------------------
+// 深度値計算
+//----------------------------------------------------------------------------
+
+float SpriteBatch::CalculateDepth(int sortingLayer, int orderInLayer) const noexcept {
+    // sortingLayer: 大きいほど手前（Z値が小さい）
+    // orderInLayer: 大きいほど手前（Z値が小さい）
+    //
+    // 深度バッファ範囲: 0.0（手前）～ 1.0（奥）
+    // スプライト用に 0.1 ～ 0.9 を使用（0.0/1.0は3D用に予約）
+
+    constexpr float minDepth = 0.1f;
+    constexpr float maxDepth = 0.9f;
+    constexpr float depthRange = maxDepth - minDepth;
+
+    constexpr int maxLayer = 100;      // sortingLayerの想定範囲: -100 ～ 100
+    constexpr int maxOrder = 1000;     // orderInLayerの想定範囲: -1000 ～ 1000
+
+    // sortingLayerを正規化（大きいほど0に近い = 手前）
+    // Note: Windowsのmax/minマクロとの衝突を避けるため括弧を使用
+    int clampedLayer = (std::max)(-maxLayer, (std::min)(maxLayer, sortingLayer));
+    float layerNorm = static_cast<float>(maxLayer - clampedLayer) / static_cast<float>(2 * maxLayer);
+
+    // orderInLayerを正規化（レイヤー内の細かい順序）
+    int clampedOrder = (std::max)(-maxOrder, (std::min)(maxOrder, orderInLayer));
+    float orderNorm = static_cast<float>(maxOrder - clampedOrder) / static_cast<float>(2 * maxOrder);
+
+    // layerNormが主要、orderNormは微調整（0.001倍）
+    float normalizedDepth = layerNorm + orderNorm * 0.001f;
+
+    return minDepth + depthRange * normalizedDepth;
 }

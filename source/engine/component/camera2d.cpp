@@ -91,10 +91,11 @@ Matrix Camera2D::GetViewProjectionMatrix() const
 {
     Matrix view = BuildViewMatrix();
     // 座標系: 左上が(0,0)、X+が右、Y+が下（標準スクリーン座標）
+    // 深度範囲: -1.0 ～ 1.0 （スプライトのZ値が0.0～1.0で使用可能）
     Matrix projection = Matrix::CreateOrthographicOffCenter(
         0.0f, viewportWidth_,
         viewportHeight_, 0.0f,
-        0.0f, 1.0f
+        -1.0f, 1.0f
     );
     Matrix viewProj = view * projection;
     return viewProj.Transpose();  // シェーダー用に転置
@@ -108,7 +109,7 @@ Vector2 Camera2D::ScreenToWorld(const Vector2& screenPos) const
     Matrix projection = Matrix::CreateOrthographicOffCenter(
         0.0f, viewportWidth_,
         viewportHeight_, 0.0f,
-        0.0f, 1.0f
+        -1.0f, 1.0f
     );
     Matrix viewProj = view * projection;
     Matrix invViewProj = viewProj.Invert();
@@ -128,7 +129,7 @@ Vector2 Camera2D::WorldToScreen(const Vector2& worldPos) const
     Matrix projection = Matrix::CreateOrthographicOffCenter(
         0.0f, viewportWidth_,
         viewportHeight_, 0.0f,
-        0.0f, 1.0f
+        -1.0f, 1.0f
     );
     Matrix viewProj = view * projection;
     Vector3 ndcPos = Vector3::Transform(Vector3(worldPos.x, worldPos.y, 0.0f), viewProj);
