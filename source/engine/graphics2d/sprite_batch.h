@@ -12,7 +12,7 @@
 #include "dx11/state/sampler_state.h"
 #include "dx11/state/rasterizer_state.h"
 #include "dx11/state/depth_stencil_state.h"
-#include "engine/scene/math_types.h"
+#include "engine/math/math_types.h"
 #include "engine/color.h"
 #include "engine/component/sprite_renderer.h"
 #include <vector>

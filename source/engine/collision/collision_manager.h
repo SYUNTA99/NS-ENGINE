@@ -5,7 +5,7 @@
 #pragma once
 
 #include "common/utility/non_copyable.h"
-#include "engine/scene/math_types.h"
+#include "engine/math/math_types.h"
 #include <vector>
 #include <unordered_map>
 #include <functional>
