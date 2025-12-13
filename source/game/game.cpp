@@ -43,7 +43,7 @@ bool Game::Initialize()
     // コンソール+ファイルログを有効化
     std::wstring debugDir = PathUtility::normalizeW(projectRoot + L"debug");
     FileSystemManager::CreateDirectories(debugDir);
-    std::wstring logPath = debugDir + L"debug_log.txt";
+    std::wstring logPath = debugDir + L"/debug_log.txt";
     g_fullLog.openFile(logPath);
     LogSystem::setOutput(&g_fullLog);
     LOG_INFO("=== ログ出力開始 ===");
