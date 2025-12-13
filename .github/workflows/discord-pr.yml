@@ -1,0 +1,60 @@
+name: Discord PR Notification
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # Draft PRは通知しない
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Send PR notification to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          # 改行をエスケープ
+          BODY=$(cat <<'BODY_EOF'
+          ${{ github.event.pull_request.body }}
+          BODY_EOF
+          )
+          # JSON用にエスケープ（改行→\n、"→\"）
+          BODY_ESCAPED=$(echo "$BODY" | head -c 1800 | sed 's/\\/\\\\/g; s/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed 's/\\n$//')
+
+          # Discord Embed JSON作成
+          JSON=$(cat <<EOF
+          {
+            "embeds": [{
+              "title": "🔀 ${{ github.event.pull_request.title }}",
+              "url": "${{ github.event.pull_request.html_url }}",
+              "color": 5814783,
+              "author": {
+                "name": "${{ github.event.pull_request.user.login }}",
+                "icon_url": "${{ github.event.pull_request.user.avatar_url }}"
+              },
+              "description": "${BODY_ESCAPED}",
+              "fields": [
+                {
+                  "name": "ブランチ",
+                  "value": "\`${{ github.head_ref }}\` → \`${{ github.base_ref }}\`",
+                  "inline": true
+                },
+                {
+                  "name": "変更",
+                  "value": "+${{ github.event.pull_request.additions }} / -${{ github.event.pull_request.deletions }}",
+                  "inline": true
+                }
+              ],
+              "footer": {
+                "text": "PR #${{ github.event.pull_request.number }}"
+              },
+              "timestamp": "${{ github.event.pull_request.created_at }}"
+            }]
+          }
+          EOF
+          )
+
+          # Discordに送信
+          curl -s -H "Content-Type: application/json" -d "$JSON" "$DISCORD_WEBHOOK"
