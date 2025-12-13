@@ -20,6 +20,9 @@ obj/
 # デバッグ出力
 debug/
 
+# ドキュメント（ローカルのみ）
+docs/
+
 # Claude Code設定
 CLAUDE.md
 
