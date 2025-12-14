@@ -214,7 +214,7 @@ void TestScene::Render()
             pos.x += offset.x;
             pos.y += offset.y;
             Vector2 size = collider->GetSize();
-            DEBUG_DRAW_RECT_OUTLINE(pos, size, obstacleColliderColor);
+            DEBUG_RECT(pos, size, obstacleColliderColor);
         }
     }
 

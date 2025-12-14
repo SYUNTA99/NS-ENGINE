@@ -58,11 +58,11 @@ private:
 //----------------------------------------------------------------------------
 // デバッグ描画マクロ（Debugビルド: 実行、Releaseビルド: 消える）
 //----------------------------------------------------------------------------
-#define DEBUG_DRAW_RECT_OUTLINE(center, size, color, ...) \
+#define DEBUG_RECT(center, size, color, ...) \
     DebugDraw::Get().DrawRectOutline(center, size, color, ##__VA_ARGS__)
-#define DEBUG_DRAW_RECT_OUTLINE_TL(topLeft, size, color, ...) \
+#define DEBUG_RECT_TL(topLeft, size, color, ...) \
     DebugDraw::Get().DrawRectOutlineTopLeft(topLeft, size, color, ##__VA_ARGS__)
-#define DEBUG_DRAW_RECT_FILLED(center, size, color) \
+#define DEBUG_RECT_FILL(center, size, color) \
     DebugDraw::Get().DrawRectFilled(center, size, color)
 
 #else
@@ -70,8 +70,8 @@ private:
 //----------------------------------------------------------------------------
 // Releaseビルド: 全マクロが空になる
 //----------------------------------------------------------------------------
-#define DEBUG_DRAW_RECT_OUTLINE(...)    ((void)0)
-#define DEBUG_DRAW_RECT_OUTLINE_TL(...) ((void)0)
-#define DEBUG_DRAW_RECT_FILLED(...)     ((void)0)
+#define DEBUG_RECT(...)      ((void)0)
+#define DEBUG_RECT_TL(...)   ((void)0)
+#define DEBUG_RECT_FILL(...) ((void)0)
 
 #endif

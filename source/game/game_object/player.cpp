@@ -242,5 +242,5 @@ void Player::RenderColliderDebug()
     Vector2 size = collider_->GetSize();
 
     Color color(0.0f, 1.0f, 0.0f, 1.0f);  // 緑
-    DEBUG_DRAW_RECT_OUTLINE(pos, size, color);
+    DEBUG_RECT(pos, size, color);
 }
