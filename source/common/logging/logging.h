@@ -178,8 +178,38 @@ class LogSystem {
 private:
     static inline ILogOutput* output_ = nullptr;
     static inline LogLevel minLevel_ = LogLevel::Debug;
+#ifdef _DEBUG
+    static inline std::unique_ptr<FullLogOutput> ownedOutput_;
+#endif
 
 public:
+    //! @brief ログシステム初期化（Debugビルドのみファイル出力有効）
+    //! @param logFilePath ログファイルパス（空の場合はファイル出力なし）
+    static void Initialize(const std::wstring& logFilePath = L"") {
+#ifdef _DEBUG
+        ownedOutput_ = std::make_unique<FullLogOutput>();
+        if (!logFilePath.empty()) {
+            ownedOutput_->openFile(logFilePath);
+        }
+        output_ = ownedOutput_.get();
+        LOG_INFO("=== ログ出力開始 ===");
+#else
+        (void)logFilePath;
+#endif
+    }
+
+    //! @brief ログシステム終了
+    static void Shutdown() {
+#ifdef _DEBUG
+        if (ownedOutput_) {
+            LOG_INFO("=== ログ出力終了 ===");
+            ownedOutput_->closeFile();
+            ownedOutput_.reset();
+        }
+        output_ = nullptr;
+#endif
+    }
+
     // ログ出力先を設定（nullptr可）
     static void setOutput(ILogOutput* output) {
         output_ = output;

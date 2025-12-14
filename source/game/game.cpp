@@ -22,11 +22,6 @@
 // シェーダーコンパイラ（グローバルインスタンス）
 static std::unique_ptr<D3DShaderCompiler> g_shaderCompiler;
 
-// コンソール+ファイルログ出力（デバッグ用）
-#ifdef _DEBUG
-static FullLogOutput g_fullLog;
-#endif
-
 //----------------------------------------------------------------------------
 Game::Game()
     : sceneManager_(SceneManager::Get())
@@ -38,16 +33,6 @@ bool Game::Initialize()
 {
     std::wstring projectRoot = FileSystemManager::GetProjectRoot();
     std::wstring assetsRoot = FileSystemManager::GetAssetsDirectory();
-
-#ifdef _DEBUG
-    // コンソール+ファイルログを有効化
-    std::wstring debugDir = PathUtility::normalizeW(projectRoot + L"debug");
-    FileSystemManager::CreateDirectories(debugDir);
-    std::wstring logPath = debugDir + L"/debug_log.txt";
-    g_fullLog.openFile(logPath);
-    LogSystem::setOutput(&g_fullLog);
-    LOG_INFO("=== ログ出力開始 ===");
-#endif
 
     // 1. InputManager初期化
     if (!InputManager::Initialize()) {
@@ -118,15 +103,6 @@ void Game::Shutdown() noexcept
     g_shaderCompiler.reset();
 
     LOG_INFO("[Game] シャットダウン完了");
-}
-
-//----------------------------------------------------------------------------
-void Game::CloseLog() noexcept
-{
-#ifdef _DEBUG
-    LOG_INFO("=== ログ出力終了 ===");
-    g_fullLog.closeFile();
-#endif
 }
 
 //----------------------------------------------------------------------------
