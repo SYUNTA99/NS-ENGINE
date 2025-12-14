@@ -11,7 +11,7 @@
 #include "engine/component/camera2d.h"
 #include "engine/component/collider2d.h"
 #include "dx11/gpu/texture.h"
-#include "game/player.h"
+#include "game/game_object/player.h"
 #include <memory>
 #include <vector>
 
