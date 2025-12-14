@@ -55,9 +55,7 @@ public:
     void Render(class SpriteBatch& spriteBatch);
 
     //! @brief コライダーのデバッグ描画
-    //! @param spriteBatch SpriteBatch参照
-    //! @param debugTexture デバッグ用テクスチャ
-    void RenderColliderDebug(class SpriteBatch& spriteBatch, Texture* debugTexture);
+    void RenderColliderDebug();
 
     //! @brief Transform取得
     [[nodiscard]] Transform2D* GetTransform() const { return transform_; }
