@@ -6,6 +6,7 @@
 #include "engine/input/input_manager.h"
 #include "engine/texture/texture_manager.h"
 #include "engine/c_systems/sprite_batch.h"
+#include "engine/debug/debug_draw.h"
 #include "engine/math/color.h"
 #include "common/logging/logging.h"
 #include <cmath>
@@ -230,12 +231,9 @@ void Player::Render(SpriteBatch& spriteBatch)
 }
 
 //----------------------------------------------------------------------------
-void Player::RenderColliderDebug(SpriteBatch& spriteBatch, Texture* debugTexture)
+void Player::RenderColliderDebug()
 {
-    if (!collider_ || !transform_ || !debugTexture) return;
-
-    const float lineWidth = 2.0f;
-    Color color(0.0f, 1.0f, 0.0f, 1.0f);  // 緑
+    if (!collider_ || !transform_) return;
 
     Vector2 pos = transform_->GetPosition();
     Vector2 offset = collider_->GetOffset();
@@ -243,21 +241,6 @@ void Player::RenderColliderDebug(SpriteBatch& spriteBatch, Texture* debugTexture
     pos.y += offset.y;
     Vector2 size = collider_->GetSize();
 
-    float left = pos.x - size.x * 0.5f;
-    float top = pos.y - size.y * 0.5f;
-    float right = left + size.x;
-    float bottom = top + size.y;
-
-    // 上辺
-    spriteBatch.Draw(debugTexture, Vector2(left, top), color, 0.0f,
-        Vector2(0, 0), Vector2(size.x / 32.0f, lineWidth / 32.0f), false, false, 100, 0);
-    // 下辺
-    spriteBatch.Draw(debugTexture, Vector2(left, bottom - lineWidth), color, 0.0f,
-        Vector2(0, 0), Vector2(size.x / 32.0f, lineWidth / 32.0f), false, false, 100, 0);
-    // 左辺
-    spriteBatch.Draw(debugTexture, Vector2(left, top), color, 0.0f,
-        Vector2(0, 0), Vector2(lineWidth / 32.0f, size.y / 32.0f), false, false, 100, 0);
-    // 右辺
-    spriteBatch.Draw(debugTexture, Vector2(right - lineWidth, top), color, 0.0f,
-        Vector2(0, 0), Vector2(lineWidth / 32.0f, size.y / 32.0f), false, false, 100, 0);
+    Color color(0.0f, 1.0f, 0.0f, 1.0f);  // 緑
+    DEBUG_DRAW_RECT_OUTLINE(pos, size, color);
 }

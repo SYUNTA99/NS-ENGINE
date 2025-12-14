@@ -9,6 +9,7 @@
 #include "engine/texture/texture_manager.h"
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/c_systems/collision_manager.h"
+#include "engine/debug/debug_draw.h"
 #include "engine/math/color.h"
 #include "common/logging/logging.h"
 
@@ -197,32 +198,9 @@ void TestScene::Render()
     }
 
     // デバッグ：コライダー枠描画
-    const float lineWidth = 2.0f;
-
-    // 枠を描画するラムダ関数
-    auto drawColliderOutline = [&](Vector2 pos, Vector2 size, const Color& color) {
-        float left = pos.x - size.x * 0.5f;
-        float top = pos.y - size.y * 0.5f;
-        float right = left + size.x;
-        float bottom = top + size.y;
-
-        // 上辺
-        spriteBatch.Draw(testTexture_.get(), Vector2(left, top), color, 0.0f,
-            Vector2(0, 0), Vector2(size.x / 32.0f, lineWidth / 32.0f), false, false, 100, 0);
-        // 下辺
-        spriteBatch.Draw(testTexture_.get(), Vector2(left, bottom - lineWidth), color, 0.0f,
-            Vector2(0, 0), Vector2(size.x / 32.0f, lineWidth / 32.0f), false, false, 100, 0);
-        // 左辺
-        spriteBatch.Draw(testTexture_.get(), Vector2(left, top), color, 0.0f,
-            Vector2(0, 0), Vector2(lineWidth / 32.0f, size.y / 32.0f), false, false, 100, 0);
-        // 右辺
-        spriteBatch.Draw(testTexture_.get(), Vector2(right - lineWidth, top), color, 0.0f,
-            Vector2(0, 0), Vector2(lineWidth / 32.0f, size.y / 32.0f), false, false, 100, 0);
-    };
-
     // プレイヤーのコライダー（緑枠）
     if (player_) {
-        player_->RenderColliderDebug(spriteBatch, testTexture_.get());
+        player_->RenderColliderDebug();
     }
 
     // 障害物のコライダー（赤枠）
@@ -236,7 +214,7 @@ void TestScene::Render()
             pos.x += offset.x;
             pos.y += offset.y;
             Vector2 size = collider->GetSize();
-            drawColliderOutline(pos, size, obstacleColliderColor);
+            DEBUG_DRAW_RECT_OUTLINE(pos, size, obstacleColliderColor);
         }
     }
 
