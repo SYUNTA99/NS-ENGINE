@@ -152,6 +152,14 @@ public:
     void QueryAABB(const AABB& aabb, std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
     void QueryPoint(const Vector2& point, std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
 
+    //! @brief 線分と交差するコライダーを検索
+    //! @param start 線分の始点
+    //! @param end 線分の終点
+    //! @param results 結果を格納するベクター
+    //! @param layerMask 検索対象のレイヤーマスク
+    void QueryLineSegment(const Vector2& start, const Vector2& end,
+                          std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
+
 private:
     CollisionManager() = default;
     ~CollisionManager() = default;

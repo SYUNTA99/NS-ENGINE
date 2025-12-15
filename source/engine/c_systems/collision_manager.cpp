@@ -482,6 +482,86 @@ void CollisionManager::QueryPoint(const Vector2& point, std::vector<Collider2D*>
     }
 }
 
+void CollisionManager::QueryLineSegment(const Vector2& start, const Vector2& end,
+                                        std::vector<Collider2D*>& results, uint8_t layerMask)
+{
+    results.clear();
+
+    // 線分のバウンディングボックスを計算
+    float minX = (std::min)(start.x, end.x);
+    float maxX = (std::max)(start.x, end.x);
+    float minY = (std::min)(start.y, end.y);
+    float maxY = (std::max)(start.y, end.y);
+
+    Cell c0 = ToCell(minX, minY);
+    Cell c1 = ToCell(maxX, maxY);
+
+    // 重複チェック用
+    std::vector<uint16_t> checked;
+
+    // 線分が通過する可能性のあるセルを走査
+    for (int cy = c0.y; cy <= c1.y; ++cy) {
+        for (int cx = c0.x; cx <= c1.x; ++cx) {
+            auto it = grid_.find({cx, cy});
+            if (it == grid_.end()) continue;
+
+            for (uint16_t idx : it->second) {
+                if ((flags_[idx] & kFlagEnabled) == 0) continue;
+                if ((layer_[idx] & layerMask) == 0) continue;
+                checked.push_back(idx);
+            }
+        }
+    }
+
+    // 重複削除
+    std::sort(checked.begin(), checked.end());
+    checked.erase(std::unique(checked.begin(), checked.end()), checked.end());
+
+    // 線分とAABBの交差判定（Liang-Barsky アルゴリズム）
+    for (uint16_t idx : checked) {
+        float boxMinX = posX_[idx] - halfW_[idx];
+        float boxMaxX = posX_[idx] + halfW_[idx];
+        float boxMinY = posY_[idx] - halfH_[idx];
+        float boxMaxY = posY_[idx] + halfH_[idx];
+
+        // 線分のパラメトリック方程式: P(t) = start + t * (end - start), t ∈ [0, 1]
+        float dx = end.x - start.x;
+        float dy = end.y - start.y;
+
+        float tMin = 0.0f;
+        float tMax = 1.0f;
+
+        // X軸方向
+        if (std::abs(dx) < 1e-8f) {
+            // 線分がX軸に平行
+            if (start.x < boxMinX || start.x > boxMaxX) continue;
+        } else {
+            float t1 = (boxMinX - start.x) / dx;
+            float t2 = (boxMaxX - start.x) / dx;
+            if (t1 > t2) std::swap(t1, t2);
+            tMin = (std::max)(tMin, t1);
+            tMax = (std::min)(tMax, t2);
+            if (tMin > tMax) continue;
+        }
+
+        // Y軸方向
+        if (std::abs(dy) < 1e-8f) {
+            // 線分がY軸に平行
+            if (start.y < boxMinY || start.y > boxMaxY) continue;
+        } else {
+            float t1 = (boxMinY - start.y) / dy;
+            float t2 = (boxMaxY - start.y) / dy;
+            if (t1 > t2) std::swap(t1, t2);
+            tMin = (std::max)(tMin, t1);
+            tMax = (std::min)(tMax, t2);
+            if (tMin > tMax) continue;
+        }
+
+        // 交差している
+        results.push_back(colliders_[idx]);
+    }
+}
+
 //----------------------------------------------------------------------------
 // グリッド
 //----------------------------------------------------------------------------
