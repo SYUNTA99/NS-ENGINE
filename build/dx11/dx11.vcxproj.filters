@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="compile">
+      <UniqueIdentifier>{2E6065D3-9A3F-E46E-A357-6F450FB64AD0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="format">
+      <UniqueIdentifier>{AE34E6FD-9AD6-10D4-8391-24286FD29724}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gpu">
+      <UniqueIdentifier>{F177880B-5D81-887C-E6FC-9E7C5205947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="state">
+      <UniqueIdentifier>{064A6110-725E-89C1-3BE0-2C21A7B385F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view">
+      <UniqueIdentifier>{60909F7C-4CC7-A00D-F5B3-8610E1C91C0F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\dx11\compile\shader_cache.h">
+      <Filter>compile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\compile\shader_compiler.h">
+      <Filter>compile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\compile\shader_reflection.h">
+      <Filter>compile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\compile\shader_type.h">
+      <Filter>compile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\compile\shader_types_fwd.h">
+      <Filter>compile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\format\format.h">
+      <Filter>format</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\buffer.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\gpu.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\gpu_resource.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\intrusive_ptr.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\shader.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu\texture.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\gpu_common.h" />
+    <ClInclude Include="..\..\source\dx11\graphics_context.h" />
+    <ClInclude Include="..\..\source\dx11\graphics_device.h" />
+    <ClInclude Include="..\..\source\dx11\state\blend_state.h">
+      <Filter>state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\state\depth_stencil_state.h">
+      <Filter>state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\state\rasterizer_state.h">
+      <Filter>state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\state\sampler_state.h">
+      <Filter>state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\swap_chain.h" />
+    <ClInclude Include="..\..\source\dx11\view\depth_stencil_view.h">
+      <Filter>view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\view\render_target_view.h">
+      <Filter>view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\view\shader_resource_view.h">
+      <Filter>view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\dx11\view\unordered_access_view.h">
+      <Filter>view</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\dx11\compile\shader_cache.cpp">
+      <Filter>compile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\compile\shader_compiler.cpp">
+      <Filter>compile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\format\format.cpp">
+      <Filter>format</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\gpu\buffer.cpp">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\gpu\shader.cpp">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\gpu\texture.cpp">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\graphics_context.cpp" />
+    <ClCompile Include="..\..\source\dx11\graphics_device.cpp" />
+    <ClCompile Include="..\..\source\dx11\state\blend_state.cpp">
+      <Filter>state</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\state\depth_stencil_state.cpp">
+      <Filter>state</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\state\rasterizer_state.cpp">
+      <Filter>state</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\state\sampler_state.cpp">
+      <Filter>state</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\swap_chain.cpp" />
+    <ClCompile Include="..\..\source\dx11\view\depth_stencil_view.cpp">
+      <Filter>view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\view\render_target_view.cpp">
+      <Filter>view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\view\shader_resource_view.cpp">
+      <Filter>view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dx11\view\unordered_access_view.cpp">
+      <Filter>view</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
