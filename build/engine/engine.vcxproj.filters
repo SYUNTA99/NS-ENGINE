@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="collision">
+      <UniqueIdentifier>{D13AF3EB-3DA5-A762-86E3-5808F28C85B7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="component">
+      <UniqueIdentifier>{18DEAB42-8448-60B9-CD86-115F39303E0E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="fs">
+      <UniqueIdentifier>{DE775900-CA03-880B-33B2-880B1F5D880B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics2d">
+      <UniqueIdentifier>{8C9B01E2-7853-432F-E15A-1C8BCD31DE1F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="input">
+      <UniqueIdentifier>{B54AA90F-215F-D1C0-EAE0-742056B4CDF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{4A63C33C-3630-1E48-5F49-0CF04B7553D6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scene">
+      <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{1C21B11B-08C3-DBF1-F17D-EF45DDBE6242}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="texture">
+      <UniqueIdentifier>{964579D9-0225-F874-0B3D-834B779B5ED6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\engine\collision\collision_manager.h">
+      <Filter>collision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\color.h" />
+    <ClInclude Include="..\..\source\engine\component\animator.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\camera2d.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\collider2d.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\component.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\game_object.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\sprite_renderer.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\component\transform2d.h">
+      <Filter>component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\engine.h" />
+    <ClInclude Include="..\..\source\engine\fs\file_error.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\file_system.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\file_system_functions.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\file_system_manager.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\file_system_types.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\file_watcher.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\host_file_system.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\memory_file_system.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\fs\path_utility.h">
+      <Filter>fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\graphics2d\sprite_batch.h">
+      <Filter>graphics2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\gamepad.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\gamepad_manager.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\input_manager.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\key.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\keyboard.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\input\mouse.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\platform\application.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\platform\renderer.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\platform\window.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\scene\math_types.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\scene\scene.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\scene\scene_manager.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\shader\global_shader.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\shader\shader_manager.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\shader\shader_program.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\texture\texture_cache.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\texture\texture_loader.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\engine\texture\texture_manager.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\engine\collision\collision_manager.cpp">
+      <Filter>collision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\component\animator.cpp">
+      <Filter>component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\component\camera2d.cpp">
+      <Filter>component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\component\collider2d.cpp">
+      <Filter>component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\engine.cpp" />
+    <ClCompile Include="..\..\source\engine\fs\file_error.cpp">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\fs\file_system_manager.cpp">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\fs\file_watcher.cpp">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\fs\host_file_system.cpp">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\fs\memory_file_system.cpp">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\graphics2d\sprite_batch.cpp">
+      <Filter>graphics2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\input\gamepad.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\input\gamepad_manager.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\input\input_manager.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\input\keyboard.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\input\mouse.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\platform\application.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\platform\renderer.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\platform\window.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\scene\scene_manager.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\shader\shader_manager.cpp">
+      <Filter>shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\shader\shader_program.cpp">
+      <Filter>shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\texture\texture_cache.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\texture\texture_loader.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\engine\texture\texture_manager.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
