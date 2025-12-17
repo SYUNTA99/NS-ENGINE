@@ -59,7 +59,7 @@ public:
             //ハンドル取得
             HANDLE ConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
             
-            //エラー処理　コンソールがない場合
+            //コンソールがない場合
             if(ConsoleHandle == INVALID_HANDLE_VALUE)
             {
                 return;
@@ -77,6 +77,12 @@ public:
 
             //ENABLE_EXTENDED_FLAGSを設定
             ConsoleMode |= ENABLE_EXTENDED_FLAGS;
+
+            //コンソールモードの設定
+            if(!SetConsoleMode(ConsoleHandle,ConsoleMode))
+            {
+                return;
+            }
         }
     }
 
