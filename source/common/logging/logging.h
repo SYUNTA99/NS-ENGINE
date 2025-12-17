@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <iostream>
 #include <string>
 #include <format>
 #include <source_location>
@@ -63,9 +62,6 @@ public:
             //エラー処理　コンソールがない場合
             if(ConsoleHandle == INVALID_HANDLE_VALUE)
             {
-                LOG_INFO("コンソールハンドルが無効です");
-
-
                 return;
             }
             
@@ -73,7 +69,6 @@ public:
             //コンソールモードの取得
             if(!GetConsoleMode(ConsoleHandle,&ConsoleMode))
             {
-                LOG_INFO("コンソールモードを取得できませんでした");
                 return;
             }
             
@@ -82,17 +77,6 @@ public:
 
             //ENABLE_EXTENDED_FLAGSを設定
             ConsoleMode |= ENABLE_EXTENDED_FLAGS;
-
-            //コンソールモードの設定確認
-            if (!SetConsoleMode(ConsoleHandle, ConsoleMode))
-            {
-                // エラー処理
-                 LOG_INFO("コンソールモードを取得できませんでした");
-            }
-            else{
-                //コンソールモードの確認
-               LOG_INFO("現在のコンソールモードは : ConsoleMode");
-            }
         }
     }
 
