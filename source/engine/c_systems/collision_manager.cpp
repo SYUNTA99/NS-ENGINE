@@ -10,7 +10,7 @@
 
 void CollisionManager::Initialize(int cellSize)
 {
-    cellSize_ = cellSize > 0 ? cellSize : 256;
+    cellSize_ = cellSize > 0 ? cellSize : CollisionConstants::kDefaultCellSize;
     Clear();
 }
 
@@ -51,8 +51,8 @@ ColliderHandle CollisionManager::Register(Collider2D* collider)
     posY_[index] = 0.0f;
     halfW_[index] = 0.0f;
     halfH_[index] = 0.0f;
-    layer_[index] = 1;
-    mask_[index] = 0xFF;
+    layer_[index] = CollisionConstants::kDefaultLayer;
+    mask_[index] = CollisionConstants::kDefaultMask;
     flags_[index] = kFlagEnabled;
     offsetX_[index] = 0.0f;
     offsetY_[index] = 0.0f;
@@ -232,6 +232,20 @@ AABB CollisionManager::GetAABB(ColliderHandle handle) const
     return aabb;
 }
 
+Vector2 CollisionManager::GetSize(ColliderHandle handle) const
+{
+    if (!IsValid(handle)) return Vector2::Zero;
+    uint16_t i = handle.index;
+    return Vector2(sizeW_[i], sizeH_[i]);
+}
+
+Vector2 CollisionManager::GetOffset(ColliderHandle handle) const
+{
+    if (!IsValid(handle)) return Vector2::Zero;
+    uint16_t i = handle.index;
+    return Vector2(offsetX_[i], offsetY_[i]);
+}
+
 uint8_t CollisionManager::GetLayer(ColliderHandle handle) const
 {
     if (!IsValid(handle)) return 0;
@@ -248,6 +262,12 @@ bool CollisionManager::IsEnabled(ColliderHandle handle) const
 {
     if (!IsValid(handle)) return false;
     return (flags_[handle.index] & kFlagEnabled) != 0;
+}
+
+bool CollisionManager::IsTrigger(ColliderHandle handle) const
+{
+    if (!IsValid(handle)) return false;
+    return (flags_[handle.index] & kFlagTrigger) != 0;
 }
 
 Collider2D* CollisionManager::GetCollider(ColliderHandle handle) const
@@ -599,4 +619,94 @@ void CollisionManager::RebuildGrid()
             }
         }
     }
+}
+
+//----------------------------------------------------------------------------
+// レイキャスト
+//----------------------------------------------------------------------------
+
+std::optional<RaycastHit> CollisionManager::RaycastFirst(
+    const Vector2& start, const Vector2& end, uint8_t layerMask)
+{
+    // 線分のバウンディングボックスを計算
+    float minX = (std::min)(start.x, end.x);
+    float maxX = (std::max)(start.x, end.x);
+    float minY = (std::min)(start.y, end.y);
+    float maxY = (std::max)(start.y, end.y);
+
+    Cell c0 = ToCell(minX, minY);
+    Cell c1 = ToCell(maxX, maxY);
+
+    // 重複チェック用
+    std::vector<uint16_t> checked;
+
+    for (int cy = c0.y; cy <= c1.y; ++cy) {
+        for (int cx = c0.x; cx <= c1.x; ++cx) {
+            auto it = grid_.find({cx, cy});
+            if (it == grid_.end()) continue;
+
+            for (uint16_t idx : it->second) {
+                if ((flags_[idx] & kFlagEnabled) == 0) continue;
+                if ((layer_[idx] & layerMask) == 0) continue;
+                checked.push_back(idx);
+            }
+        }
+    }
+
+    // 重複削除
+    std::sort(checked.begin(), checked.end());
+    checked.erase(std::unique(checked.begin(), checked.end()), checked.end());
+
+    float dx = end.x - start.x;
+    float dy = end.y - start.y;
+    float lineLength = std::sqrt(dx * dx + dy * dy);
+
+    std::optional<RaycastHit> closestHit;
+    float closestT = 2.0f;  // 1.0より大きい初期値
+
+    for (uint16_t idx : checked) {
+        float boxMinX = posX_[idx] - halfW_[idx];
+        float boxMaxX = posX_[idx] + halfW_[idx];
+        float boxMinY = posY_[idx] - halfH_[idx];
+        float boxMaxY = posY_[idx] + halfH_[idx];
+
+        float tMin = 0.0f;
+        float tMax = 1.0f;
+
+        // X軸方向
+        if (std::abs(dx) < 1e-8f) {
+            if (start.x < boxMinX || start.x > boxMaxX) continue;
+        } else {
+            float t1 = (boxMinX - start.x) / dx;
+            float t2 = (boxMaxX - start.x) / dx;
+            if (t1 > t2) std::swap(t1, t2);
+            tMin = (std::max)(tMin, t1);
+            tMax = (std::min)(tMax, t2);
+            if (tMin > tMax) continue;
+        }
+
+        // Y軸方向
+        if (std::abs(dy) < 1e-8f) {
+            if (start.y < boxMinY || start.y > boxMaxY) continue;
+        } else {
+            float t1 = (boxMinY - start.y) / dy;
+            float t2 = (boxMaxY - start.y) / dy;
+            if (t1 > t2) std::swap(t1, t2);
+            tMin = (std::max)(tMin, t1);
+            tMax = (std::min)(tMax, t2);
+            if (tMin > tMax) continue;
+        }
+
+        // 交差している & より近い場合
+        if (tMin < closestT) {
+            closestT = tMin;
+            RaycastHit hit;
+            hit.collider = colliders_[idx];
+            hit.distance = tMin * lineLength;
+            hit.point = Vector2(start.x + dx * tMin, start.y + dy * tMin);
+            closestHit = hit;
+        }
+    }
+
+    return closestHit;
 }

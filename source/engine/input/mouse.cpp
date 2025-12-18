@@ -55,6 +55,8 @@ void Mouse::Update(HWND hwnd) noexcept
     bool leftPressed = (::GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
     bool rightPressed = (::GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
     bool middlePressed = (::GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+    bool x1Pressed = (::GetAsyncKeyState(VK_XBUTTON1) & 0x8000) != 0;
+    bool x2Pressed = (::GetAsyncKeyState(VK_XBUTTON2) & 0x8000) != 0;
 
     // 左ボタン
     {
@@ -79,6 +81,22 @@ void Mouse::Update(HWND hwnd) noexcept
         btn.pressed = middlePressed;
         btn.down = middlePressed && !wasPressed;
         btn.up = !middlePressed && wasPressed;
+    }
+    // X1ボタン（サイドボタン1）
+    {
+        auto& btn = buttons_[static_cast<int>(MouseButton::X1)];
+        bool wasPressed = btn.pressed;
+        btn.pressed = x1Pressed;
+        btn.down = x1Pressed && !wasPressed;
+        btn.up = !x1Pressed && wasPressed;
+    }
+    // X2ボタン（サイドボタン2）
+    {
+        auto& btn = buttons_[static_cast<int>(MouseButton::X2)];
+        bool wasPressed = btn.pressed;
+        btn.pressed = x2Pressed;
+        btn.down = x2Pressed && !wasPressed;
+        btn.up = !x2Pressed && wasPressed;
     }
 
     // ホイールデルタをリセット（フレーム毎にリセット）

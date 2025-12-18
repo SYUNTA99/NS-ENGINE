@@ -29,6 +29,7 @@ public:
 
 private:
     float time_ = 0.0f;
+    float fpsTimer_ = 0.0f;  //!< FPS表示用タイマー
 
     // カメラ
     std::unique_ptr<GameObject> cameraObj_;

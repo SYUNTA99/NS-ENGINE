@@ -128,11 +128,10 @@ void TestScene::Update()
     time_ += dt;
 
     // デバッグ用にFPSを表示（1秒ごと）
-    static float fpsTimer = 0.0f;
-    fpsTimer += dt;
-    if (fpsTimer >= 1.0f) {
+    fpsTimer_ += dt;
+    if (fpsTimer_ >= 1.0f) {
         LOG_INFO("FPS: " + std::to_string(1.0f / dt));
-        fpsTimer = 0.0f;
+        fpsTimer_ = 0.0f;
     }
 
     // プレイヤー更新

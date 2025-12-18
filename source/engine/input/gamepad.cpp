@@ -36,14 +36,15 @@ void Gamepad::Update() noexcept
         currentButtons_ = state.Gamepad.wButtons;
 
         // 左スティック（-32768 ~ 32767 → -1.0 ~ 1.0）
-        float lx = static_cast<float>(state.Gamepad.sThumbLX) / 32767.0f;
-        float ly = static_cast<float>(state.Gamepad.sThumbLY) / 32767.0f;
+        // NOTE: 32768で割ると正確だが、clampで-1.0~1.0に収める
+        float lx = std::clamp(static_cast<float>(state.Gamepad.sThumbLX) / 32767.0f, -1.0f, 1.0f);
+        float ly = std::clamp(static_cast<float>(state.Gamepad.sThumbLY) / 32767.0f, -1.0f, 1.0f);
         leftStickX_ = ApplyDeadZone(lx, deadZone_);
         leftStickY_ = ApplyDeadZone(ly, deadZone_);
 
         // 右スティック
-        float rx = static_cast<float>(state.Gamepad.sThumbRX) / 32767.0f;
-        float ry = static_cast<float>(state.Gamepad.sThumbRY) / 32767.0f;
+        float rx = std::clamp(static_cast<float>(state.Gamepad.sThumbRX) / 32767.0f, -1.0f, 1.0f);
+        float ry = std::clamp(static_cast<float>(state.Gamepad.sThumbRY) / 32767.0f, -1.0f, 1.0f);
         rightStickX_ = ApplyDeadZone(rx, deadZone_);
         rightStickY_ = ApplyDeadZone(ry, deadZone_);
 

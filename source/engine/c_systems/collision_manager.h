@@ -1,6 +1,8 @@
 //----------------------------------------------------------------------------
 //! @file   collision_manager.h
 //! @brief  衝突判定マネージャー（DOD設計）
+//!
+//! @note スレッドセーフではない。メインスレッドからのみ呼び出すこと。
 //----------------------------------------------------------------------------
 #pragma once
 
@@ -10,9 +12,20 @@
 #include <unordered_map>
 #include <functional>
 #include <cstdint>
+#include <optional>
 
 class Collider2D;
 class GameObject;
+
+//============================================================================
+// 定数定義
+//============================================================================
+namespace CollisionConstants {
+    static constexpr uint16_t kInvalidIndex = UINT16_MAX;   //!< 無効なインデックス
+    static constexpr uint8_t kDefaultLayer = 0x01;          //!< デフォルトレイヤー
+    static constexpr uint8_t kDefaultMask = 0xFF;           //!< デフォルトマスク（全レイヤーと衝突）
+    static constexpr int kDefaultCellSize = 256;            //!< デフォルトセルサイズ
+}
 
 //============================================================================
 //! @brief コライダーハンドル
@@ -21,10 +34,12 @@ class GameObject;
 //! 実データはCollisionManagerが所有する。
 //============================================================================
 struct ColliderHandle {
-    uint16_t index = UINT16_MAX;      //!< データ配列へのインデックス
-    uint16_t generation = 0;          //!< 世代（再利用検出用）
+    uint16_t index = CollisionConstants::kInvalidIndex;  //!< データ配列へのインデックス
+    uint16_t generation = 0;                              //!< 世代（再利用検出用）
 
-    [[nodiscard]] bool IsValid() const noexcept { return index != UINT16_MAX; }
+    [[nodiscard]] bool IsValid() const noexcept {
+        return index != CollisionConstants::kInvalidIndex;
+    }
     bool operator==(const ColliderHandle& other) const noexcept {
         return index == other.index && generation == other.generation;
     }
@@ -34,35 +49,50 @@ struct ColliderHandle {
 //! @brief AABB（軸平行境界ボックス）
 //============================================================================
 struct AABB {
-    float minX, minY;
-    float maxX, maxY;
+    float minX = 0.0f;
+    float minY = 0.0f;
+    float maxX = 0.0f;
+    float maxY = 0.0f;
 
-    AABB() : minX(0), minY(0), maxX(0), maxY(0) {}
+    AABB() = default;
     AABB(float x, float y, float w, float h)
         : minX(x), minY(y), maxX(x + w), maxY(y + h) {}
 
+    //! @brief 他のAABBと交差しているか判定
     [[nodiscard]] bool Intersects(const AABB& other) const noexcept {
         return minX < other.maxX && maxX > other.minX &&
                minY < other.maxY && maxY > other.minY;
     }
 
+    //! @brief 点を含んでいるか判定
     [[nodiscard]] bool Contains(float px, float py) const noexcept {
         return px >= minX && px < maxX && py >= minY && py < maxY;
     }
 
+    //! @brief 中心座標を取得
     [[nodiscard]] Vector2 GetCenter() const noexcept {
         return Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
     }
 
-    // 旧APIとの互換性
-    Vector2 position;  // 使用非推奨
-    Vector2 size;      // 使用非推奨
+    //! @brief サイズを取得
+    [[nodiscard]] Vector2 GetSize() const noexcept {
+        return Vector2(maxX - minX, maxY - minY);
+    }
 };
 
 //============================================================================
 //! @brief 衝突コールバック型
 //============================================================================
 using CollisionCallback = std::function<void(Collider2D*, Collider2D*)>;
+
+//============================================================================
+//! @brief レイキャストヒット情報
+//============================================================================
+struct RaycastHit {
+    Collider2D* collider = nullptr;  //!< ヒットしたコライダー
+    float distance = 0.0f;           //!< 始点からの距離
+    Vector2 point;                   //!< ヒット座標
+};
 
 //============================================================================
 //! @brief 衝突判定マネージャー（DOD設計）
@@ -81,7 +111,7 @@ public:
     // 初期化・終了
     //------------------------------------------------------------------------
 
-    void Initialize(int cellSize = 256);
+    void Initialize(int cellSize = CollisionConstants::kDefaultCellSize);
     void Shutdown();
 
     //------------------------------------------------------------------------
@@ -121,9 +151,12 @@ public:
     //------------------------------------------------------------------------
 
     [[nodiscard]] AABB GetAABB(ColliderHandle handle) const;
+    [[nodiscard]] Vector2 GetSize(ColliderHandle handle) const;
+    [[nodiscard]] Vector2 GetOffset(ColliderHandle handle) const;
     [[nodiscard]] uint8_t GetLayer(ColliderHandle handle) const;
     [[nodiscard]] uint8_t GetMask(ColliderHandle handle) const;
     [[nodiscard]] bool IsEnabled(ColliderHandle handle) const;
+    [[nodiscard]] bool IsTrigger(ColliderHandle handle) const;
     [[nodiscard]] Collider2D* GetCollider(ColliderHandle handle) const;
 
     //------------------------------------------------------------------------
@@ -141,7 +174,9 @@ public:
     // 設定・統計
     //------------------------------------------------------------------------
 
-    void SetCellSize(int size) noexcept { cellSize_ = size > 0 ? size : 256; }
+    void SetCellSize(int size) noexcept {
+        cellSize_ = size > 0 ? size : CollisionConstants::kDefaultCellSize;
+    }
     [[nodiscard]] int GetCellSize() const noexcept { return cellSize_; }
     [[nodiscard]] size_t GetColliderCount() const noexcept { return activeCount_; }
 
@@ -149,8 +184,13 @@ public:
     // クエリ
     //------------------------------------------------------------------------
 
-    void QueryAABB(const AABB& aabb, std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
-    void QueryPoint(const Vector2& point, std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
+    //! @brief AABB範囲内のコライダーを検索
+    void QueryAABB(const AABB& aabb, std::vector<Collider2D*>& results,
+                   uint8_t layerMask = CollisionConstants::kDefaultMask);
+
+    //! @brief 点と交差するコライダーを検索
+    void QueryPoint(const Vector2& point, std::vector<Collider2D*>& results,
+                    uint8_t layerMask = CollisionConstants::kDefaultMask);
 
     //! @brief 線分と交差するコライダーを検索
     //! @param start 線分の始点
@@ -158,7 +198,17 @@ public:
     //! @param results 結果を格納するベクター
     //! @param layerMask 検索対象のレイヤーマスク
     void QueryLineSegment(const Vector2& start, const Vector2& end,
-                          std::vector<Collider2D*>& results, uint8_t layerMask = 0xFF);
+                          std::vector<Collider2D*>& results,
+                          uint8_t layerMask = CollisionConstants::kDefaultMask);
+
+    //! @brief レイキャストで最初にヒットしたコライダーを取得
+    //! @param start 線分の始点
+    //! @param end 線分の終点
+    //! @param layerMask 検索対象のレイヤーマスク
+    //! @return ヒット情報（ヒットしなかった場合はnullopt）
+    [[nodiscard]] std::optional<RaycastHit> RaycastFirst(
+        const Vector2& start, const Vector2& end,
+        uint8_t layerMask = CollisionConstants::kDefaultMask);
 
 private:
     CollisionManager() = default;
@@ -198,8 +248,10 @@ private:
 
     struct CellHash {
         size_t operator()(const Cell& c) const noexcept {
-            return static_cast<size_t>(c.x) * 73856093u ^
-                   static_cast<size_t>(c.y) * 19349663u;
+            // 負の座標を正しく処理するハッシュ関数
+            auto h1 = std::hash<int>{}(c.x);
+            auto h2 = std::hash<int>{}(c.y);
+            return h1 ^ (h2 * 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
         }
     };
 
@@ -239,7 +291,7 @@ private:
     size_t activeCount_ = 0;
 
     // 空間ハッシュグリッド
-    int cellSize_ = 256;
+    int cellSize_ = CollisionConstants::kDefaultCellSize;
     std::unordered_map<Cell, std::vector<uint16_t>, CellHash> grid_;
 
     // 衝突ペア（ソート済み）

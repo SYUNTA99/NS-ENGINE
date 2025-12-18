@@ -14,14 +14,15 @@ Collider2D::Collider2D(const Vector2& size, const Vector2& offset)
 
 void Collider2D::OnAttach()
 {
-    handle_ = CollisionManager::Get().Register(this);
+    auto& mgr = CollisionManager::Get();
+    handle_ = mgr.Register(this);
 
     // 初期値を設定
-    CollisionManager::Get().SetSize(handle_, initSize_.x, initSize_.y);
-    CollisionManager::Get().SetOffset(handle_, initOffset_.x, initOffset_.y);
-    CollisionManager::Get().SetLayer(handle_, initLayer_);
-    CollisionManager::Get().SetMask(handle_, initMask_);
-    CollisionManager::Get().SetTrigger(handle_, initTrigger_);
+    mgr.SetSize(handle_, initSize_.x, initSize_.y);
+    mgr.SetOffset(handle_, initOffset_.x, initOffset_.y);
+    mgr.SetLayer(handle_, initLayer_);
+    mgr.SetMask(handle_, initMask_);
+    mgr.SetTrigger(handle_, initTrigger_);
 }
 
 void Collider2D::OnDetach()
@@ -78,10 +79,7 @@ void Collider2D::SetSize(const Vector2& size)
 Vector2 Collider2D::GetSize() const
 {
     if (handle_.IsValid()) {
-        // CollisionManagerから取得（sizeW_, sizeH_を公開する必要あり）
-        // 簡易実装: AABBから計算
-        AABB aabb = CollisionManager::Get().GetAABB(handle_);
-        return Vector2(aabb.maxX - aabb.minX, aabb.maxY - aabb.minY);
+        return CollisionManager::Get().GetSize(handle_);
     }
     return initSize_;
 }
@@ -101,7 +99,10 @@ void Collider2D::SetOffset(const Vector2& offset)
 
 Vector2 Collider2D::GetOffset() const
 {
-    return initOffset_;  // 簡易実装
+    if (handle_.IsValid()) {
+        return CollisionManager::Get().GetOffset(handle_);
+    }
+    return initOffset_;
 }
 
 void Collider2D::SetBounds(const Vector2& min, const Vector2& max)
@@ -173,7 +174,10 @@ void Collider2D::SetTrigger(bool trigger)
 
 bool Collider2D::IsTrigger() const
 {
-    return initTrigger_;  // 簡易実装
+    if (handle_.IsValid()) {
+        return CollisionManager::Get().IsTrigger(handle_);
+    }
+    return initTrigger_;
 }
 
 //----------------------------------------------------------------------------
