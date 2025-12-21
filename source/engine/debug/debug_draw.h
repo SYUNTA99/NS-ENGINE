@@ -51,6 +51,32 @@ public:
         float lineWidth = 2.0f
     );
 
+    //! @brief 円の枠線を描画
+    //! @param center 中心座標
+    //! @param radius 半径
+    //! @param color 色
+    //! @param segments 分割数（デフォルト32）
+    //! @param lineWidth 線の太さ
+    void DrawCircleOutline(
+        const Vector2& center,
+        float radius,
+        const Color& color,
+        int segments = 32,
+        float lineWidth = 2.0f
+    );
+
+    //! @brief 塗りつぶし円を描画
+    //! @param center 中心座標
+    //! @param radius 半径
+    //! @param color 色
+    //! @param segments 分割数（デフォルト32）
+    void DrawCircleFilled(
+        const Vector2& center,
+        float radius,
+        const Color& color,
+        int segments = 32
+    );
+
 private:
     DebugDraw() = default;
     ~DebugDraw() = default;
@@ -74,15 +100,21 @@ private:
     DebugDraw::Get().DrawRectFilled(center, size, color)
 #define DEBUG_LINE(start, end, color, ...) \
     DebugDraw::Get().DrawLine(start, end, color, ##__VA_ARGS__)
+#define DEBUG_CIRCLE(center, radius, color, ...) \
+    DebugDraw::Get().DrawCircleOutline(center, radius, color, ##__VA_ARGS__)
+#define DEBUG_CIRCLE_FILL(center, radius, color, ...) \
+    DebugDraw::Get().DrawCircleFilled(center, radius, color, ##__VA_ARGS__)
 
 #else
 
 //----------------------------------------------------------------------------
 // Releaseビルド: 全マクロが空になる
 //----------------------------------------------------------------------------
-#define DEBUG_RECT(...)      ((void)0)
-#define DEBUG_RECT_TL(...)   ((void)0)
-#define DEBUG_RECT_FILL(...) ((void)0)
-#define DEBUG_LINE(...)      ((void)0)
+#define DEBUG_RECT(...)       ((void)0)
+#define DEBUG_RECT_TL(...)    ((void)0)
+#define DEBUG_RECT_FILL(...)  ((void)0)
+#define DEBUG_LINE(...)       ((void)0)
+#define DEBUG_CIRCLE(...)     ((void)0)
+#define DEBUG_CIRCLE_FILL(...) ((void)0)
 
 #endif
