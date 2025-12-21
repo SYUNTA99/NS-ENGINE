@@ -151,6 +151,15 @@ public:
     //! @brief 攻撃終了
     void EndAttack();
 
+    //! @brief 攻撃可能か（クールダウン完了かつ範囲に入った直後）
+    [[nodiscard]] bool CanAttackNow() const;
+
+    //! @brief 攻撃クールダウンを開始
+    void StartAttackCooldown(float duration);
+
+    //! @brief 攻撃クールダウンを更新
+    void UpdateAttackCooldown(float dt);
+
     //! @brief Transform2D取得
     [[nodiscard]] Transform2D* GetTransform() const { return transform_; }
 
@@ -238,10 +247,15 @@ protected:
 
     // 状態
     IndividualAction action_ = IndividualAction::Idle;
+    IndividualAction prevAction_ = IndividualAction::Idle;  //!< 前フレームの行動
     bool isAttacking_ = false;          //!< 攻撃モーション中
 
     // 攻撃ターゲット
     Individual* attackTarget_ = nullptr; //!< 攻撃対象の個体
+
+    // 攻撃クールダウン
+    float attackCooldown_ = 0.0f;       //!< 攻撃クールダウン残り時間
+    bool justEnteredAttackRange_ = false; //!< 攻撃範囲に入った直後か
 
     // 移動
     Vector2 desiredVelocity_ = Vector2::Zero;

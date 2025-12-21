@@ -24,21 +24,14 @@ CombatSystem& CombatSystem::Get()
 //----------------------------------------------------------------------------
 void CombatSystem::Update(float dt)
 {
-    LOG_INFO("[CombatSystem] Update called, dt=" + std::to_string(dt) + ", timer=" + std::to_string(attackTimer_));
-
-    attackTimer_ += dt;
-
-    // 攻撃間隔チェック
-    if (attackTimer_ < attackInterval_) {
-        return;
-    }
-    attackTimer_ = 0.0f;
-
-    // 各グループの戦闘処理
-    LOG_INFO("[CombatSystem] Attack phase - groups: " + std::to_string(groups_.size()));
-
+    // 各グループの個体クールダウン更新と戦闘処理
     for (Group* attacker : groups_) {
         if (!attacker || attacker->IsDefeated()) continue;
+
+        // 全個体のクールダウン更新
+        for (Individual* individual : attacker->GetAliveIndividuals()) {
+            individual->UpdateAttackCooldown(dt);
+        }
 
         // 硬直中は攻撃しない
         if (StaggerSystem::Get().IsStaggered(attacker)) continue;
@@ -50,10 +43,6 @@ void CombatSystem::Update(float dt)
         // プレイヤーの脅威度とグループの脅威度を比較
         float playerThreat = (canAttackPlayer && player_) ? player_->GetThreat() : -1.0f;
         float groupThreat = groupTarget ? groupTarget->GetThreat() : -1.0f;
-
-        LOG_INFO("[CombatSystem] " + attacker->GetId() +
-                 " - groupTarget: " + (groupTarget ? groupTarget->GetId() : "none") +
-                 ", canAttackPlayer: " + std::to_string(canAttackPlayer));
 
         if (playerThreat > groupThreat && canAttackPlayer) {
             // プレイヤーの脅威度が高い → プレイヤーを攻撃
@@ -206,6 +195,9 @@ void CombatSystem::ProcessCombatAgainstPlayer(Group* attacker, float /*dt*/)
     Individual* attackerIndividual = attacker->GetRandomAliveIndividual();
     if (!attackerIndividual) return;
 
+    // 攻撃クールダウンチェック
+    if (!attackerIndividual->CanAttackNow()) return;
+
     // 攻撃距離チェック
     Vector2 attackerPos = attackerIndividual->GetPosition();
     Vector2 playerPos = player_->GetPosition();
@@ -221,6 +213,9 @@ void CombatSystem::ProcessCombatAgainstPlayer(Group* attacker, float /*dt*/)
 
     // 攻撃実行（種族ごとのAttackPlayer()を呼ぶ）
     attackerIndividual->AttackPlayer(player_);
+
+    // 攻撃クールダウン開始
+    attackerIndividual->StartAttackCooldown(attackInterval_);
 }
 
 //----------------------------------------------------------------------------
@@ -231,6 +226,9 @@ void CombatSystem::ProcessCombat(Group* attacker, Group* defender, float /*dt*/)
     // 攻撃者からランダムな個体を選択
     Individual* attackerIndividual = attacker->GetRandomAliveIndividual();
     if (!attackerIndividual) return;
+
+    // 攻撃クールダウンチェック
+    if (!attackerIndividual->CanAttackNow()) return;
 
     // 防御者からランダムな個体を選択
     Individual* defenderIndividual = defender->GetRandomAliveIndividual();
@@ -251,6 +249,9 @@ void CombatSystem::ProcessCombat(Group* attacker, Group* defender, float /*dt*/)
 
     // 攻撃実行（種族ごとのAttack()を呼ぶ）
     attackerIndividual->Attack(defenderIndividual);
+
+    // 攻撃クールダウン開始
+    attackerIndividual->StartAttackCooldown(attackInterval_);
 
     if (onAttack_) {
         onAttack_(attackerIndividual, defenderIndividual, attackerIndividual->GetAttackDamage());

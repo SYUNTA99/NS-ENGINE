@@ -3,6 +3,7 @@
 //! @brief  Knight種族クラス実装
 //----------------------------------------------------------------------------
 #include "knight.h"
+#include "player.h"
 #include "engine/texture/texture_manager.h"
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/c_systems/collision_manager.h"
@@ -142,49 +143,88 @@ void Knight::Attack(Individual* target)
 {
     if (target == nullptr || !target->IsAlive()) return;
     if (!IsAlive()) return;
-    if (isSwinging_) return;  // 既に振っている場合は無視
 
-    // 剣振り開始
+    // ターゲットを保存（CheckSwordHitで使用）
+    attackTarget_ = target;
+    playerTarget_ = nullptr;
+
+    StartSwordSwing(target->GetPosition());
+    LOG_INFO("[Knight] " + id_ + " starts sword swing at " + target->GetId());
+}
+
+//----------------------------------------------------------------------------
+void Knight::AttackPlayer(Player* target)
+{
+    if (target == nullptr || !target->IsAlive()) return;
+    if (!IsAlive()) return;
+
+    // ターゲットを保存（CheckSwordHitで使用）
+    attackTarget_ = nullptr;
+    playerTarget_ = target;
+
+    StartSwordSwing(target->GetPosition());
+    LOG_INFO("[Knight] " + id_ + " starts sword swing at Player");
+}
+
+//----------------------------------------------------------------------------
+void Knight::StartSwordSwing(const Vector2& targetPos)
+{
+    if (isSwinging_) return;
+
     isSwinging_ = true;
     swingTimer_ = 0.0f;
     swingAngle_ = kSwingStartAngle;
     hasHitTarget_ = false;
 
-    // ターゲット方向を記録
+    // ターゲット方向を計算
     Vector2 myPos = GetPosition();
-    Vector2 targetPos = target->GetPosition();
     Vector2 diff = targetPos - myPos;
     float length = diff.Length();
-    if (length > 0.001f) {
+
+    constexpr float kMinLength = 0.001f;
+    if (length > kMinLength) {
         swingDirection_ = diff / length;
     } else {
         swingDirection_ = Vector2(1.0f, 0.0f);
     }
-
-    LOG_INFO("[Knight] " + id_ + " starts sword swing");
 }
 
 //----------------------------------------------------------------------------
 void Knight::CheckSwordHit()
 {
-    if (attackTarget_ == nullptr || !attackTarget_->IsAlive()) return;
-
     Vector2 swordTip = CalculateSwordTip();
 
-    // ターゲットのコライダーをチェック
-    Collider2D* targetCollider = attackTarget_->GetCollider();
-    if (targetCollider == nullptr) return;
+    // Individual対象の場合
+    if (attackTarget_ != nullptr && attackTarget_->IsAlive()) {
+        Collider2D* targetCollider = attackTarget_->GetCollider();
+        if (targetCollider != nullptr) {
+            AABB targetAABB = targetCollider->GetAABB();
 
-    AABB targetAABB = targetCollider->GetAABB();
+            if (targetAABB.Contains(swordTip.x, swordTip.y)) {
+                attackTarget_->TakeDamage(attackDamage_);
+                hasHitTarget_ = true;
 
-    // 剣先がターゲットのAABB内にあるか
-    if (targetAABB.Contains(swordTip.x, swordTip.y)) {
-        // ヒット！ダメージを与える
-        attackTarget_->TakeDamage(attackDamage_);
-        hasHitTarget_ = true;
+                LOG_INFO("[Knight] " + id_ + " sword hit " + attackTarget_->GetId() +
+                         " for " + std::to_string(attackDamage_) + " damage");
+            }
+        }
+        return;
+    }
 
-        LOG_INFO("[Knight] " + id_ + " sword hit " + attackTarget_->GetId() +
-                 " for " + std::to_string(attackDamage_) + " damage");
+    // Player対象の場合
+    if (playerTarget_ != nullptr && playerTarget_->IsAlive()) {
+        Collider2D* targetCollider = playerTarget_->GetCollider();
+        if (targetCollider != nullptr) {
+            AABB targetAABB = targetCollider->GetAABB();
+
+            if (targetAABB.Contains(swordTip.x, swordTip.y)) {
+                playerTarget_->TakeDamage(attackDamage_);
+                hasHitTarget_ = true;
+
+                LOG_INFO("[Knight] " + id_ + " sword hit Player for " +
+                         std::to_string(attackDamage_) + " damage");
+            }
+        }
     }
 }
 

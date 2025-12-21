@@ -267,16 +267,21 @@ void Individual::CalculateSeparation(const std::vector<Individual*>& others)
 //----------------------------------------------------------------------------
 void Individual::UpdateAction()
 {
+    // 前フレームのアクションを保存
+    prevAction_ = action_;
+
     // 死亡チェック
     if (hp_ <= 0.0f) {
         action_ = IndividualAction::Death;
         attackTarget_ = nullptr;
+        justEnteredAttackRange_ = false;
         return;
     }
 
     // 所属グループがない場合はIdle
     if (!ownerGroup_) {
         action_ = IndividualAction::Idle;
+        justEnteredAttackRange_ = false;
         return;
     }
 
@@ -284,6 +289,7 @@ void Individual::UpdateAction()
     GroupAI* ai = ownerGroup_->GetAI();
     if (!ai) {
         action_ = IndividualAction::Idle;
+        justEnteredAttackRange_ = false;
         return;
     }
 
@@ -293,6 +299,7 @@ void Individual::UpdateAction()
     if (groupState == AIState::Flee) {
         action_ = IndividualAction::Walk;
         attackTarget_ = nullptr;
+        justEnteredAttackRange_ = false;
         return;
     }
 
@@ -300,6 +307,7 @@ void Individual::UpdateAction()
     if (groupState == AIState::Wander) {
         action_ = IndividualAction::Idle;
         attackTarget_ = nullptr;
+        justEnteredAttackRange_ = false;
         return;
     }
 
@@ -320,6 +328,7 @@ void Individual::UpdateAction()
     if (!targetGroup || targetGroup->IsDefeated()) {
         action_ = IndividualAction::Idle;
         attackTarget_ = nullptr;
+        justEnteredAttackRange_ = false;
         return;
     }
 
@@ -333,19 +342,45 @@ void Individual::UpdateAction()
 
     if (distance <= attackRange) {
         // 射程内 → Attack
-        if (action_ != IndividualAction::Attack) {
-            action_ = IndividualAction::Attack;
-            // 攻撃開始時にターゲット個体を選択
-            SelectAttackTarget();
-            // ターゲットが見つかったら攻撃開始
-            if (attackTarget_) {
-                StartAttack();
-            }
+        if (prevAction_ != IndividualAction::Attack) {
+            // 攻撃範囲に入った瞬間
+            justEnteredAttackRange_ = true;
+            attackCooldown_ = 0.0f;  // クールダウンリセット
+        }
+        action_ = IndividualAction::Attack;
+        // 攻撃開始時にターゲット個体を選択
+        SelectAttackTarget();
+        // ターゲットが見つかったら攻撃開始
+        if (attackTarget_) {
+            StartAttack();
         }
     } else {
         // 射程外 → Walk
         action_ = IndividualAction::Walk;
         attackTarget_ = nullptr;
+        justEnteredAttackRange_ = false;
+    }
+}
+
+//----------------------------------------------------------------------------
+bool Individual::CanAttackNow() const
+{
+    // 攻撃範囲に入った直後、またはクールダウン完了
+    return justEnteredAttackRange_ || attackCooldown_ <= 0.0f;
+}
+
+//----------------------------------------------------------------------------
+void Individual::StartAttackCooldown(float duration)
+{
+    attackCooldown_ = duration;
+    justEnteredAttackRange_ = false;
+}
+
+//----------------------------------------------------------------------------
+void Individual::UpdateAttackCooldown(float dt)
+{
+    if (attackCooldown_ > 0.0f) {
+        attackCooldown_ -= dt;
     }
 }
 

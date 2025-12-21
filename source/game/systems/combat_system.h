@@ -105,8 +105,8 @@ private:
     std::set<Group*> defeatedGroups_;  //!< 既に全滅処理済みのグループ
     Player* player_ = nullptr;      //!< プレイヤー参照
 
-    float attackInterval_ = 0.3f;   //!< 攻撃間隔（0.3秒）
-    float attackTimer_ = 0.0f;      //!< 攻撃タイマー
+    float attackInterval_ = 1.0f;   //!< 攻撃間隔（1.0秒）
+    float attackTimer_ = 1.0f;      //!< 攻撃タイマー（初期値=間隔で即攻撃可能）
 
     // コールバック
     std::function<void(Individual*, Individual*, float)> onAttack_;
