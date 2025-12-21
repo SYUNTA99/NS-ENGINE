@@ -52,7 +52,7 @@ void Player::Initialize(const Vector2& position)
     collider_ = gameObject_->AddComponent<Collider2D>();
     collider_->SetBounds(Vector2(-20, -30), Vector2(20, 30));
     collider_->SetLayer(0x01);  // プレイヤーレイヤー
-    collider_->SetMask(0x02);   // 敵レイヤーと衝突
+    collider_->SetMask(0x0C);   // Individual(0x04) + Arrow(0x08)と衝突
 
     LOG_INFO("[Player] Initialized");
 }

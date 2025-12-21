@@ -7,6 +7,7 @@
 #include "engine/component/game_object.h"
 #include "engine/component/transform2d.h"
 #include "engine/component/sprite_renderer.h"
+#include "engine/component/collider2d.h"
 #include "engine/math/math_types.h"
 #include "dx11/gpu/texture.h"
 #include <memory>
@@ -59,9 +60,6 @@ public:
     [[nodiscard]] Vector2 GetPosition() const;
 
 private:
-    //! @brief ターゲットへの命中チェック
-    void CheckHit();
-
     // 所有者・ターゲット
     Individual* owner_ = nullptr;
     Individual* target_ = nullptr;
@@ -71,6 +69,7 @@ private:
     std::unique_ptr<GameObject> gameObject_;
     Transform2D* transform_ = nullptr;
     SpriteRenderer* sprite_ = nullptr;
+    Collider2D* collider_ = nullptr;
 
     // テクスチャ
     TexturePtr texture_;
@@ -84,5 +83,4 @@ private:
     bool isActive_ = true;
     float lifetime_ = 0.0f;
     static constexpr float kMaxLifetime = 3.0f;  // 最大生存時間
-    static constexpr float kHitRadius = 30.0f;   // 命中判定半径
 };

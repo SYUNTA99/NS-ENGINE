@@ -52,6 +52,9 @@ private:
 #ifdef _DEBUG
     //! @brief 索敵範囲を描画（デバッグ用）
     void DrawDetectionRanges();
+
+    //! @brief 個体のコライダーを描画（デバッグ用）
+    void DrawIndividualColliders();
 #endif
 
     //! @brief UI情報を描画

@@ -419,65 +419,31 @@ void TestScene::HandleInput(float /*dt*/)
         }
     }
 
-    // 結モード中: プレイヤーが触れたらマーク
-    if (BindSystem::Get().IsEnabled() && player_ && player_->GetCollider()) {
-        AABB playerAABB = player_->GetCollider()->GetAABB();
-
-        // 敵グループの個体に触れたか
-        for (const std::unique_ptr<Group>& group : enemyGroups_) {
-            if (group->IsDefeated()) continue;
-
-            // 既にマーク済みのグループはスキップ
-            if (BindSystem::Get().HasMark()) {
-                std::optional<BondableEntity> marked = BindSystem::Get().GetMarkedEntity();
-                if (marked.has_value()) {
-                    BondableEntity currentGroup = group.get();
-                    if (BondableHelper::IsSame(marked.value(), currentGroup)) {
-                        continue;
-                    }
-                }
-            }
-
-            for (Individual* individual : group->GetAliveIndividuals()) {
-                Collider2D* collider = individual->GetCollider();
-                if (!collider) continue;
-
-                // コライダーAABBの交差判定
-                AABB individualAABB = collider->GetAABB();
-                if (playerAABB.Intersects(individualAABB)) {
-                    LOG_INFO("[TestScene] Touch detected: " + individual->GetId());
-                    BondableEntity entity = group.get();
-                    // MarkEntityがFE消費、縁作成、モード終了を自動処理
-                    bool created = BindSystem::Get().MarkEntity(entity);
-                    if (created) {
-                        LOG_INFO("[TestScene] Bond created!");
-                    } else if (BindSystem::Get().HasMark()) {
-                        LOG_INFO("[TestScene] Marked: " + group->GetId());
-                    }
-                    break;
-                }
-            }
-        }
-    }
+    // 結モード中: CollisionManagerのコールバックで自動処理
+    // （Individual::SetupCollider()で設定済み）
 
     // 切モード中: プレイヤーが縁を通過したら切断
-    if (CutSystem::Get().IsEnabled() && player_) {
-        Vector2 playerPos = player_->GetPosition();
+    // ※縁はコライダーを持たないためQueryLineSegmentを使用
+    if (CutSystem::Get().IsEnabled() && player_ && player_->GetCollider()) {
+        Collider2D* playerCollider = player_->GetCollider();
 
         const std::vector<std::unique_ptr<Bond>>& bonds = BondManager::Get().GetAllBonds();
         for (const std::unique_ptr<Bond>& bond : bonds) {
             Vector2 posA = BondableHelper::GetPosition(bond->GetEntityA());
             Vector2 posB = BondableHelper::GetPosition(bond->GetEntityB());
 
-            // 線分との距離を計算
-            LineSegment line(posA, posB);
-            float dist = line.DistanceToPoint(playerPos);
+            // CollisionManagerで線分と交差するコライダーを検索
+            std::vector<Collider2D*> hits;
+            CollisionManager::Get().QueryLineSegment(posA, posB, hits, 0x01);  // Player用レイヤー
 
-            if (dist < 30.0f) {
-                // CutSystemを通じて縁を切断（FE消費、硬直、絶縁、モード終了を自動処理）
-                if (CutSystem::Get().CutBond(bond.get())) {
-                    LOG_INFO("[TestScene] Bond cut!");
-                    break;
+            // プレイヤーのコライダーが含まれているか確認
+            for (Collider2D* hitCollider : hits) {
+                if (hitCollider == playerCollider) {
+                    // CutSystemを通じて縁を切断（FE消費、硬直、絶縁、モード終了を自動処理）
+                    if (CutSystem::Get().CutBond(bond.get())) {
+                        LOG_INFO("[TestScene] Bond cut!");
+                        break;
+                    }
                 }
             }
         }
@@ -495,18 +461,18 @@ Group* TestScene::GetGroupUnderCursor() const
         Vector2(static_cast<float>(mouse.GetX()), static_cast<float>(mouse.GetY()))
     );
 
-    // 個体のコライダーで当たり判定
-    for (const std::unique_ptr<Group>& group : enemyGroups_) {
-        if (group->IsDefeated()) continue;
+    // CollisionManagerでマウス位置のコライダーを検索
+    std::vector<Collider2D*> hits;
+    CollisionManager::Get().QueryPoint(mouseWorld, hits, 0x04);  // Individual用レイヤー
 
-        for (Individual* individual : group->GetAliveIndividuals()) {
-            Collider2D* collider = individual->GetCollider();
-            if (!collider) continue;
+    for (Collider2D* hitCollider : hits) {
+        for (const std::unique_ptr<Group>& group : enemyGroups_) {
+            if (group->IsDefeated()) continue;
 
-            // マウス座標がコライダー内にあるか
-            AABB aabb = collider->GetAABB();
-            if (aabb.Contains(mouseWorld.x, mouseWorld.y)) {
-                return group.get();
+            for (Individual* individual : group->GetAliveIndividuals()) {
+                if (individual->GetCollider() == hitCollider) {
+                    return group.get();
+                }
             }
         }
     }
@@ -582,6 +548,18 @@ void TestScene::Render()
     for (const std::unique_ptr<Group>& group : enemyGroups_) {
         group->Render(spriteBatch);
     }
+
+#ifdef _DEBUG
+    // 個体コライダー描画
+    DrawIndividualColliders();
+
+    // プレイヤーコライダー描画
+    if (player_ && player_->GetCollider()) {
+        AABB playerAABB = player_->GetCollider()->GetAABB();
+        Color playerColliderColor(0.0f, 1.0f, 0.0f, 0.8f);  // 緑
+        DEBUG_RECT(playerAABB.GetCenter(), playerAABB.GetSize(), playerColliderColor, 2.0f);
+    }
+#endif
 
     // 矢の描画
     ArrowManager::Get().Render(spriteBatch);
@@ -664,6 +642,24 @@ void TestScene::DrawDetectionRanges()
         Vector2 groupPos = group->GetPosition();
         float detectionRange = group->GetDetectionRange();
         CircleRenderer::Get().DrawFilled(groupPos, detectionRange, detectionRangeColor);
+    }
+}
+
+//----------------------------------------------------------------------------
+void TestScene::DrawIndividualColliders()
+{
+    Color colliderColor(0.0f, 1.0f, 1.0f, 0.8f);  // シアン
+
+    for (const std::unique_ptr<Group>& group : enemyGroups_) {
+        if (group->IsDefeated()) continue;
+
+        for (Individual* individual : group->GetAliveIndividuals()) {
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            AABB aabb = collider->GetAABB();
+            DEBUG_RECT(aabb.GetCenter(), aabb.GetSize(), colliderColor, 2.0f);
+        }
     }
 }
 #endif
