@@ -8,6 +8,7 @@
 
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/texture/texture_manager.h"
+#include "circle_renderer.h"
 #include <cmath>
 
 //----------------------------------------------------------------------------
@@ -157,13 +158,18 @@ void DebugDraw::DrawCircleOutline(
 
 //----------------------------------------------------------------------------
 void DebugDraw::DrawCircleFilled(
-    const Vector2& /*center*/,
-    float /*radius*/,
-    const Color& /*color*/,
+    const Vector2& center,
+    float radius,
+    const Color& color,
     int /*segments*/)
 {
-    // CircleRendererを直接使用すること
-    // DEBUG_CIRCLE_FILLマクロではなく、CircleRenderer::Get().DrawFilled()を呼ぶ
+    // 注意: CircleRendererはBegin/Endパターンを使用するため、
+    // このメソッドは単独では描画されない。
+    // 正しい使用法:
+    //   CircleRenderer::Get().Begin(camera);
+    //   CircleRenderer::Get().DrawFilled(center, radius, color);
+    //   CircleRenderer::Get().End();
+    CircleRenderer::Get().DrawFilled(center, radius, color);
 }
 
 #endif // _DEBUG

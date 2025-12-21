@@ -79,7 +79,7 @@ private:
     bool isBegun_ = false;
     bool initialized_ = false;
 
-    Matrix constantData_;
+    Matrix constantData_{};
 };
 
 #endif // _DEBUG

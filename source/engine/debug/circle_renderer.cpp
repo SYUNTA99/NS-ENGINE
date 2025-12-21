@@ -104,7 +104,9 @@ void CircleRenderer::Shutdown()
 void CircleRenderer::Begin(const Camera2D& camera)
 {
     if (!initialized_) {
-        Initialize();
+        if (!Initialize()) {
+            return;
+        }
     }
 
     instances_.clear();

@@ -639,6 +639,7 @@ void TestScene::DrawBonds()
     }
 }
 
+#ifdef _DEBUG
 //----------------------------------------------------------------------------
 void TestScene::DrawDetectionRanges()
 {
@@ -652,6 +653,7 @@ void TestScene::DrawDetectionRanges()
         CircleRenderer::Get().DrawFilled(groupPos, detectionRange, detectionRangeColor);
     }
 }
+#endif
 
 //----------------------------------------------------------------------------
 void TestScene::DrawUI()
