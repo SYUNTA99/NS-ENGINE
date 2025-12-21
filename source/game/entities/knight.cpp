@@ -3,7 +3,11 @@
 //! @brief  Knight種族クラス実装
 //----------------------------------------------------------------------------
 #include "knight.h"
+#include "group.h"
+#include "game/systems/bind_system.h"
+#include "game/bond/bondable_entity.h"
 #include "engine/texture/texture_manager.h"
+#include "engine/c_systems/collision_manager.h"
 #include "engine/math/color.h"
 #include "common/logging/logging.h"
 #include <vector>
@@ -63,7 +67,24 @@ void Knight::SetupCollider()
     // Knightは少し大きめのコライダー
     collider_ = gameObject_->AddComponent<Collider2D>(Vector2(48, 48));
     collider_->SetLayer(0x04);  // Individual用レイヤー
-    collider_->SetMask(0x04);   // 他のIndividualと衝突
+    collider_->SetMask(0x0D);   // Individual(0x04) + Player(0x01) + Arrow(0x08)と衝突
+
+    // 衝突コールバック：Playerとの衝突時に結びシステムを処理
+    collider_->SetOnCollisionEnter([this](Collider2D* /*self*/, Collider2D* other) {
+        if ((CollisionManager::Get().GetLayer(other->GetHandle()) & 0x01) == 0) return;
+        if (!BindSystem::Get().IsEnabled()) return;
+
+        Group* group = GetOwnerGroup();
+        if (!group || group->IsDefeated()) return;
+
+        BondableEntity entity = group;
+        bool created = BindSystem::Get().MarkEntity(entity);
+        if (created) {
+            LOG_INFO("[Knight] Bond created via collision!");
+        } else if (BindSystem::Get().HasMark()) {
+            LOG_INFO("[Knight] Marked group: " + group->GetId());
+        }
+    });
 }
 
 //----------------------------------------------------------------------------
