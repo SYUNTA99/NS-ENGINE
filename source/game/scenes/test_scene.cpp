@@ -210,19 +210,10 @@ void TestScene::OnEnter()
         FactionManager::Get().RegisterEntity(group.get());
     }
 
-    // 初期縁を作成（同種族同士を接続）
-    // ElfGroup1(0) <-> ElfGroup2(2)
+    // 初期縁を作成（騎士同士のみ接続、エルフは未接続）
     // KnightGroup1(1) <-> KnightGroup2(3)
-    LOG_INFO("[TestScene] Creating initial bonds (same species)...");
+    LOG_INFO("[TestScene] Creating initial bonds...");
     {
-        // エルフ同士
-        BondableEntity elf1 = enemyGroups_[0].get();  // ElfGroup1
-        BondableEntity elf2 = enemyGroups_[2].get();  // ElfGroup2
-        Bond* elfBond = BondManager::Get().CreateBond(elf1, elf2, BondType::Basic);
-        if (elfBond) {
-            LOG_INFO("  Bond: ElfGroup1 <-> ElfGroup2 (Elves)");
-        }
-
         // 騎士同士
         BondableEntity knight1 = enemyGroups_[1].get();  // KnightGroup1
         BondableEntity knight2 = enemyGroups_[3].get();  // KnightGroup2
@@ -613,14 +604,29 @@ void TestScene::DrawBonds()
         DEBUG_LINE(posA, posB, bondColor, 3.0f);
     }
 
-    // マーク中のエンティティを強調表示
-    if (BindSystem::Get().HasMark()) {
-        std::optional<BondableEntity> marked = BindSystem::Get().GetMarkedEntity();
-        if (marked.has_value()) {
-            Vector2 pos = BondableHelper::GetPosition(marked.value());
-            Color highlightColor(0.0f, 1.0f, 0.0f, 0.8f);
-            DEBUG_RECT(pos, Vector2(100.0f, 100.0f), highlightColor);
+    // 個体コライダーの描画（デバッグ用）
+    Color colliderColor(0.0f, 1.0f, 1.0f, 0.5f);  // シアン
+    for (const std::unique_ptr<Group>& group : enemyGroups_) {
+        if (group->IsDefeated()) continue;
+
+        for (Individual* individual : group->GetAliveIndividuals()) {
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            AABB aabb = collider->GetAABB();
+            Vector2 center((aabb.minX + aabb.maxX) * 0.5f, (aabb.minY + aabb.maxY) * 0.5f);
+            Vector2 size(aabb.maxX - aabb.minX, aabb.maxY - aabb.minY);
+            DEBUG_RECT(center, size, colliderColor);
         }
+    }
+
+    // プレイヤーコライダーの描画
+    if (player_ && player_->GetCollider()) {
+        AABB aabb = player_->GetCollider()->GetAABB();
+        Vector2 center((aabb.minX + aabb.maxX) * 0.5f, (aabb.minY + aabb.maxY) * 0.5f);
+        Vector2 size(aabb.maxX - aabb.minX, aabb.maxY - aabb.minY);
+        Color playerColliderColor(1.0f, 1.0f, 0.0f, 0.5f);  // 黄色
+        DEBUG_RECT(center, size, playerColliderColor);
     }
 }
 
