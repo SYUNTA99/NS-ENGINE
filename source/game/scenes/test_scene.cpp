@@ -618,14 +618,29 @@ void TestScene::DrawBonds()
         DEBUG_LINE(posA, posB, bondColor, 3.0f);
     }
 
-    // マーク中のエンティティを強調表示
-    if (BindSystem::Get().HasMark()) {
-        std::optional<BondableEntity> marked = BindSystem::Get().GetMarkedEntity();
-        if (marked.has_value()) {
-            Vector2 pos = BondableHelper::GetPosition(marked.value());
-            Color highlightColor(0.0f, 1.0f, 0.0f, 0.8f);
-            DEBUG_RECT(pos, Vector2(100.0f, 100.0f), highlightColor);
+    // 個体コライダーの描画（デバッグ用）
+    Color colliderColor(0.0f, 1.0f, 1.0f, 0.5f);  // シアン
+    for (const std::unique_ptr<Group>& group : enemyGroups_) {
+        if (group->IsDefeated()) continue;
+
+        for (Individual* individual : group->GetAliveIndividuals()) {
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            AABB aabb = collider->GetAABB();
+            Vector2 center((aabb.minX + aabb.maxX) * 0.5f, (aabb.minY + aabb.maxY) * 0.5f);
+            Vector2 size(aabb.maxX - aabb.minX, aabb.maxY - aabb.minY);
+            DEBUG_RECT(center, size, colliderColor);
         }
+    }
+
+    // プレイヤーコライダーの描画
+    if (player_ && player_->GetCollider()) {
+        AABB aabb = player_->GetCollider()->GetAABB();
+        Vector2 center((aabb.minX + aabb.maxX) * 0.5f, (aabb.minY + aabb.maxY) * 0.5f);
+        Vector2 size(aabb.maxX - aabb.minX, aabb.maxY - aabb.minY);
+        Color playerColliderColor(1.0f, 1.0f, 0.0f, 0.5f);  // 黄色
+        DEBUG_RECT(center, size, playerColliderColor);
     }
 }
 
