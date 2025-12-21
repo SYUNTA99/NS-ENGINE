@@ -49,6 +49,9 @@ private:
     //! @brief 縁をデバッグ描画
     void DrawBonds();
 
+    //! @brief 索敵範囲を描画（デバッグ用）
+    void DrawDetectionRanges();
+
     //! @brief UI情報を描画
     void DrawUI();
 

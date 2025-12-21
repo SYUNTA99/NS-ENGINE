@@ -10,6 +10,7 @@
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/c_systems/collision_manager.h"
 #include "engine/debug/debug_draw.h"
+#include "engine/debug/circle_renderer.h"
 #include "engine/math/color.h"
 #include "engine/input/input_manager.h"
 #include "common/logging/logging.h"
@@ -82,7 +83,7 @@ void TestScene::OnEnter()
     {
         std::unique_ptr<Group> group = std::make_unique<Group>("ElfGroup1");
         group->SetBaseThreat(80.0f);
-        group->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        group->SetDetectionRange(300.0f);  // デバッグ用に小さめ
 
         // Elf個体を3体追加
         for (int i = 0; i < 3; ++i) {
@@ -98,7 +99,7 @@ void TestScene::OnEnter()
         std::unique_ptr<GroupAI> ai = std::make_unique<GroupAI>(group.get());
         ai->SetPlayer(player_.get());
         ai->SetCamera(camera_);
-        ai->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        ai->SetDetectionRange(300.0f);  // デバッグ用に小さめ
         group->SetAI(ai.get());  // GroupにAI参照をセット
         groupAIs_.push_back(std::move(ai));
 
@@ -113,7 +114,7 @@ void TestScene::OnEnter()
     {
         std::unique_ptr<Group> group = std::make_unique<Group>("KnightGroup1");
         group->SetBaseThreat(120.0f);
-        group->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        group->SetDetectionRange(300.0f);  // デバッグ用に小さめ
 
         // Knight個体を2体追加
         for (int i = 0; i < 2; ++i) {
@@ -129,7 +130,7 @@ void TestScene::OnEnter()
         std::unique_ptr<GroupAI> ai = std::make_unique<GroupAI>(group.get());
         ai->SetPlayer(player_.get());
         ai->SetCamera(camera_);
-        ai->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        ai->SetDetectionRange(300.0f);  // デバッグ用に小さめ
         group->SetAI(ai.get());  // GroupにAI参照をセット
         groupAIs_.push_back(std::move(ai));
 
@@ -143,7 +144,7 @@ void TestScene::OnEnter()
     {
         std::unique_ptr<Group> group = std::make_unique<Group>("ElfGroup2");
         group->SetBaseThreat(60.0f);
-        group->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        group->SetDetectionRange(300.0f);  // デバッグ用に小さめ
 
         for (int i = 0; i < 4; ++i) {
             std::unique_ptr<Elf> elf = std::make_unique<Elf>("Elf2_" + std::to_string(i));
@@ -157,7 +158,7 @@ void TestScene::OnEnter()
         std::unique_ptr<GroupAI> ai = std::make_unique<GroupAI>(group.get());
         ai->SetPlayer(player_.get());
         ai->SetCamera(camera_);
-        ai->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        ai->SetDetectionRange(300.0f);  // デバッグ用に小さめ
         group->SetAI(ai.get());  // GroupにAI参照をセット
         groupAIs_.push_back(std::move(ai));
 
@@ -171,7 +172,7 @@ void TestScene::OnEnter()
     {
         std::unique_ptr<Group> group = std::make_unique<Group>("KnightGroup2");
         group->SetBaseThreat(100.0f);
-        group->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        group->SetDetectionRange(300.0f);  // デバッグ用に小さめ
 
         for (int i = 0; i < 3; ++i) {
             std::unique_ptr<Knight> knight = std::make_unique<Knight>("Knight2_" + std::to_string(i));
@@ -186,7 +187,7 @@ void TestScene::OnEnter()
         std::unique_ptr<GroupAI> ai = std::make_unique<GroupAI>(group.get());
         ai->SetPlayer(player_.get());
         ai->SetCamera(camera_);
-        ai->SetDetectionRange(1500.0f);  // 画面全体をカバー
+        ai->SetDetectionRange(300.0f);  // デバッグ用に小さめ
         group->SetAI(ai.get());  // GroupにAI参照をセット
         groupAIs_.push_back(std::move(ai));
 
@@ -596,6 +597,13 @@ void TestScene::Render()
     DrawUI();
 
     spriteBatch.End();
+
+#ifdef _DEBUG
+    // 円描画（別シェーダー）
+    CircleRenderer::Get().Begin(*camera_);
+    DrawDetectionRanges();
+    CircleRenderer::Get().End();
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -628,6 +636,20 @@ void TestScene::DrawBonds()
             Color highlightColor(0.0f, 1.0f, 0.0f, 0.8f);
             DEBUG_RECT(pos, Vector2(100.0f, 100.0f), highlightColor);
         }
+    }
+}
+
+//----------------------------------------------------------------------------
+void TestScene::DrawDetectionRanges()
+{
+    Color detectionRangeColor(1.0f, 0.5f, 0.0f, 0.3f);  // オレンジ（半透明）
+
+    for (const std::unique_ptr<Group>& group : enemyGroups_) {
+        if (group->IsDefeated()) continue;
+
+        Vector2 groupPos = group->GetPosition();
+        float detectionRange = group->GetDetectionRange();
+        CircleRenderer::Get().DrawFilled(groupPos, detectionRange, detectionRangeColor);
     }
 }
 

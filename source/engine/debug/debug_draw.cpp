@@ -125,4 +125,45 @@ void DebugDraw::DrawLine(
         Vector2(0.5f, 0.5f), Vector2(length, lineWidth), false, false, 100, 0);
 }
 
+//----------------------------------------------------------------------------
+void DebugDraw::DrawCircleOutline(
+    const Vector2& center,
+    float radius,
+    const Color& color,
+    int segments,
+    float lineWidth)
+{
+    if (segments < 3) segments = 3;
+
+    constexpr float kPi = 3.14159265358979323846f;
+    float angleStep = 2.0f * kPi / static_cast<float>(segments);
+
+    for (int i = 0; i < segments; ++i) {
+        float angle1 = angleStep * static_cast<float>(i);
+        float angle2 = angleStep * static_cast<float>(i + 1);
+
+        Vector2 p1(
+            center.x + std::cos(angle1) * radius,
+            center.y + std::sin(angle1) * radius
+        );
+        Vector2 p2(
+            center.x + std::cos(angle2) * radius,
+            center.y + std::sin(angle2) * radius
+        );
+
+        DrawLine(p1, p2, color, lineWidth);
+    }
+}
+
+//----------------------------------------------------------------------------
+void DebugDraw::DrawCircleFilled(
+    const Vector2& /*center*/,
+    float /*radius*/,
+    const Color& /*color*/,
+    int /*segments*/)
+{
+    // CircleRendererを直接使用すること
+    // DEBUG_CIRCLE_FILLマクロではなく、CircleRenderer::Get().DrawFilled()を呼ぶ
+}
+
 #endif // _DEBUG
