@@ -448,9 +448,12 @@ void TestScene::HandleInput(float /*dt*/)
             }
 
             for (Individual* individual : group->GetAliveIndividuals()) {
-                Vector2 pos = individual->GetPosition();
-                float dist = (playerPos - pos).Length();
-                if (dist < 50.0f) {
+                // コライダー同士の衝突判定
+                Collider2D* playerCollider = player_->GetCollider();
+                Collider2D* indivCollider = individual->GetCollider();
+                if (!playerCollider || !indivCollider) continue;
+
+                if (playerCollider->GetAABB().Intersects(indivCollider->GetAABB())) {
                     BondableEntity entity = group.get();
                     // MarkEntityがFE消費、縁作成、モード終了を自動処理
                     bool created = BindSystem::Get().MarkEntity(entity);
@@ -500,14 +503,15 @@ Group* TestScene::GetGroupUnderCursor() const
         Vector2(static_cast<float>(mouse.GetX()), static_cast<float>(mouse.GetY()))
     );
 
-    // 個体単位で当たり判定
+    // 個体単位で当たり判定（コライダー使用）
     for (const std::unique_ptr<Group>& group : enemyGroups_) {
         if (group->IsDefeated()) continue;
 
         for (Individual* individual : group->GetAliveIndividuals()) {
-            Vector2 pos = individual->GetPosition();
-            float dist = (mouseWorld - pos).Length();
-            if (dist < 40.0f) { // 個体の選択範囲
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            if (collider->GetAABB().Contains(mouseWorld.x, mouseWorld.y)) {
                 return group.get();
             }
         }
@@ -588,6 +592,13 @@ void TestScene::Render()
 #ifdef _DEBUG
     // 個体コライダー描画
     DrawIndividualColliders();
+
+    // プレイヤーコライダー描画
+    if (player_ && player_->GetCollider()) {
+        AABB playerAABB = player_->GetCollider()->GetAABB();
+        Color playerColliderColor(0.0f, 1.0f, 0.0f, 0.8f);  // 緑
+        DEBUG_RECT(playerAABB.GetCenter(), playerAABB.GetSize(), playerColliderColor, 2.0f);
+    }
 #endif
 
     // 矢の描画
@@ -663,14 +674,16 @@ void TestScene::DrawDetectionRanges()
 void TestScene::DrawIndividualColliders()
 {
     Color colliderColor(0.0f, 1.0f, 1.0f, 0.8f);  // シアン
-    Vector2 colliderSize(32.0f, 32.0f);  // Individual::SetupCollider()と同じサイズ
 
     for (const std::unique_ptr<Group>& group : enemyGroups_) {
         if (group->IsDefeated()) continue;
 
         for (Individual* individual : group->GetAliveIndividuals()) {
-            Vector2 pos = individual->GetPosition();
-            DEBUG_RECT(pos, colliderSize, colliderColor, 2.0f);
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            AABB aabb = collider->GetAABB();
+            DEBUG_RECT(aabb.GetCenter(), aabb.GetSize(), colliderColor, 2.0f);
         }
     }
 }
