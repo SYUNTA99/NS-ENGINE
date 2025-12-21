@@ -428,8 +428,8 @@ void TestScene::HandleInput(float /*dt*/)
     }
 
     // 結モード中: プレイヤーが触れたらマーク
-    if (BindSystem::Get().IsEnabled() && player_) {
-        Vector2 playerPos = player_->GetPosition();
+    if (BindSystem::Get().IsEnabled() && player_ && player_->GetCollider()) {
+        AABB playerAABB = player_->GetCollider()->GetAABB();
 
         // 敵グループの個体に触れたか
         for (const std::unique_ptr<Group>& group : enemyGroups_) {
@@ -447,9 +447,11 @@ void TestScene::HandleInput(float /*dt*/)
             }
 
             for (Individual* individual : group->GetAliveIndividuals()) {
-                Vector2 pos = individual->GetPosition();
-                float dist = (playerPos - pos).Length();
-                if (dist < 50.0f) {
+                Collider2D* collider = individual->GetCollider();
+                if (!collider) continue;
+
+                // コライダーAABBの交差判定
+                if (playerAABB.Intersects(collider->GetAABB())) {
                     BondableEntity entity = group.get();
                     // MarkEntityがFE消費、縁作成、モード終了を自動処理
                     bool created = BindSystem::Get().MarkEntity(entity);
@@ -499,14 +501,17 @@ Group* TestScene::GetGroupUnderCursor() const
         Vector2(static_cast<float>(mouse.GetX()), static_cast<float>(mouse.GetY()))
     );
 
-    // 個体単位で当たり判定
+    // 個体のコライダーで当たり判定
     for (const std::unique_ptr<Group>& group : enemyGroups_) {
         if (group->IsDefeated()) continue;
 
         for (Individual* individual : group->GetAliveIndividuals()) {
-            Vector2 pos = individual->GetPosition();
-            float dist = (mouseWorld - pos).Length();
-            if (dist < 40.0f) { // 個体の選択範囲
+            Collider2D* collider = individual->GetCollider();
+            if (!collider) continue;
+
+            // マウス座標がコライダー内にあるか
+            AABB aabb = collider->GetAABB();
+            if (aabb.Contains(mouseWorld.x, mouseWorld.y)) {
                 return group.get();
             }
         }
