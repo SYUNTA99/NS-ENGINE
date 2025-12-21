@@ -4,9 +4,19 @@
 //----------------------------------------------------------------------------
 #include "knight.h"
 #include "engine/texture/texture_manager.h"
+#include "engine/c_systems/sprite_batch.h"
+#include "engine/c_systems/collision_manager.h"
+#include "engine/c_systems/collision_layers.h"
+#include "engine/debug/debug_draw.h"
 #include "engine/math/color.h"
 #include "common/logging/logging.h"
 #include <vector>
+#include <cmath>
+
+namespace {
+    constexpr float kPi = 3.14159265358979323846f;
+    constexpr float kDegToRad = kPi / 180.0f;
+}
 
 //----------------------------------------------------------------------------
 Knight::Knight(const std::string& id)
@@ -77,16 +87,120 @@ void Knight::SetColor(const Color& color)
 }
 
 //----------------------------------------------------------------------------
+void Knight::Update(float dt)
+{
+    // 基底クラスの更新
+    Individual::Update(dt);
+
+    // 剣振りアニメーション更新
+    if (isSwinging_) {
+        swingTimer_ += dt;
+
+        // 剣振り進行度（0.0〜1.0）
+        float progress = swingTimer_ / kSwingDuration;
+        if (progress >= 1.0f) {
+            // 剣振り終了
+            isSwinging_ = false;
+            swingTimer_ = 0.0f;
+            hasHitTarget_ = false;
+        } else {
+            // 角度を補間
+            swingAngle_ = kSwingStartAngle + (kSwingEndAngle - kSwingStartAngle) * progress;
+
+            // 当たり判定チェック（まだヒットしていない場合のみ）
+            if (!hasHitTarget_) {
+                CheckSwordHit();
+            }
+        }
+    }
+}
+
+//----------------------------------------------------------------------------
+void Knight::Render(SpriteBatch& spriteBatch)
+{
+    // 基底クラスの描画
+    Individual::Render(spriteBatch);
+
+    // 剣振りエフェクト描画
+    if (isSwinging_ && IsAlive()) {
+        Vector2 myPos = GetPosition();
+        Vector2 swordTip = CalculateSwordTip();
+
+        // 剣の色（白〜銀色）
+        Color swordColor(0.9f, 0.9f, 1.0f, 1.0f);
+
+        // 剣を線で描画
+        DEBUG_LINE(myPos, swordTip, swordColor, 3.0f);
+
+        // 剣先に小さな円を描画（ヒット判定可視化）
+        DEBUG_CIRCLE(swordTip, 8.0f, swordColor);
+    }
+}
+
+//----------------------------------------------------------------------------
 void Knight::Attack(Individual* target)
 {
-    if (!target || !target->IsAlive()) return;
+    if (target == nullptr || !target->IsAlive()) return;
     if (!IsAlive()) return;
+    if (isSwinging_) return;  // 既に振っている場合は無視
 
-    // Knightはアニメーションなし、即座にダメージ
-    // TODO: 攻撃エフェクト追加
+    // 剣振り開始
+    isSwinging_ = true;
+    swingTimer_ = 0.0f;
+    swingAngle_ = kSwingStartAngle;
+    hasHitTarget_ = false;
 
-    // ダメージを与える
-    target->TakeDamage(attackDamage_);
+    // ターゲット方向を記録
+    Vector2 myPos = GetPosition();
+    Vector2 targetPos = target->GetPosition();
+    Vector2 diff = targetPos - myPos;
+    float length = diff.Length();
+    if (length > 0.001f) {
+        swingDirection_ = diff / length;
+    } else {
+        swingDirection_ = Vector2(1.0f, 0.0f);
+    }
 
-    LOG_INFO("[Knight] " + id_ + " attacks " + target->GetId() + " for " + std::to_string(attackDamage_) + " damage");
+    LOG_INFO("[Knight] " + id_ + " starts sword swing");
+}
+
+//----------------------------------------------------------------------------
+void Knight::CheckSwordHit()
+{
+    if (attackTarget_ == nullptr || !attackTarget_->IsAlive()) return;
+
+    Vector2 swordTip = CalculateSwordTip();
+
+    // ターゲットのコライダーをチェック
+    Collider2D* targetCollider = attackTarget_->GetCollider();
+    if (targetCollider == nullptr) return;
+
+    AABB targetAABB = targetCollider->GetAABB();
+
+    // 剣先がターゲットのAABB内にあるか
+    if (targetAABB.Contains(swordTip.x, swordTip.y)) {
+        // ヒット！ダメージを与える
+        attackTarget_->TakeDamage(attackDamage_);
+        hasHitTarget_ = true;
+
+        LOG_INFO("[Knight] " + id_ + " sword hit " + attackTarget_->GetId() +
+                 " for " + std::to_string(attackDamage_) + " damage");
+    }
+}
+
+//----------------------------------------------------------------------------
+Vector2 Knight::CalculateSwordTip() const
+{
+    Vector2 myPos = GetPosition();
+
+    // 基準方向からの角度を計算
+    float baseAngle = std::atan2(swingDirection_.y, swingDirection_.x);
+    float totalAngle = baseAngle + swingAngle_ * kDegToRad;
+
+    // 剣先の位置
+    Vector2 swordTip;
+    swordTip.x = myPos.x + std::cos(totalAngle) * kSwordLength;
+    swordTip.y = myPos.y + std::sin(totalAngle) * kSwordLength;
+
+    return swordTip;
 }
