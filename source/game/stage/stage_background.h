@@ -5,6 +5,7 @@
 #pragma once
 
 #include "dx11/gpu/texture.h"
+#include "dx11/gpu/shader.h"
 #include "engine/math/math_types.h"
 #include "engine/math/color.h"
 #include <vector>
@@ -40,6 +41,16 @@ public:
     void Shutdown();
 
 private:
+    //! @brief 地面タイル（回転/反転付き）
+    struct GroundTile
+    {
+        Vector2 position;           //!< 位置
+        float rotation;             //!< 回転（0, 90, 180, 270度）
+        bool flipX;                 //!< X反転
+        bool flipY;                 //!< Y反転
+        float alpha;                //!< アルファ値（2層目用）
+    };
+
     //! @brief 装飾オブジェクト
     struct DecorationObject
     {
@@ -68,7 +79,28 @@ private:
     // 地面テクスチャ（タイル用）
     TexturePtr groundTexture_;
 
-    // 装飾オブジェクト（タイル地面 + 装飾）
+    // ベースカラー用の1x1白テクスチャ
+    TexturePtr whiteTexture_;
+
+    // ベースカラー（地面の基本色）
+    Color baseColor_;
+
+    // 地面タイル用シェーダー（端フェード付き）
+    ShaderPtr groundVertexShader_;
+    ShaderPtr groundPixelShader_;
+
+    // 地面タイル（回転/反転付き）
+    std::vector<GroundTile> groundTiles_;
+
+    // タイル描画サイズ
+    float tileWidth_ = 0.0f;
+    float tileHeight_ = 0.0f;
+
+    // ステージサイズ
+    float stageWidth_ = 0.0f;
+    float stageHeight_ = 0.0f;
+
+    // 装飾オブジェクト
     std::vector<DecorationObject> decorations_;
 
     // 乱数生成器

@@ -259,6 +259,83 @@ void SpriteBatch::Draw(
     spriteQueue_.push_back(info);
 }
 
+void SpriteBatch::Draw(
+    Texture* texture,
+    const Vector2& position,
+    const Vector4& sourceRect,
+    const Color& color,
+    float rotation,
+    const Vector2& origin,
+    const Vector2& scale,
+    bool flipX,
+    bool flipY,
+    int sortingLayer,
+    int orderInLayer)
+{
+    if (!isBegun_) {
+        LOG_WARN("SpriteBatch: Begin()が呼ばれていません");
+        return;
+    }
+    if (!texture) {
+        return;
+    }
+
+    // テクスチャサイズ取得
+    float texWidth = static_cast<float>(texture->Width());
+    float texHeight = static_cast<float>(texture->Height());
+
+    // ソース矩形からUV座標を計算（ピクセル→正規化）
+    float u0 = sourceRect.x / texWidth;
+    float v0 = sourceRect.y / texHeight;
+    float u1 = (sourceRect.x + sourceRect.z) / texWidth;
+    float v1 = (sourceRect.y + sourceRect.w) / texHeight;
+
+    // 反転
+    if (flipX) std::swap(u0, u1);
+    if (flipY) std::swap(v0, v1);
+
+    // スプライトサイズ（ソース矩形のサイズを使用）
+    float width = sourceRect.z * scale.x;
+    float height = sourceRect.w * scale.y;
+
+    // 4頂点の計算（原点を考慮）
+    float x0 = -origin.x * scale.x;
+    float y0 = -origin.y * scale.y;
+    float x1 = x0 + width;
+    float y1 = y0 + height;
+
+    // 回転行列
+    float cosR = std::cos(rotation);
+    float sinR = std::sin(rotation);
+
+    auto rotatePoint = [&](float x, float y) -> Vector2 {
+        return Vector2(
+            x * cosR - y * sinR + position.x,
+            x * sinR + y * cosR + position.y
+        );
+    };
+
+    SpriteInfo info;
+    info.texture = texture;
+    info.sortingLayer = sortingLayer;
+    info.orderInLayer = orderInLayer;
+
+    Vector2 p0 = rotatePoint(x0, y0);
+    Vector2 p1 = rotatePoint(x1, y0);
+    Vector2 p2 = rotatePoint(x0, y1);
+    Vector2 p3 = rotatePoint(x1, y1);
+
+    // sortingLayer/orderInLayerから深度値を計算
+    float z = CalculateDepth(sortingLayer, orderInLayer);
+
+    info.vertices[0] = { Vector3(p0.x, p0.y, z), Vector2(u0, v0), color };
+    info.vertices[1] = { Vector3(p1.x, p1.y, z), Vector2(u1, v0), color };
+    info.vertices[2] = { Vector3(p2.x, p2.y, z), Vector2(u0, v1), color };
+    info.vertices[3] = { Vector3(p3.x, p3.y, z), Vector2(u1, v1), color };
+
+    spriteQueue_.push_back(info);
+}
+
 void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transform) {
     if (!isBegun_ || !renderer.GetTexture()) {
         return;
@@ -390,6 +467,16 @@ void SpriteBatch::End() {
     isBegun_ = false;
 }
 
+void SpriteBatch::SetCustomShaders(Shader* vs, Shader* ps) {
+    customVertexShader_ = vs;
+    customPixelShader_ = ps;
+}
+
+void SpriteBatch::ClearCustomShaders() {
+    customVertexShader_ = nullptr;
+    customPixelShader_ = nullptr;
+}
+
 void SpriteBatch::SortSprites() {
     // インデックス配列を初期化
     uint32_t count = static_cast<uint32_t>(spriteQueue_.size());
@@ -425,10 +512,14 @@ void SpriteBatch::FlushBatch() {
     ctx.SetVertexBuffer(0, vertexBuffer_.get(), sizeof(SpriteVertex));
     ctx.SetIndexBuffer(indexBuffer_.get(), DXGI_FORMAT_R16_UINT, 0);
 
-    ctx.SetVertexShader(vertexShader_.get());
+    // カスタムシェーダーがあれば使用、なければデフォルト
+    Shader* vs = customVertexShader_ ? customVertexShader_ : vertexShader_.get();
+    Shader* ps = customPixelShader_ ? customPixelShader_ : pixelShader_.get();
+
+    ctx.SetVertexShader(vs);
     ctx.SetVSConstantBuffer(0, constantBuffer_.get());
 
-    ctx.SetPixelShader(pixelShader_.get());
+    ctx.SetPixelShader(ps);
     ctx.SetPSSampler(0, samplerState_.get());
 
     ctx.SetBlendState(blendState_.get());

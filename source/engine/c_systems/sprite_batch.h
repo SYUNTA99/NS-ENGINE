@@ -87,6 +87,34 @@ public:
     );
 
     //------------------------------------------------------------------------
+    //! @brief ソース矩形指定でスプライトを描画キューに追加
+    //! @param texture テクスチャ
+    //! @param position 描画位置
+    //! @param sourceRect ソース矩形（ピクセル単位: x, y, width, height）
+    //! @param color 色
+    //! @param rotation 回転（ラジアン）
+    //! @param origin 原点（ピクセル単位）
+    //! @param scale スケール
+    //! @param flipX X反転
+    //! @param flipY Y反転
+    //! @param sortingLayer ソーティングレイヤー
+    //! @param orderInLayer レイヤー内順序
+    //------------------------------------------------------------------------
+    void Draw(
+        Texture* texture,
+        const Vector2& position,
+        const Vector4& sourceRect,
+        const Color& color = Colors::White,
+        float rotation = 0.0f,
+        const Vector2& origin = Vector2::Zero,
+        const Vector2& scale = Vector2::One,
+        bool flipX = false,
+        bool flipY = false,
+        int sortingLayer = 0,
+        int orderInLayer = 0
+    );
+
+    //------------------------------------------------------------------------
     //! @brief SpriteRendererコンポーネントから描画
     //------------------------------------------------------------------------
     void Draw(const SpriteRenderer& renderer, const Transform2D& transform);
@@ -103,6 +131,18 @@ public:
     //! @brief バッチ描画終了（実際の描画を実行）
     //------------------------------------------------------------------------
     void End();
+
+    //------------------------------------------------------------------------
+    //! @brief カスタムシェーダーを設定（次のEnd()で使用）
+    //! @param vs 頂点シェーダー（nullptrでデフォルト）
+    //! @param ps ピクセルシェーダー（nullptrでデフォルト）
+    //------------------------------------------------------------------------
+    void SetCustomShaders(Shader* vs, Shader* ps);
+
+    //------------------------------------------------------------------------
+    //! @brief カスタムシェーダーをクリア（デフォルトに戻す）
+    //------------------------------------------------------------------------
+    void ClearCustomShaders();
 
     //------------------------------------------------------------------------
     //! @brief 描画統計を取得
@@ -168,6 +208,10 @@ private:
     // 状態
     bool isBegun_ = false;
     bool initialized_ = false;
+
+    // カスタムシェーダー（nullptrの場合はデフォルト使用）
+    Shader* customVertexShader_ = nullptr;
+    Shader* customPixelShader_ = nullptr;
 
     // 統計
     uint32_t drawCallCount_ = 0;

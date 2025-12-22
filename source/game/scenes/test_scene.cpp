@@ -56,25 +56,10 @@ void TestScene::OnEnter()
         32 * sizeof(uint32_t)
     );
 
-    // 背景テクスチャをロード
-    backgroundTexture_ = TextureManager::Get().LoadTexture2D("background.png");
-
-    // 背景作成
-    background_ = std::make_unique<GameObject>("Background");
-    bgTransform_ = background_->AddComponent<Transform2D>();
-    bgTransform_->SetPosition(Vector2(screenWidth_ * 0.5f, screenHeight_ * 0.5f));
-    bgSprite_ = background_->AddComponent<SpriteRenderer>();
-    bgSprite_->SetTexture(backgroundTexture_.get());
-    bgSprite_->SetSortingLayer(-100);
-    if (backgroundTexture_) {
-        float texW = static_cast<float>(backgroundTexture_->Width());
-        float texH = static_cast<float>(backgroundTexture_->Height());
-        bgTransform_->SetPivot(Vector2(texW * 0.5f, texH * 0.5f));
-        float scaleX = screenWidth_ / texW;
-        float scaleY = screenHeight_ / texH;
-        float scale = (scaleX > scaleY) ? scaleX : scaleY;
-        bgTransform_->SetScale(Vector2(scale, scale));
-    }
+    // ステージ背景初期化（画面の4倍サイズ）
+    float stageWidth = screenWidth_ * 4.0f;   // 5120
+    float stageHeight = screenHeight_ * 4.0f; // 2880
+    stageBackground_.Initialize("stage1", stageWidth, stageHeight);
 
     // プレイヤー作成（画面中央）
     player_ = std::make_unique<Player>();
@@ -302,10 +287,9 @@ void TestScene::OnExit()
         player_.reset();
     }
 
-    background_.reset();
+    stageBackground_.Shutdown();
     cameraObj_.reset();
     whiteTexture_.reset();
-    backgroundTexture_.reset();
 }
 
 //----------------------------------------------------------------------------
@@ -530,12 +514,12 @@ void TestScene::Render()
         static_cast<float>(backBuffer->Width()),
         static_cast<float>(backBuffer->Height()));
 
-    // 背景色（モードによって変更）
-    float clearColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
+    // 背景色（#4C8447 = ground simpleに合わせた緑）
+    float clearColor[4] = { 0.30f, 0.52f, 0.28f, 1.0f };
     if (BindSystem::Get().IsEnabled()) {
-        clearColor[0] = 0.1f; clearColor[1] = 0.2f; clearColor[2] = 0.1f; // 緑がかった色
+        clearColor[0] = 0.27f; clearColor[1] = 0.48f; clearColor[2] = 0.25f;
     } else if (CutSystem::Get().IsEnabled()) {
-        clearColor[0] = 0.2f; clearColor[1] = 0.1f; clearColor[2] = 0.1f; // 赤がかった色
+        clearColor[0] = 0.33f; clearColor[1] = 0.48f; clearColor[2] = 0.27f;
     }
     ctx.ClearRenderTarget(backBuffer, clearColor);
     ctx.ClearDepthStencil(depthBuffer, 1.0f, 0);
@@ -544,10 +528,8 @@ void TestScene::Render()
     spriteBatch.SetCamera(*camera_);
     spriteBatch.Begin();
 
-    // 背景描画
-    if (bgTransform_ && bgSprite_) {
-        spriteBatch.Draw(*bgSprite_, *bgTransform_);
-    }
+    // ステージ背景描画
+    stageBackground_.Render(spriteBatch);
 
     // 縁の描画
     DrawBonds();

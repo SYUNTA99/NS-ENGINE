@@ -4,7 +4,9 @@
 //----------------------------------------------------------------------------
 #include "stage_background.h"
 #include "engine/texture/texture_manager.h"
+#include "engine/shader/shader_manager.h"
 #include "engine/c_systems/sprite_batch.h"
+#include "dx11/gpu/texture.h"
 #include "common/logging/logging.h"
 #include <algorithm>
 
@@ -13,39 +15,76 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
 {
     screenWidth_ = screenWidth;
     screenHeight_ = screenHeight;
+    stageWidth_ = screenWidth;
+    stageHeight_ = screenHeight;
 
     // 乱数初期化
     std::random_device rd;
     rng_ = std::mt19937(rd());
 
-    // テクスチャパスのベース（TextureManagerは相対パス）
+    // ベースカラー（草原の緑 - 明るめ）
+    baseColor_ = Color(0.45f, 0.65f, 0.40f, 1.0f);
+
+    // 1x1白テクスチャを作成（ベースカラー描画用）
+    {
+        uint32_t whitePixel = 0xFFFFFFFF;  // RGBA白
+        whiteTexture_ = Texture::Create2D(1, 1, DXGI_FORMAT_R8G8B8A8_UNORM, &whitePixel);
+    }
+
+    // テクスチャパスのベース
     std::string basePath = stageId + "/";
 
-    // 地面テクスチャ読み込み（タイル配置用）
+    // 地面テクスチャ読み込み
     groundTexture_ = TextureManager::Get().LoadTexture2D(basePath + "ground.png");
     if (groundTexture_) {
         float texW = static_cast<float>(groundTexture_->Width());
         float texH = static_cast<float>(groundTexture_->Height());
 
-        // つなぎ目を目立たなくするためオーバーラップ
-        float overlapX = texW * 0.05f;  // 5%オーバーラップ
-        float overlapY = texH * 0.05f;
-        float stepX = texW - overlapX;
-        float stepY = texH - overlapY;
+        // タイルサイズ（テクスチャ全体を使用）
+        tileWidth_ = texW;
+        tileHeight_ = texH;
 
-        // ステージ全体をカバーするタイル数を計算
-        int tilesX = static_cast<int>(std::ceil(screenWidth / stepX)) + 1;
-        int tilesY = static_cast<int>(std::ceil(screenHeight / stepY)) + 1;
+        // オーバーラップ率（fadeWidth=0.15 × 2 = 30%が正しい）
+        float overlapRatio = 0.30f;
+        float stepX = tileWidth_ * (1.0f - overlapRatio);
+        float stepY = tileHeight_ * (1.0f - overlapRatio);
 
-        // タイルを配置（装飾として追加）
-        for (int y = 0; y < tilesY; ++y) {
-            for (int x = 0; x < tilesX; ++x) {
-                Vector2 pos(x * stepX + texW * 0.5f, y * stepY + texH * 0.5f);
-                AddDecoration(groundTexture_, pos, -200, Vector2::One, 0.0f);
+        // ランダム回転（0, 90, 180, 270度）
+        std::uniform_int_distribution<int> rotDist(0, 3);
+        std::uniform_int_distribution<int> flipDist(0, 1);
+
+        // ステージ全体をカバーするタイル数を計算（オーバーラップ考慮）
+        int tilesX = static_cast<int>(std::ceil(screenWidth / stepX)) + 2;
+        int tilesY = static_cast<int>(std::ceil(screenHeight / stepY)) + 2;
+
+        // タイルを配置（オーバーラップあり、シェーダーで端フェード）
+        for (int y = -1; y < tilesY; ++y) {
+            for (int x = -1; x < tilesX; ++x) {
+                GroundTile tile;
+                tile.position = Vector2(
+                    x * stepX + tileWidth_ * 0.5f,
+                    y * stepY + tileHeight_ * 0.5f
+                );
+                tile.rotation = rotDist(rng_) * 1.5707963f;  // 0, 90, 180, 270度
+                tile.flipX = flipDist(rng_) == 1;
+                tile.flipY = flipDist(rng_) == 1;
+                tile.alpha = 1.0f;  // フルアルファ（シェーダーで端フェード）
+                groundTiles_.push_back(tile);
             }
         }
 
-        LOG_INFO("[StageBackground] Ground tiles: " + std::to_string(tilesX) + "x" + std::to_string(tilesY));
+        LOG_INFO("[StageBackground] Ground tiles: " + std::to_string(groundTiles_.size()) + " (edge fade shader + overlap)");
+    } else {
+        LOG_ERROR("[StageBackground] Failed to load ground texture: " + basePath + "ground.png");
+    }
+
+    // 地面用シェーダー読み込み（端フェード付き）
+    groundVertexShader_ = ShaderManager::Get().LoadVertexShader("ground_vs.hlsl");
+    groundPixelShader_ = ShaderManager::Get().LoadPixelShader("ground_ps.hlsl");
+    if (groundVertexShader_ && groundPixelShader_) {
+        LOG_INFO("[StageBackground] Ground shaders loaded");
+    } else {
+        LOG_WARN("[StageBackground] Ground shaders not loaded, using default");
     }
 
     // 装飾を配置
@@ -87,7 +126,7 @@ void StageBackground::PlaceDecorations(const std::string& stageId, float screenW
             if (tex) {
                 Vector2 pos(xDist(rng_), yFullDist(rng_));
                 Vector2 scale(scaleDist(rng_), scaleDist(rng_));
-                AddDecoration(tex, pos, -120, scale, rotationDist(rng_));
+                AddDecoration(tex, pos, -90, scale, rotationDist(rng_));
             }
         }
     }
@@ -178,7 +217,49 @@ void StageBackground::AddDecoration(TexturePtr texture, const Vector2& position,
 //----------------------------------------------------------------------------
 void StageBackground::Render(SpriteBatch& spriteBatch)
 {
-    // 装飾描画（タイル地面 + 装飾オブジェクト）
+    // 1. ベースカラー（単色の緑）を描画
+    if (whiteTexture_) {
+        Vector2 baseScale(stageWidth_, stageHeight_);
+        spriteBatch.Draw(
+            whiteTexture_.get(),
+            Vector2(stageWidth_ * 0.5f, stageHeight_ * 0.5f),
+            baseColor_,
+            0.0f,
+            Vector2(0.5f, 0.5f),
+            baseScale,
+            false, false,
+            -99, 0
+        );
+    }
+
+    // ベースを先にフラッシュ
+    spriteBatch.End();
+
+    // 2. 地面タイル（端フェードシェーダーで描画）
+    if (groundTexture_ && groundVertexShader_ && groundPixelShader_) {
+        spriteBatch.SetCustomShaders(groundVertexShader_.get(), groundPixelShader_.get());
+        spriteBatch.Begin();
+
+        Vector2 origin(tileWidth_ * 0.5f, tileHeight_ * 0.5f);
+        for (const GroundTile& tile : groundTiles_) {
+            spriteBatch.Draw(
+                groundTexture_.get(),
+                tile.position,
+                Color(1.0f, 1.0f, 1.0f, tile.alpha),
+                tile.rotation,
+                origin,
+                Vector2::One,
+                tile.flipX, tile.flipY,
+                -98, 0
+            );
+        }
+
+        spriteBatch.End();
+        spriteBatch.ClearCustomShaders();
+    }
+
+    // 3. 装飾描画
+    spriteBatch.Begin();
     for (const DecorationObject& obj : decorations_) {
         if (!obj.texture) continue;
 
@@ -193,10 +274,8 @@ void StageBackground::Render(SpriteBatch& spriteBatch)
             obj.rotation,
             origin,
             obj.scale,
-            false,
-            false,
-            obj.sortingLayer,
-            0
+            false, false,
+            obj.sortingLayer, 0
         );
     }
 }
@@ -204,8 +283,12 @@ void StageBackground::Render(SpriteBatch& spriteBatch)
 //----------------------------------------------------------------------------
 void StageBackground::Shutdown()
 {
+    groundTiles_.clear();
     decorations_.clear();
     groundTexture_.reset();
+    whiteTexture_.reset();
+    groundVertexShader_.reset();
+    groundPixelShader_.reset();
 
     LOG_INFO("[StageBackground] Shutdown");
 }

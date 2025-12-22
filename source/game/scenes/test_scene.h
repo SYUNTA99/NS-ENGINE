@@ -12,6 +12,7 @@
 #include "engine/component/collider2d.h"
 #include "dx11/gpu/texture.h"
 #include "game/entities/player.h"
+#include "game/stage/stage_background.h"
 #include "game/entities/group.h"
 #include "game/ai/group_ai.h"
 #include "game/bond/bondable_entity.h"
@@ -80,11 +81,8 @@ private:
     // グループAI
     std::vector<std::unique_ptr<GroupAI>> groupAIs_;
 
-    // 背景
-    std::unique_ptr<GameObject> background_;
-    Transform2D* bgTransform_ = nullptr;
-    SpriteRenderer* bgSprite_ = nullptr;
-    TexturePtr backgroundTexture_;
+    // ステージ背景
+    StageBackground stageBackground_;
 
     // UI用テクスチャ
     TexturePtr whiteTexture_;
