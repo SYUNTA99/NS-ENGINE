@@ -13,12 +13,20 @@
 #include <DirectXMath.h>
 
 //----------------------------------------------------------------------------
+// ステージサイズ設定（ここを変更してサイズ調整）
+//----------------------------------------------------------------------------
+constexpr float STAGE_WIDTH  = 5120.0f;
+constexpr float STAGE_HEIGHT = 2880.0f;
+
+//----------------------------------------------------------------------------
 void StageBackground::Initialize(const std::string& stageId, float screenWidth, float screenHeight)
 {
     screenWidth_ = screenWidth;
     screenHeight_ = screenHeight;
-    stageWidth_ = screenWidth;
-    stageHeight_ = screenHeight;
+
+    // ステージサイズ
+    stageWidth_ = STAGE_WIDTH;
+    stageHeight_ = STAGE_HEIGHT;
 
     // 乱数初期化
     std::random_device rd;
@@ -27,14 +35,22 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
     // テクスチャパスのベース
     std::string basePath = stageId + "/";
 
-    // ベース地面テクスチャ読み込み（敷き詰め用）
-    baseGroundTexture_ = TextureManager::Get().LoadTexture2D(basePath + "ground simple.jpg");
+    // ベース地面テクスチャ作成（1x1単色、シェーダーのBASE_COLORと同じ）
+    // sRGB: (0.30, 0.52, 0.28) = RGB(76, 133, 71) = #4C8547
+    uint8_t baseColorData[4] = { 76, 133, 71, 255 };  // RGBA
+    baseGroundTexture_ = TextureManager::Get().Create2D(
+        1, 1,
+        DXGI_FORMAT_R8G8B8A8_UNORM,
+        D3D11_BIND_SHADER_RESOURCE,
+        baseColorData,
+        4  // rowPitch = 4 bytes for 1 pixel RGBA
+    );
     if (baseGroundTexture_) {
-        baseGroundWidth_ = static_cast<float>(baseGroundTexture_->Width());
-        baseGroundHeight_ = static_cast<float>(baseGroundTexture_->Height());
-        LOG_INFO("[StageBackground] Base ground texture loaded: " + std::to_string(baseGroundWidth_) + "x" + std::to_string(baseGroundHeight_));
+        baseGroundWidth_ = 1.0f;
+        baseGroundHeight_ = 1.0f;
+        LOG_INFO("[StageBackground] Base ground color texture created (1x1)");
     } else {
-        LOG_ERROR("[StageBackground] Failed to load base ground texture");
+        LOG_ERROR("[StageBackground] Failed to create base ground texture");
     }
 
     // 地面テクスチャ読み込み
@@ -57,8 +73,8 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
         std::uniform_int_distribution<int> flipDist(0, 1);
 
         // ステージ全体をカバーするタイル数を計算（50%オーバーラップ + オフセット分）
-        int tilesX = static_cast<int>(std::ceil(screenWidth / stepX)) + 4;
-        int tilesY = static_cast<int>(std::ceil(screenHeight / stepY)) + 4;
+        int tilesX = static_cast<int>(std::ceil(stageWidth_ / stepX)) + 4;
+        int tilesY = static_cast<int>(std::ceil(stageHeight_ / stepY)) + 4;
 
         // タイルを配置（オーバーラップあり、シェーダーで端フェード）
         // エッジフェードを考慮して、最初のタイルを左上にオフセット
@@ -102,15 +118,15 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
         LOG_WARN("[StageBackground] Normalize shader not loaded");
     }
 
-    // 蓄積用レンダーターゲット作成（RGBA16F、オーバーフロー防止）
+    // 蓄積用レンダーターゲット作成（RGBA16F、ステージサイズ）
     accumulationRT_ = TextureManager::Get().CreateRenderTarget(
-        static_cast<uint32_t>(screenWidth),
-        static_cast<uint32_t>(screenHeight),
+        static_cast<uint32_t>(stageWidth_),
+        static_cast<uint32_t>(stageHeight_),
         DXGI_FORMAT_R16G16B16A16_FLOAT);
     if (accumulationRT_) {
         LOG_INFO("[StageBackground] Accumulation RT created: " +
-                 std::to_string(static_cast<int>(screenWidth)) + "x" +
-                 std::to_string(static_cast<int>(screenHeight)));
+                 std::to_string(static_cast<int>(stageWidth_)) + "x" +
+                 std::to_string(static_cast<int>(stageHeight_)));
     } else {
         LOG_ERROR("[StageBackground] Failed to create accumulation RT");
     }
@@ -300,7 +316,7 @@ void StageBackground::BakeGroundTexture()
 
     // === パス1: 蓄積パス（accumulationRTに加算ブレンドで描画） ===
     ctx.SetRenderTarget(accumulationRT_.get(), nullptr);
-    ctx.SetViewport(0, 0, screenWidth_, screenHeight_);
+    ctx.SetViewport(0, 0, stageWidth_, stageHeight_);
 
     // 黒でクリア（蓄積開始点）
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -331,10 +347,10 @@ void StageBackground::BakeGroundTexture()
     spriteBatch.ClearCustomBlendState();
 
     // === パス2: 正規化パス（蓄積結果を正規化してbakedGroundTextureに描画） ===
-    // ベイク済みテクスチャ用RTを作成
+    // ベイク済みテクスチャ用RTを作成（ステージサイズ）
     bakedGroundTexture_ = TextureManager::Get().CreateRenderTarget(
-        static_cast<uint32_t>(screenWidth_),
-        static_cast<uint32_t>(screenHeight_),
+        static_cast<uint32_t>(stageWidth_),
+        static_cast<uint32_t>(stageHeight_),
         DXGI_FORMAT_R8G8B8A8_UNORM);
 
     if (!bakedGroundTexture_) {
@@ -346,7 +362,7 @@ void StageBackground::BakeGroundTexture()
     }
 
     ctx.SetRenderTarget(bakedGroundTexture_.get(), nullptr);
-    ctx.SetViewport(0, 0, screenWidth_, screenHeight_);
+    ctx.SetViewport(0, 0, stageWidth_, stageHeight_);
 
     // 透明でクリア
     float clearTransparent[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -357,11 +373,11 @@ void StageBackground::BakeGroundTexture()
     spriteBatch.SetCustomShaders(nullptr, normalizePixelShader_.get());
     spriteBatch.Begin();
 
-    // 蓄積RTをステージ全体に描画
-    Vector2 rtOrigin(screenWidth_ * 0.5f, screenHeight_ * 0.5f);
+    // 蓄積RTをステージ全体に描画（ステージサイズで）
+    Vector2 rtOrigin(stageWidth_ * 0.5f, stageHeight_ * 0.5f);
     spriteBatch.Draw(
         accumulationRT_.get(),
-        Vector2(screenWidth_ * 0.5f, screenHeight_ * 0.5f),
+        Vector2(stageWidth_ * 0.5f, stageHeight_ * 0.5f),
         Colors::White,
         0.0f,
         rtOrigin,
@@ -387,32 +403,20 @@ void StageBackground::BakeGroundTexture()
 //----------------------------------------------------------------------------
 void StageBackground::Render(SpriteBatch& spriteBatch)
 {
-    // 1. ベース地面テクスチャを敷き詰め
+    // 1. ベース地面カラーを描画（1x1テクスチャをステージ全体にスケール）
     if (baseGroundTexture_) {
-        Vector2 origin(baseGroundWidth_ * 0.5f, baseGroundHeight_ * 0.5f);
-
-        // 画面をカバーするタイル数
-        int tilesX = static_cast<int>(std::ceil(stageWidth_ / baseGroundWidth_)) + 1;
-        int tilesY = static_cast<int>(std::ceil(stageHeight_ / baseGroundHeight_)) + 1;
-
-        for (int y = 0; y < tilesY; ++y) {
-            for (int x = 0; x < tilesX; ++x) {
-                Vector2 pos(
-                    x * baseGroundWidth_ + baseGroundWidth_ * 0.5f,
-                    y * baseGroundHeight_ + baseGroundHeight_ * 0.5f
-                );
-                spriteBatch.Draw(
-                    baseGroundTexture_.get(),
-                    pos,
-                    Colors::White,
-                    0.0f,
-                    origin,
-                    Vector2::One,
-                    false, false,
-                    -99, 0
-                );
-            }
-        }
+        Vector2 origin(0.5f, 0.5f);  // 1x1テクスチャの中心
+        Vector2 scale(stageWidth_, stageHeight_);  // ステージ全体にスケール
+        spriteBatch.Draw(
+            baseGroundTexture_.get(),
+            Vector2(stageWidth_ * 0.5f, stageHeight_ * 0.5f),
+            Colors::White,
+            0.0f,
+            origin,
+            scale,
+            false, false,
+            -99, 0
+        );
     }
 
     // 2. ベイク済み地面テクスチャを描画（1枚のテクスチャ）
