@@ -15,6 +15,7 @@
 #include "engine/scene/scene_manager.h"
 #include "engine/c_systems/collision_manager.h"
 
+#include "scenes/title_scene.h"
 #include "scenes/test_scene.h"
 #include "dx11/graphics_context.h"
 #include "engine/c_systems/sprite_batch.h"
@@ -73,7 +74,7 @@ bool Game::Initialize()
     LOG_INFO("[Game] サブシステム初期化完了");
 
     // 6. 初期シーンを設定
-    sceneManager_.Load<TestScene>();
+    sceneManager_.Load<Title_Scene>();
     sceneManager_.ApplyPendingChange(currentScene_);
 
     return true;
