@@ -13,155 +13,12 @@
 #include "common/logging/logging.h"
 #include <algorithm>
 #include <DirectXMath.h>
-#include <DirectXTex.h>
 
 //----------------------------------------------------------------------------
 // ステージサイズ設定（ここを変更してサイズ調整）
 //----------------------------------------------------------------------------
 constexpr float STAGE_WIDTH  = 5120.0f;
 constexpr float STAGE_HEIGHT = 2880.0f;
-
-//----------------------------------------------------------------------------
-// BC1圧縮ヘルパー関数
-//----------------------------------------------------------------------------
-namespace
-{
-    //! @brief レンダーターゲットをBC1圧縮してテクスチャを作成
-    //! @param sourceRT 圧縮元のレンダーターゲット
-    //! @return BC1圧縮されたテクスチャ（失敗時nullptr）
-    TexturePtr CompressToBC1(Texture* sourceRT)
-    {
-        if (!sourceRT) return nullptr;
-
-        auto* device = GraphicsDevice::Get().Device();
-        auto* context = GraphicsContext::Get().GetContext();
-        if (!device || !context) return nullptr;
-
-        uint32_t width = sourceRT->Width();
-        uint32_t height = sourceRT->Height();
-
-        // 1. ステージングテクスチャを作成（CPUで読み取り可能）
-        D3D11_TEXTURE2D_DESC stagingDesc{};
-        stagingDesc.Width = width;
-        stagingDesc.Height = height;
-        stagingDesc.MipLevels = 1;
-        stagingDesc.ArraySize = 1;
-        stagingDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        stagingDesc.SampleDesc.Count = 1;
-        stagingDesc.Usage = D3D11_USAGE_STAGING;
-        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-
-        ComPtr<ID3D11Texture2D> stagingTexture;
-        HRESULT hr = device->CreateTexture2D(&stagingDesc, nullptr, &stagingTexture);
-        if (FAILED(hr)) {
-            LOG_ERROR("[CompressToBC1] ステージングテクスチャの作成に失敗");
-            return nullptr;
-        }
-
-        // 2. レンダーターゲットからステージングにコピー
-        context->CopyResource(stagingTexture.Get(), sourceRT->Get());
-
-        // 3. ステージングテクスチャをマップしてピクセルデータを読み取り
-        D3D11_MAPPED_SUBRESOURCE mapped{};
-        hr = context->Map(stagingTexture.Get(), 0, D3D11_MAP_READ, 0, &mapped);
-        if (FAILED(hr)) {
-            LOG_ERROR("[CompressToBC1] ステージングテクスチャのマップに失敗");
-            return nullptr;
-        }
-
-        // 4. ScratchImageを作成
-        DirectX::ScratchImage srcImage;
-        hr = srcImage.Initialize2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1);
-        if (FAILED(hr)) {
-            context->Unmap(stagingTexture.Get(), 0);
-            LOG_ERROR("[CompressToBC1] ScratchImageの初期化に失敗");
-            return nullptr;
-        }
-
-        // ピクセルデータをコピー
-        const DirectX::Image* img = srcImage.GetImage(0, 0, 0);
-        const uint8_t* srcPtr = static_cast<const uint8_t*>(mapped.pData);
-        uint8_t* dstPtr = img->pixels;
-        size_t rowSize = width * 4;
-        for (uint32_t y = 0; y < height; ++y) {
-            memcpy(dstPtr + y * img->rowPitch, srcPtr + y * mapped.RowPitch, rowSize);
-        }
-        context->Unmap(stagingTexture.Get(), 0);
-
-        // 5. BC1に圧縮（高速、8倍圧縮）
-        DirectX::ScratchImage compressedImage;
-        hr = DirectX::Compress(
-            srcImage.GetImages(),
-            srcImage.GetImageCount(),
-            srcImage.GetMetadata(),
-            DXGI_FORMAT_BC1_UNORM,
-            DirectX::TEX_COMPRESS_DEFAULT,
-            0.5f,
-            compressedImage);
-        if (FAILED(hr)) {
-            LOG_ERROR("[CompressToBC1] BC1圧縮に失敗: HRESULT=" + std::to_string(hr));
-            return nullptr;
-        }
-
-        // 6. 圧縮データからテクスチャを作成
-        const DirectX::Image* compImg = compressedImage.GetImage(0, 0, 0);
-
-        D3D11_TEXTURE2D_DESC texDesc{};
-        texDesc.Width = width;
-        texDesc.Height = height;
-        texDesc.MipLevels = 1;
-        texDesc.ArraySize = 1;
-        texDesc.Format = DXGI_FORMAT_BC1_UNORM;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-        D3D11_SUBRESOURCE_DATA initData{};
-        initData.pSysMem = compImg->pixels;
-        initData.SysMemPitch = static_cast<UINT>(compImg->rowPitch);
-
-        ComPtr<ID3D11Texture2D> compressedTexture;
-        hr = device->CreateTexture2D(&texDesc, &initData, &compressedTexture);
-        if (FAILED(hr)) {
-            LOG_ERROR("[CompressToBC1] 圧縮テクスチャの作成に失敗");
-            return nullptr;
-        }
-
-        // SRVを作成
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-        srvDesc.Format = DXGI_FORMAT_BC1_UNORM;
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-
-        ComPtr<ID3D11ShaderResourceView> srv;
-        hr = device->CreateShaderResourceView(compressedTexture.Get(), &srvDesc, &srv);
-        if (FAILED(hr)) {
-            LOG_ERROR("[CompressToBC1] SRVの作成に失敗");
-            return nullptr;
-        }
-
-        // Textureオブジェクトを作成して返す
-        TextureDesc desc{};
-        desc.width = width;
-        desc.height = height;
-        desc.depth = 1;
-        desc.format = DXGI_FORMAT_BC1_UNORM;
-        desc.bindFlags = D3D11_BIND_SHADER_RESOURCE;
-        desc.dimension = TextureDimension::Tex2D;
-
-        auto result = std::make_shared<Texture>(
-            compressedTexture,
-            srv,
-            ComPtr<ID3D11RenderTargetView>(nullptr),
-            ComPtr<ID3D11DepthStencilView>(nullptr),
-            ComPtr<ID3D11UnorderedAccessView>(nullptr),
-            desc);
-
-        LOG_INFO("[CompressToBC1] BC1圧縮完了: " + std::to_string(width) + "x" + std::to_string(height) +
-                 " (VRAM: " + std::to_string(width * height / 2 / 1024 / 1024) + "MB)");
-        return result;
-    }
-}
 
 //----------------------------------------------------------------------------
 void StageBackground::Initialize(const std::string& stageId, float screenWidth, float screenHeight)
@@ -552,7 +409,7 @@ void StageBackground::BakeGroundTexture()
 
     // BC1圧縮でVRAM節約（59MB → 7MB）
     LOG_INFO("[StageBackground] BC1圧縮中...");
-    TexturePtr compressedTexture = CompressToBC1(bakedGroundTexture_.get());
+    TexturePtr compressedTexture = TextureManager::Get().CompressToBC1(bakedGroundTexture_.get());
     if (compressedTexture) {
         bakedGroundTexture_ = compressedTexture;
         LOG_INFO("[StageBackground] BC1圧縮完了、VRAMを節約しました");
