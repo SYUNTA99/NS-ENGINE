@@ -7,6 +7,7 @@
 #include "dx11/gpu/texture.h"
 #include "dx11/gpu/shader.h"
 #include "dx11/state/blend_state.h"
+#include "dx11/state/sampler_state.h"
 #include "engine/math/math_types.h"
 #include "engine/math/color.h"
 #include <vector>
@@ -15,6 +16,14 @@
 
 // 前方宣言
 class SpriteBatch;
+class Camera2D;
+
+//----------------------------------------------------------------------------
+// チャンク設定
+//----------------------------------------------------------------------------
+constexpr float kChunkSize = 1024.0f;   //!< チャンクサイズ（ピクセル）
+constexpr int kChunksX = 5;             //!< X方向チャンク数 (5120/1024)
+constexpr int kChunksY = 3;             //!< Y方向チャンク数 (2880/1024、切り上げ)
 
 //----------------------------------------------------------------------------
 //! @brief ステージ背景クラス
@@ -36,7 +45,8 @@ public:
 
     //! @brief 背景を描画
     //! @param spriteBatch スプライトバッチ
-    void Render(SpriteBatch& spriteBatch);
+    //! @param camera カメラ（可視チャンク判定用）
+    void Render(SpriteBatch& spriteBatch, const Camera2D& camera);
 
     //! @brief リソース解放
     void Shutdown();
@@ -50,6 +60,13 @@ private:
         bool flipX;                 //!< X反転
         bool flipY;                 //!< Y反転
         float alpha;                //!< アルファ値（2層目用）
+    };
+
+    //! @brief 地面チャンク（分割描画用）
+    struct GroundChunk
+    {
+        TexturePtr texture;         //!< チャンクテクスチャ (1024x1024)
+        Vector2 position;           //!< チャンク左上のワールド座標
     };
 
     //! @brief 装飾オブジェクト
@@ -80,6 +97,9 @@ private:
     //! @brief 地面テクスチャをプリベイク
     void BakeGroundTexture();
 
+    //! @brief ベイク済みテクスチャをチャンクに分割
+    void SplitIntoChunks();
+
     // 地面テクスチャ（タイル用、ベイク時のみ使用）
     TexturePtr groundTexture_;
 
@@ -88,7 +108,10 @@ private:
     float baseGroundWidth_ = 0.0f;
     float baseGroundHeight_ = 0.0f;
 
-    // ベイク済み地面テクスチャ（描画時に使用）
+    // 地面チャンク配列（分割描画用）
+    std::vector<GroundChunk> chunks_;
+
+    // ベイク済み地面テクスチャ（一時使用、分割後に解放）
     TexturePtr bakedGroundTexture_;
 
     // 地面タイル用シェーダー（端フェード付き）
@@ -103,6 +126,9 @@ private:
 
     // 加算ブレンドステート（蓄積用）
     std::unique_ptr<BlendState> additiveBlendState_;
+
+    // クランプサンプラー（チャンク描画用、テクスチャ端のラップを防止）
+    std::unique_ptr<SamplerState> clampSamplerState_;
 
     // 地面タイル（回転/反転付き）
     std::vector<GroundTile> groundTiles_;

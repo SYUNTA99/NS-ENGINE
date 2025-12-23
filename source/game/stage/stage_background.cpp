@@ -6,17 +6,162 @@
 #include "engine/texture/texture_manager.h"
 #include "engine/shader/shader_manager.h"
 #include "engine/c_systems/sprite_batch.h"
+#include "engine/component/camera2d.h"
 #include "dx11/gpu/texture.h"
+#include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
 #include <algorithm>
 #include <DirectXMath.h>
+#include <DirectXTex.h>
 
 //----------------------------------------------------------------------------
 // ステージサイズ設定（ここを変更してサイズ調整）
 //----------------------------------------------------------------------------
 constexpr float STAGE_WIDTH  = 5120.0f;
 constexpr float STAGE_HEIGHT = 2880.0f;
+
+//----------------------------------------------------------------------------
+// BC7圧縮ヘルパー関数
+//----------------------------------------------------------------------------
+namespace
+{
+    //! @brief レンダーターゲットをBC7圧縮してテクスチャを作成
+    //! @param sourceRT 圧縮元のレンダーターゲット
+    //! @return BC7圧縮されたテクスチャ（失敗時nullptr）
+    TexturePtr CompressToBC7(Texture* sourceRT)
+    {
+        if (!sourceRT) return nullptr;
+
+        auto* device = GraphicsDevice::Get().Device();
+        auto* context = GraphicsContext::Get().GetContext();
+        if (!device || !context) return nullptr;
+
+        uint32_t width = sourceRT->Width();
+        uint32_t height = sourceRT->Height();
+
+        // 1. ステージングテクスチャを作成（CPUで読み取り可能）
+        D3D11_TEXTURE2D_DESC stagingDesc{};
+        stagingDesc.Width = width;
+        stagingDesc.Height = height;
+        stagingDesc.MipLevels = 1;
+        stagingDesc.ArraySize = 1;
+        stagingDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        stagingDesc.SampleDesc.Count = 1;
+        stagingDesc.Usage = D3D11_USAGE_STAGING;
+        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+        ComPtr<ID3D11Texture2D> stagingTexture;
+        HRESULT hr = device->CreateTexture2D(&stagingDesc, nullptr, &stagingTexture);
+        if (FAILED(hr)) {
+            LOG_ERROR("[CompressToBC7] ステージングテクスチャの作成に失敗");
+            return nullptr;
+        }
+
+        // 2. レンダーターゲットからステージングにコピー
+        context->CopyResource(stagingTexture.Get(), sourceRT->Get());
+
+        // 3. ステージングテクスチャをマップしてピクセルデータを読み取り
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        hr = context->Map(stagingTexture.Get(), 0, D3D11_MAP_READ, 0, &mapped);
+        if (FAILED(hr)) {
+            LOG_ERROR("[CompressToBC7] ステージングテクスチャのマップに失敗");
+            return nullptr;
+        }
+
+        // 4. ScratchImageを作成
+        DirectX::ScratchImage srcImage;
+        hr = srcImage.Initialize2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1);
+        if (FAILED(hr)) {
+            context->Unmap(stagingTexture.Get(), 0);
+            LOG_ERROR("[CompressToBC7] ScratchImageの初期化に失敗");
+            return nullptr;
+        }
+
+        // ピクセルデータをコピー
+        const DirectX::Image* img = srcImage.GetImage(0, 0, 0);
+        const uint8_t* srcPtr = static_cast<const uint8_t*>(mapped.pData);
+        uint8_t* dstPtr = img->pixels;
+        size_t rowSize = width * 4;
+        for (uint32_t y = 0; y < height; ++y) {
+            memcpy(dstPtr + y * img->rowPitch, srcPtr + y * mapped.RowPitch, rowSize);
+        }
+        context->Unmap(stagingTexture.Get(), 0);
+
+        // 5. BC1に圧縮（高速、8倍圧縮）
+        DirectX::ScratchImage compressedImage;
+        hr = DirectX::Compress(
+            srcImage.GetImages(),
+            srcImage.GetImageCount(),
+            srcImage.GetMetadata(),
+            DXGI_FORMAT_BC1_UNORM,
+            DirectX::TEX_COMPRESS_DEFAULT,
+            0.5f,
+            compressedImage);
+        if (FAILED(hr)) {
+            LOG_ERROR("[CompressToBC7] BC1圧縮に失敗: HRESULT=" + std::to_string(hr));
+            return nullptr;
+        }
+
+        // 6. 圧縮データからテクスチャを作成
+        const DirectX::Image* compImg = compressedImage.GetImage(0, 0, 0);
+
+        D3D11_TEXTURE2D_DESC texDesc{};
+        texDesc.Width = width;
+        texDesc.Height = height;
+        texDesc.MipLevels = 1;
+        texDesc.ArraySize = 1;
+        texDesc.Format = DXGI_FORMAT_BC1_UNORM;
+        texDesc.SampleDesc.Count = 1;
+        texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+        D3D11_SUBRESOURCE_DATA initData{};
+        initData.pSysMem = compImg->pixels;
+        initData.SysMemPitch = static_cast<UINT>(compImg->rowPitch);
+
+        ComPtr<ID3D11Texture2D> compressedTexture;
+        hr = device->CreateTexture2D(&texDesc, &initData, &compressedTexture);
+        if (FAILED(hr)) {
+            LOG_ERROR("[CompressToBC7] 圧縮テクスチャの作成に失敗");
+            return nullptr;
+        }
+
+        // SRVを作成
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Format = DXGI_FORMAT_BC1_UNORM;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+
+        ComPtr<ID3D11ShaderResourceView> srv;
+        hr = device->CreateShaderResourceView(compressedTexture.Get(), &srvDesc, &srv);
+        if (FAILED(hr)) {
+            LOG_ERROR("[CompressToBC7] SRVの作成に失敗");
+            return nullptr;
+        }
+
+        // Textureオブジェクトを作成して返す
+        TextureDesc desc{};
+        desc.width = width;
+        desc.height = height;
+        desc.depth = 1;
+        desc.format = DXGI_FORMAT_BC1_UNORM;
+        desc.bindFlags = D3D11_BIND_SHADER_RESOURCE;
+        desc.dimension = TextureDimension::Tex2D;
+
+        auto result = std::make_shared<Texture>(
+            compressedTexture,
+            srv,
+            ComPtr<ID3D11RenderTargetView>(nullptr),
+            ComPtr<ID3D11DepthStencilView>(nullptr),
+            ComPtr<ID3D11UnorderedAccessView>(nullptr),
+            desc);
+
+        LOG_INFO("[CompressToBC7] BC1圧縮完了: " + std::to_string(width) + "x" + std::to_string(height) +
+                 " (VRAM: " + std::to_string(width * height / 2 / 1024 / 1024) + "MB)");
+        return result;
+    }
+}
 
 //----------------------------------------------------------------------------
 void StageBackground::Initialize(const std::string& stageId, float screenWidth, float screenHeight)
@@ -148,6 +293,12 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
     }
     if (additiveBlendState_) {
         LOG_INFO("[StageBackground] Additive blend state created");
+    }
+
+    // クランプサンプラー作成（チャンク描画用）
+    clampSamplerState_ = SamplerState::CreateClamp();
+    if (clampSamplerState_) {
+        LOG_INFO("[StageBackground] Clamp sampler state created");
     }
 
     // 地面テクスチャをプリベイク（2パス正規化）
@@ -398,11 +549,86 @@ void StageBackground::BakeGroundTexture()
     groundTiles_.clear();
 
     LOG_INFO("[StageBackground] Ground texture baked successfully");
+
+    // BC7圧縮でVRAM節約（59MB → 15MB）
+    LOG_INFO("[StageBackground] BC7圧縮中...");
+    TexturePtr compressedTexture = CompressToBC7(bakedGroundTexture_.get());
+    if (compressedTexture) {
+        bakedGroundTexture_ = compressedTexture;
+        LOG_INFO("[StageBackground] BC7圧縮完了、VRAMを節約しました");
+    } else {
+        LOG_WARN("[StageBackground] BC7圧縮に失敗、非圧縮テクスチャを使用します");
+    }
 }
 
 //----------------------------------------------------------------------------
-void StageBackground::Render(SpriteBatch& spriteBatch)
+void StageBackground::SplitIntoChunks()
 {
+    if (!bakedGroundTexture_) {
+        LOG_WARN("[StageBackground] No baked texture to split");
+        return;
+    }
+
+    auto& ctx = GraphicsContext::Get();
+    ID3D11DeviceContext4* d3dCtx = ctx.GetContext();
+
+    // チャンク配列を初期化
+    chunks_.clear();
+    chunks_.reserve(kChunksX * kChunksY);
+
+    for (int y = 0; y < kChunksY; ++y) {
+        for (int x = 0; x < kChunksX; ++x) {
+            GroundChunk chunk;
+            chunk.position = Vector2(x * kChunkSize, y * kChunkSize);
+
+            // チャンクサイズを計算（端のチャンクは小さい場合がある）
+            uint32_t chunkW = static_cast<uint32_t>((std::min)(kChunkSize, stageWidth_ - x * kChunkSize));
+            uint32_t chunkH = static_cast<uint32_t>((std::min)(kChunkSize, stageHeight_ - y * kChunkSize));
+
+            // チャンク用テクスチャを作成
+            chunk.texture = TextureManager::Get().CreateRenderTarget(
+                static_cast<uint32_t>(kChunkSize),
+                static_cast<uint32_t>(kChunkSize),
+                DXGI_FORMAT_R8G8B8A8_UNORM);
+
+            if (chunk.texture) {
+                // ソース領域を定義
+                D3D11_BOX srcBox;
+                srcBox.left = static_cast<UINT>(x * kChunkSize);
+                srcBox.top = static_cast<UINT>(y * kChunkSize);
+                srcBox.front = 0;
+                srcBox.right = srcBox.left + chunkW;
+                srcBox.bottom = srcBox.top + chunkH;
+                srcBox.back = 1;
+
+                // CopySubresourceRegionでコピー
+                d3dCtx->CopySubresourceRegion(
+                    chunk.texture->Get(),
+                    0,
+                    0, 0, 0,
+                    bakedGroundTexture_->Get(),
+                    0,
+                    &srcBox
+                );
+            }
+
+            chunks_.push_back(std::move(chunk));
+        }
+    }
+
+    // 元の大きいテクスチャを解放
+    bakedGroundTexture_.reset();
+
+    LOG_INFO("[StageBackground] Split into " + std::to_string(chunks_.size()) + " chunks");
+}
+
+//----------------------------------------------------------------------------
+void StageBackground::Render(SpriteBatch& spriteBatch, const Camera2D& camera)
+{
+    // カメラの可視範囲を取得
+    Vector2 viewMin, viewMax;
+    camera.GetWorldBounds(viewMin, viewMax);
+
     // 1. ベース地面カラーを描画（1x1テクスチャをステージ全体にスケール）
     if (baseGroundTexture_) {
         Vector2 origin(0.5f, 0.5f);  // 1x1テクスチャの中心
@@ -419,15 +645,12 @@ void StageBackground::Render(SpriteBatch& spriteBatch)
         );
     }
 
-    // 2. ベイク済み地面テクスチャを描画（1枚のテクスチャ）
+    // 2. ベイク済み地面テクスチャを描画（単一テクスチャ、継ぎ目なし）
     if (bakedGroundTexture_) {
-        float texW = static_cast<float>(bakedGroundTexture_->Width());
-        float texH = static_cast<float>(bakedGroundTexture_->Height());
-        Vector2 origin(texW * 0.5f, texH * 0.5f);
-
+        Vector2 origin(stageWidth_ * 0.5f, stageHeight_ * 0.5f);
         spriteBatch.Draw(
             bakedGroundTexture_.get(),
-            Vector2(texW * 0.5f, texH * 0.5f),  // ステージ左上が(0,0)なので中心に配置
+            Vector2(stageWidth_ * 0.5f, stageHeight_ * 0.5f),
             Colors::White,
             0.0f,
             origin,
@@ -461,16 +684,22 @@ void StageBackground::Render(SpriteBatch& spriteBatch)
 //----------------------------------------------------------------------------
 void StageBackground::Shutdown()
 {
+    // チャンクをクリア
+    for (GroundChunk& chunk : chunks_) {
+        chunk.texture.reset();
+    }
+    chunks_.clear();
+
     groundTiles_.clear();
     decorations_.clear();
     groundTexture_.reset();
     baseGroundTexture_.reset();
-    bakedGroundTexture_.reset();
     groundVertexShader_.reset();
     groundPixelShader_.reset();
     normalizePixelShader_.reset();
     accumulationRT_.reset();
     additiveBlendState_.reset();
+    clampSamplerState_.reset();
 
     LOG_INFO("[StageBackground] Shutdown");
 }

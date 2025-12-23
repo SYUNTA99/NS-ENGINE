@@ -156,6 +156,17 @@ public:
     void ClearCustomBlendState();
 
     //------------------------------------------------------------------------
+    //! @brief カスタムサンプラーステートを設定（次のEnd()で使用）
+    //! @param samplerState サンプラーステート（nullptrでデフォルト）
+    //------------------------------------------------------------------------
+    void SetCustomSamplerState(SamplerState* samplerState);
+
+    //------------------------------------------------------------------------
+    //! @brief カスタムサンプラーステートをクリア（デフォルトに戻す）
+    //------------------------------------------------------------------------
+    void ClearCustomSamplerState();
+
+    //------------------------------------------------------------------------
     //! @brief 描画統計を取得
     //------------------------------------------------------------------------
     [[nodiscard]] uint32_t GetDrawCallCount() const noexcept { return drawCallCount_; }
@@ -226,6 +237,9 @@ private:
 
     // カスタムブレンドステート（nullptrの場合はデフォルト使用）
     BlendState* customBlendState_ = nullptr;
+
+    // カスタムサンプラーステート（nullptrの場合はデフォルト使用）
+    SamplerState* customSamplerState_ = nullptr;
 
     // 統計
     uint32_t drawCallCount_ = 0;

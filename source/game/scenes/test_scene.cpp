@@ -529,7 +529,7 @@ void TestScene::Render()
     spriteBatch.Begin();
 
     // ステージ背景描画
-    stageBackground_.Render(spriteBatch);
+    stageBackground_.Render(spriteBatch, *camera_);
 
     // 縁の描画
     DrawBonds();

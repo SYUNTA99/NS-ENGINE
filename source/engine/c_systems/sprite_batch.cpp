@@ -485,6 +485,14 @@ void SpriteBatch::ClearCustomBlendState() {
     customBlendState_ = nullptr;
 }
 
+void SpriteBatch::SetCustomSamplerState(SamplerState* samplerState) {
+    customSamplerState_ = samplerState;
+}
+
+void SpriteBatch::ClearCustomSamplerState() {
+    customSamplerState_ = nullptr;
+}
+
 void SpriteBatch::SortSprites() {
     // インデックス配列を初期化
     uint32_t count = static_cast<uint32_t>(spriteQueue_.size());
@@ -528,7 +536,10 @@ void SpriteBatch::FlushBatch() {
     ctx.SetVSConstantBuffer(0, constantBuffer_.get());
 
     ctx.SetPixelShader(ps);
-    ctx.SetPSSampler(0, samplerState_.get());
+
+    // カスタムサンプラーステートがあれば使用、なければデフォルト
+    SamplerState* ss = customSamplerState_ ? customSamplerState_ : samplerState_.get();
+    ctx.SetPSSampler(0, ss);
 
     // カスタムブレンドステートがあれば使用、なければデフォルト
     BlendState* bs = customBlendState_ ? customBlendState_ : blendState_.get();
