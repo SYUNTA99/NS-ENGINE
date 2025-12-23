@@ -55,8 +55,8 @@ void StageBackground::Initialize(const std::string& stageId, float screenWidth, 
         LOG_ERROR("[StageBackground] Failed to create base ground texture");
     }
 
-    // 地面テクスチャ読み込み
-    groundTexture_ = TextureManager::Get().LoadTexture2D(basePath + "ground.png");
+    // 地面テクスチャ読み込み（DDS: プリ圧縮済み）
+    groundTexture_ = TextureManager::Get().LoadTexture2D(basePath + "ground.dds");
     if (groundTexture_) {
         float texW = static_cast<float>(groundTexture_->Width());
         float texH = static_cast<float>(groundTexture_->Height());
