@@ -98,7 +98,9 @@ std::vector<Group*> LoveBondSystem::BuildClusterBFS(Group* start, std::set<Group
 //----------------------------------------------------------------------------
 std::vector<Group*> LoveBondSystem::GetLoveCluster(Group* group) const
 {
-    if (!group) return {};
+    if (group == nullptr) {
+        return {};
+    }
 
     // キャッシュからO(1)で検索
     auto it = clusterIndexCache_.find(group);
@@ -113,7 +115,9 @@ std::vector<Group*> LoveBondSystem::GetLoveCluster(Group* group) const
 //----------------------------------------------------------------------------
 bool LoveBondSystem::HasLovePartners(Group* group) const
 {
-    if (!group) return false;
+    if (group == nullptr) {
+        return false;
+    }
 
     // キャッシュからO(1)で判定
     return clusterIndexCache_.find(group) != clusterIndexCache_.end();
@@ -122,7 +126,7 @@ bool LoveBondSystem::HasLovePartners(Group* group) const
 //----------------------------------------------------------------------------
 AITarget LoveBondSystem::DetermineSharedTarget(const std::vector<Group*>& cluster) const
 {
-    AITarget bestTarget;
+    AITarget bestTarget{};  // 明示的にデフォルト初期化
     float highestThreat = -1.0f;
 
     CombatSystem& combat = CombatSystem::Get();
@@ -181,10 +185,11 @@ float LoveBondSystem::GetTargetThreat(const AITarget& target) const
 {
     if (std::holds_alternative<Group*>(target)) {
         Group* group = std::get<Group*>(target);
-        return group ? group->GetThreat() : -1.0f;
-    } else if (std::holds_alternative<Player*>(target)) {
+        return (group != nullptr) ? group->GetThreat() : -1.0f;
+    }
+    if (std::holds_alternative<Player*>(target)) {
         Player* player = std::get<Player*>(target);
-        return player ? player->GetThreat() : -1.0f;
+        return (player != nullptr) ? player->GetThreat() : -1.0f;
     }
     return -1.0f;
 }

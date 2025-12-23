@@ -15,6 +15,15 @@
 #include <random>
 #include <cmath>
 
+namespace {
+    //! @brief 最小近接攻撃範囲
+    constexpr float kMinMeleeAttackRange = 50.0f;
+    //! @brief 画面端からの可視マージン
+    constexpr float kVisibilityMargin = 50.0f;
+    //! @brief 円周率（徘徊角度計算用）
+    constexpr float kTwoPi = 2.0f * 3.14159f;
+}
+
 //----------------------------------------------------------------------------
 GroupAI::GroupAI(Group* owner)
     : owner_(owner)
@@ -247,12 +256,10 @@ void GroupAI::UpdateWander(float dt)
 
             // クラスタ中心から新しい目標を設定（最初のグループのみが計算）
             if (loveCluster[0] == owner_) {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * 3.14159f);
-                std::uniform_real_distribution<float> radiusDist(50.0f, wanderRadius_);
-                float angle = angleDist(gen);
-                float radius = radiusDist(gen);
+                std::uniform_real_distribution<float> angleDist(0.0f, kTwoPi);
+                std::uniform_real_distribution<float> radiusDist(kMinMeleeAttackRange, wanderRadius_);
+                float angle = angleDist(rng_);
+                float radius = radiusDist(rng_);
                 wanderTarget_ = clusterCenter + Vector2(std::cos(angle) * radius, std::sin(angle) * radius);
 
                 // 他のグループにも同じ目標を設定
@@ -329,8 +336,8 @@ void GroupAI::UpdateSeek(float dt)
 
     // 攻撃範囲内なら移動しない（遠距離攻撃ユニットは近づかない）
     float attackRange = owner_->GetMaxAttackRange();
-    if (attackRange < 50.0f) {
-        attackRange = 50.0f;  // 最低でも50（近接用）
+    if (attackRange < kMinMeleeAttackRange) {
+        attackRange = kMinMeleeAttackRange;  // 最低でも近接用の範囲
     }
 
     if (distance > attackRange) {
@@ -358,12 +365,11 @@ void GroupAI::UpdateFlee(float dt)
     // カメラ内に映っていたら移動しない
     if (camera_) {
         Vector2 screenPos = camera_->WorldToScreen(currentPos);
-        float margin = 50.0f;  // 画面端からの余裕
         float viewW = camera_->GetViewportWidth();
         float viewH = camera_->GetViewportHeight();
 
-        bool isVisible = screenPos.x >= margin && screenPos.x <= viewW - margin &&
-                         screenPos.y >= margin && screenPos.y <= viewH - margin;
+        bool isVisible = screenPos.x >= kVisibilityMargin && screenPos.x <= viewW - kVisibilityMargin &&
+                         screenPos.y >= kVisibilityMargin && screenPos.y <= viewH - kVisibilityMargin;
 
         if (isVisible) {
             // 画面内にいるので移動不要
@@ -451,13 +457,11 @@ void GroupAI::SetNewWanderTarget()
 
     Vector2 currentPos = owner_->GetPosition();
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * 3.14159f);
-    std::uniform_real_distribution<float> radiusDist(50.0f, wanderRadius_);
+    std::uniform_real_distribution<float> angleDist(0.0f, kTwoPi);
+    std::uniform_real_distribution<float> radiusDist(kMinMeleeAttackRange, wanderRadius_);
 
-    float angle = angleDist(gen);
-    float radius = radiusDist(gen);
+    float angle = angleDist(rng_);
+    float radius = radiusDist(rng_);
 
     wanderTarget_ = currentPos + Vector2(
         std::cos(angle) * radius,

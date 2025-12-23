@@ -7,6 +7,7 @@
 #include "engine/math/math_types.h"
 #include <functional>
 #include <variant>
+#include <random>
 
 // 前方宣言
 class Group;
@@ -177,6 +178,9 @@ private:
     float wanderRadius_ = 150.0f;       //!< 徘徊半径
     float fleeSpeedMultiplier_ = 1.2f;  //!< 逃走速度倍率（通常より速い）
     float fleeStopDistance_ = 80.0f;    //!< 逃走停止距離（プレイヤーに近すぎたら止まる）
+
+    //! @brief 乱数生成器（毎回生成のオーバーヘッド削減）
+    mutable std::mt19937 rng_{std::random_device{}()};
 
     std::function<void(AIState)> onStateChanged_;
 };

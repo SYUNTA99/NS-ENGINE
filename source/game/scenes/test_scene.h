@@ -78,6 +78,10 @@ private:
     int frameCount_ = 0;
     float currentFps_ = 0.0f;
 
+    // リザルト遷移タイマー
+    float resultTransitionTimer_ = 0.0f;
+    static constexpr float kResultTransitionDelay = 2.0f;  //!< 遷移までの遅延（秒）
+
     // カメラ
     std::unique_ptr<GameObject> cameraObj_;
     Camera2D* camera_ = nullptr;

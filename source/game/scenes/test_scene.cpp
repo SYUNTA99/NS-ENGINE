@@ -3,7 +3,9 @@
 //! @brief  テストシーン実装 - A-RAS!ゲームプロトタイプ
 //----------------------------------------------------------------------------
 #include "test_scene.h"
+#include "result_scene.h"
 #include "dx11/graphics_context.h"
+#include "engine/scene/scene_manager.h"
 #include "engine/platform/renderer.h"
 #include "engine/platform/application.h"
 #include "engine/texture/texture_manager.h"
@@ -283,8 +285,12 @@ void TestScene::Update()
     // ゲーム状態チェック
     GameStateManager::Get().Update();
 
-    // ゲーム終了時は更新停止
+    // ゲーム終了時はリザルトシーンへ遷移
     if (!GameStateManager::Get().IsPlaying()) {
+        resultTransitionTimer_ += rawDt;
+        if (resultTransitionTimer_ >= kResultTransitionDelay) {
+            SceneManager::Get().Load<Result_Scene>();
+        }
         return;
     }
 
