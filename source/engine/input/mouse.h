@@ -2,6 +2,7 @@
 
 #include "key.h"
 #include <array>
+#include <math/math_types.h>
 
 // 前方宣言
 struct HWND__;
@@ -46,6 +47,11 @@ public:
     /// @brief 前フレームからのY移動量を取得
     /// @return Y方向の移動量（ピクセル）
     int GetDeltaY() const noexcept { return deltaY_; }
+
+
+    /// @brief マウスのX,Y座標を取得
+    /// @return　(マウスのX座標、マウスのY座標)
+    Vector2 GestPosition() const noexcept { return Vector2(static_cast<float>(x_), static_cast<float>(y_)); }
 
     /// @brief ホイールスクロール量を取得
     /// @return このフレームのホイールスクロール量（正=上、負=下）

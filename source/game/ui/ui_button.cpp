@@ -17,7 +17,8 @@ bool UIButton::IsMouseOver() const
 	if (!input) return false;
 
 	//マウスの座標取得
-	Vector2 mouse = {(float)input->GetMouse().GetX(),(float)input->GetMouse().GetY() };
+	Vector2 mouse = input->GetMouse().GestPosition();
+	//{(float)input->GetMouse().GetX(),(float)input->GetMouse().GetY() };
 
 	//ボタンの範囲を計算
 	float left = position_.x - size_.x * 0.5f;
