@@ -17,8 +17,9 @@ void Title_Scene::OnEnter()
 	LOG_INFO("現在のシーン : タイトル");
 	camera_ = std::make_unique<Camera2D>();
 	//画面中央
-	camera_->SetPosition(Vector2(640.0f, 360.0f));
-
+	//camera_->SetPosition(Vector2(640.0f, 360.0f));
+	camera_->SetViewportSize(1280.0f, 720.0f);  // 画面サイズ
+	camera_->SetPosition(640.0f, 360.0f);       // 画面中央
 	
 	startButton_ = std::make_unique<UIButton>
 	(
@@ -91,7 +92,7 @@ void Title_Scene::Render()
 	SpriteBatch& batch = SpriteBatch::Get();
 	if (camera_)
 	{
-		batch.SetCamera(*camera_);
+		//batch.SetCamera(*camera_);
 	}
 	batch.Begin();
 

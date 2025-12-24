@@ -77,6 +77,5 @@ void UIButton::Render()
 		}
 	}
 
-
 	DEBUG_RECT_FILL(position_,size_,color);
 }
