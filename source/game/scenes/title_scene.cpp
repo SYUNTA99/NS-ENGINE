@@ -18,11 +18,32 @@ void Title_Scene::OnEnter()
 	camera_ = std::make_unique<Camera2D>();
 	//画面中央
 	camera_->SetPosition(Vector2(640.0f, 360.0f));
+
+	
+	startButton_ = std::make_unique<UIButton>
+	(
+		//座標,サイズ
+		Vector2(640.0f,360.0f),
+		Vector2(200.0f,100.0f)
+	);
+	
+	startButton_->SetOnClick
+	([]()
+		{SceneManager::Get().Load<TestScene>(); 
+	});
+
+	startButton_->SetNormalColor(Color(0.2f, 0.5f, 0.2f, 1.0f));
+	startButton_->SetHoverColor(Color(0.5f, 0.5f, 0.5f, 1.0f));
+
+
 }
+
 //破棄
 void Title_Scene::OnExit()
 {
 	camera_.reset();
+
+	startButton_.reset();
 }
 
 //フレームコールバック
@@ -43,6 +64,8 @@ void Title_Scene::Update()
 	{
 		PostQuitMessage(0);
 	}
+
+	startButton_->Update();
 }
 
 //描画
@@ -64,4 +87,7 @@ void Title_Scene::Render()
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	ctx.ClearRenderTarget(backBuffer, clearColor);
 	ctx.ClearDepthStencil(depthBuffer, 1.0f, 0);
+
+
+	startButton_->Render();
 }
