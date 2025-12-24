@@ -35,7 +35,7 @@ bool UIButton::IsMouseOver() const
 void UIButton::Update()
 {
 	InputManager* input = InputManager::GetInstance();
-	if (input)return;
+	if (!input)return;
 
 	//マウスがボタンの範囲内ならクリック判定
 	if (IsMouseOver())

@@ -23,8 +23,8 @@ void Title_Scene::OnEnter()
 	startButton_ = std::make_unique<UIButton>
 	(
 		//座標,サイズ
-		Vector2(640.0f,360.0f),
-		Vector2(200.0f,100.0f)
+		Vector2(640.0f,400.0f),
+		Vector2(200.0f,500.0f)
 	);
 	
 	startButton_->SetOnClick
