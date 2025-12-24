@@ -1,4 +1,4 @@
-#include "ui_button.h"
+ï»¿#include "ui_button.h"
 #include "engine/input/input_manager.h"
 #include "engine/input/key.h"
 #include "engine/debug/debug_draw.h"
@@ -10,23 +10,22 @@ UIButton::UIButton(const Vector2& pos, const Vector2& size)
 {
 }
 
-//ƒ}ƒEƒX‚ªƒ{ƒ^ƒ“‚Ì”ÍˆÍ“à‚©”»’è
+//ãƒã‚¦ã‚¹ãŒãƒœã‚¿ãƒ³ã®ç¯„å›²å†…ã‹åˆ¤å®š
 bool UIButton::IsMouseOver() const
 {
 	InputManager* input = InputManager::GetInstance();
 	if (!input) return false;
 
-	//ƒ}ƒEƒX‚ÌÀ•Wæ“¾
+	//ãƒã‚¦ã‚¹ã®åº§æ¨™å–å¾—
 	Vector2 mouse = input->GetMouse().GestPosition();
-	//{(float)input->GetMouse().GetX(),(float)input->GetMouse().GetY() };
 
-	//ƒ{ƒ^ƒ“‚Ì”ÍˆÍ‚ğŒvZ
+	//ãƒœã‚¿ãƒ³ã®ç¯„å›²ã‚’è¨ˆç®—
 	float left = position_.x - size_.x * 0.5f;
 	float right = position_.x + size_.x * 0.5f;
 	float top = position_.y - size_.y * 0.5f;
 	float bottom = position_.y + size_.y * 0.5f;
 
-	//ƒ}ƒEƒX‚ª”ÍˆÍ“à‚©H
+	//ãƒã‚¦ã‚¹ãŒç¯„å›²å†…ã‹ï¼Ÿ
 	bool inX = (mouse.x >= left) && (mouse.x <= right);
 	bool inY = (mouse.y >= top) && (mouse.y <= bottom);
 
@@ -38,10 +37,10 @@ void UIButton::Update()
 	InputManager* input = InputManager::GetInstance();
 	if (!input)return;
 
-	//ƒ}ƒEƒX‚ªƒ{ƒ^ƒ“‚Ì”ÍˆÍ“à‚È‚çƒNƒŠƒbƒN”»’è
+	//ãƒã‚¦ã‚¹ãŒãƒœã‚¿ãƒ³ã®ç¯„å›²å†…ãªã‚‰ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 	if (IsMouseOver())
 	{
-		//ƒ}ƒEƒX‚Ì¶ƒNƒŠƒbƒN‚ª‰Ÿ‚³‚ê‚½‚ç
+		//ãƒã‚¦ã‚¹ã®å·¦ã‚¯ãƒªãƒƒã‚¯ãŒæŠ¼ã•ã‚ŒãŸã‚‰
 		if (input->GetMouse().IsButtonDown(MouseButton::Left))
 		{
 			if (onClick_)
@@ -56,26 +55,26 @@ void UIButton::Render()
 {
 	InputManager* input = InputManager::GetInstance();
 
-	//ƒ}ƒEƒX‚Ìó‘Ô‚É‰‚¶‚ÄAƒ{ƒ^ƒ“‚ÌF‚ğ•ÏX
+	//ãƒã‚¦ã‚¹ã®çŠ¶æ…‹ã«å¿œã˜ã¦ã€ãƒœã‚¿ãƒ³ã®è‰²ã‚’å¤‰æ›´
 	
-	//’Êí
+	//é€šå¸¸
 	Color color = normalColor_;
 	
-	//ƒ}ƒEƒX‚ªƒ{ƒ^ƒ“‚Ì”ÍˆÍ“à‚È‚çƒNƒŠƒbƒN”»’è
+	//ãƒã‚¦ã‚¹ãŒãƒœã‚¿ãƒ³ã®ç¯„å›²å†…ãªã‚‰ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 	if (IsMouseOver())
 	{
-		//‰Ÿ‰º‚µ‚Ä‚¢‚é‚©
+		//æŠ¼ä¸‹ã—ã¦ã„ã‚‹ã‹
 		if (input->GetMouse().IsButtonPressed(MouseButton::Left))
 		{
-			//‰Ÿ‰º
+			//æŠ¼ä¸‹
 			color = pressColor_;
 		}
 		else
 		{
-			//ƒzƒo[
+			//ãƒ›ãƒãƒ¼
 			color = hoverColor_;
 		}
 	}
 
-	currentColor_ = color;//ƒeƒXƒg
+	currentColor_ = color;//ãƒ†ã‚¹ãƒˆ
 }

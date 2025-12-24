@@ -10,24 +10,17 @@
 #include "common/logging/logging.h"
 
 
-
 //ライフサイクル
 //初期化
 void Title_Scene::OnEnter()
 {
 	LOG_INFO("現在のシーン : タイトル");
-	//camera_ = std::make_unique<Camera2D>();
+
 	//画面中央
-
-
-	
 	cameraObj_ = std::make_unique<GameObject>("Camera");
-	cameraObj_->AddComponent<Transform2D>(640.0f, 360.0f);
+	cameraObj_->AddComponent<Transform2D>(Vector2(640.0f, 360.0f));
 	camera_ = cameraObj_->AddComponent<Camera2D>(1280.0f, 720.0f);
-	
-	//camera_->SetPosition(Vector2(640.0f, 360.0f));
-	//camera_->SetViewportSize(1280.0f, 720.0f);  // 画面サイズ
-	//camera_->SetPosition(640.0f, 360.0f);       // 画面中央
+
 	
 	startButton_ = std::make_unique<UIButton>
 	(
@@ -97,7 +90,10 @@ void Title_Scene::Render()
 	ctx.ClearDepthStencil(depthBuffer, 1.0f, 0);
 
 	SpriteBatch& batch = SpriteBatch::Get();
+
+
 	batch.Begin();
+	batch.SetCamera(*camera_);
 
 	startButton_->Render();
 

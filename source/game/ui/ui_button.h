@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "engine/math/math_types.h"
 #include "engine/math/color.h"
 #include <functional>
@@ -8,47 +8,47 @@ class UIButton
 {
 public:
   
-    //! @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-    //! @param pos ƒ{ƒ^ƒ“‚Ì’†SˆÊ’uiƒXƒNƒŠ[ƒ“À•Wj
-    //! @param size ƒ{ƒ^ƒ“‚ÌƒTƒCƒYi•, ‚‚³j
+    //! @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+    //! @param pos ãƒœã‚¿ãƒ³ã®ä¸­å¿ƒä½ç½®ï¼ˆã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ï¼‰
+    //! @param size ãƒœã‚¿ãƒ³ã®ã‚µã‚¤ã‚ºï¼ˆå¹…, é«˜ã•ï¼‰
     UIButton(const Vector2& pos, const Vector2& size);
 
    
-    //XV
-    void Update();  // ƒ}ƒEƒX“ü—Í‚ğƒ`ƒFƒbƒN‚µ‚ÄƒNƒŠƒbƒN”»’è
-    void Render();  // ƒ{ƒ^ƒ“‚ğ•`‰æ
+    //æ›´æ–°
+    void Update();  // ãƒã‚¦ã‚¹å…¥åŠ›ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
+    void Render();  // ãƒœã‚¿ãƒ³ã‚’æç”»
 
-   //ƒNƒŠƒbƒN‚Ìˆ—
+   //ã‚¯ãƒªãƒƒã‚¯æ™‚ã®å‡¦ç†
     void SetOnClick(std::function<void()> callback) { onClick_ = callback; }
 
-    //Fİ’è
-    void SetNormalColor(const Color& c) { normalColor_ = c; }  // ’Êí
-    void SetHoverColor(const Color& c) { hoverColor_ = c; }    // ƒ}ƒEƒXæ‚¹
-    void SetPressColor(const Color& c) { pressColor_ = c; }    // ƒNƒŠƒbƒN’†
+    //è‰²è¨­å®š
+    void SetNormalColor(const Color& c) { normalColor_ = c; }  // é€šå¸¸æ™‚
+    void SetHoverColor(const Color& c) { hoverColor_ = c; }    // ãƒã‚¦ã‚¹ä¹—ã›æ™‚
+    void SetPressColor(const Color& c) { pressColor_ = c; }    // ã‚¯ãƒªãƒƒã‚¯ä¸­
 
 
-    Vector2 GetPosition() { return position_; }//ƒeƒXƒg
-    Vector2 GetSize() { return size_; }//ƒeƒXƒg
-    Color GetColor() { return currentColor_; }//ƒeƒXƒg
+    Vector2 GetPosition() { return position_; }//ãƒ†ã‚¹ãƒˆ
+    Vector2 GetSize() { return size_; }//ãƒ†ã‚¹ãƒˆ
+    Color GetColor() { return currentColor_; }//ãƒ†ã‚¹ãƒˆ
 
 
 private:
   
-    // ƒ}ƒEƒX‚ªƒ{ƒ^ƒ“‚Ì”ÍˆÍ“à‚©”»’è
+    // ãƒã‚¦ã‚¹ãŒãƒœã‚¿ãƒ³ã®ç¯„å›²å†…ã‹åˆ¤å®š
     bool IsMouseOver() const;
 
-    // ˆÊ’u‚ÆƒTƒCƒY
-    Vector2 position_;   // ƒ{ƒ^ƒ“’†S‚ÌƒXƒNƒŠ[ƒ“À•W
-    Vector2 size_;       // ƒ{ƒ^ƒ“‚Ì•‚Æ‚‚³
+    // ä½ç½®ã¨ã‚µã‚¤ã‚º
+    Vector2 position_;   // ãƒœã‚¿ãƒ³ä¸­å¿ƒã®ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™
+    Vector2 size_;       // ãƒœã‚¿ãƒ³ã®å¹…ã¨é«˜ã•
 
-    //ƒeƒXƒg
+    //ãƒ†ã‚¹ãƒˆ
     Color currentColor_;
 
-    // Šeó‘Ô‚ÌF
-    Color normalColor_ = Color(0.0f, 1.0f, 0.0f, 0.8f);  // ’Êí: ˆÃ‚¢ƒOƒŒ[
-    Color hoverColor_ = Color(0.5f, 0.5f, 0.5f, 1.0f);  // ƒzƒo[: –¾‚é‚¢ƒOƒŒ[
-    Color pressColor_ = Color(0.2f, 0.2f, 0.2f, 1.0f);  // ‰Ÿ‰º: ‚æ‚èˆÃ‚¢ƒOƒŒ[
+    // å„çŠ¶æ…‹ã®è‰²
+    Color normalColor_ = Color(0.0f, 1.0f, 0.0f, 0.8f);  // é€šå¸¸: æš—ã„ã‚°ãƒ¬ãƒ¼
+    Color hoverColor_ = Color(0.5f, 0.5f, 0.5f, 1.0f);  // ãƒ›ãƒãƒ¼: æ˜ã‚‹ã„ã‚°ãƒ¬ãƒ¼
+    Color pressColor_ = Color(0.2f, 0.2f, 0.2f, 1.0f);  // æŠ¼ä¸‹: ã‚ˆã‚Šæš—ã„ã‚°ãƒ¬ãƒ¼
 
-    // ƒNƒŠƒbƒN‚ÉŒÄ‚Î‚ê‚éŠÖ”iƒR[ƒ‹ƒoƒbƒNj
+    // ã‚¯ãƒªãƒƒã‚¯æ™‚ã«å‘¼ã°ã‚Œã‚‹é–¢æ•°ï¼ˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ï¼‰
     std::function<void()> onClick_;
 };
