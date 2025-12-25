@@ -10,6 +10,7 @@
 #include "game/systems/combat_system.h"
 #include "game/systems/love_bond_system.h"
 #include "game/systems/time_manager.h"
+#include "game/systems/game_constants.h"
 #include "game/bond/bond_manager.h"
 #include "game/bond/bond.h"
 #include "engine/component/camera2d.h"
@@ -18,8 +19,6 @@
 #include <cmath>
 
 namespace {
-    //! @brief 最小近接攻撃範囲
-    constexpr float kMinMeleeAttackRange = 50.0f;
     //! @brief 画面端からの可視マージン
     constexpr float kVisibilityMargin = 50.0f;
     //! @brief 円周率（徘徊角度計算用）
@@ -263,10 +262,6 @@ void GroupAI::UpdateWander(float dt)
 {
     wanderTimer_ += dt;
 
-    // Love追従速度（プレイヤーと同じ速度）
-    constexpr float kLoveFollowSpeed = 200.0f;
-    constexpr float kFollowStartDistance = 100.0f;
-
     // プレイヤーとラブ縁で結ばれているかチェック
     bool followPlayer = false;
     if (player_) {
@@ -286,9 +281,9 @@ void GroupAI::UpdateWander(float dt)
         float distance = direction.Length();
 
         // プレイヤーから一定距離離れていたら近づく（プレイヤー速度で）
-        if (distance > kFollowStartDistance) {
+        if (distance > GameConstants::kLoveFollowStartDistance) {
             direction.Normalize();
-            float moveAmount = kLoveFollowSpeed * dt;
+            float moveAmount = GameConstants::kLoveFollowSpeed * dt;
             Vector2 newPos = currentPos + direction * moveAmount;
             owner_->SetPosition(newPos);
         }
@@ -313,9 +308,9 @@ void GroupAI::UpdateWander(float dt)
         // 中心から離れすぎていたら中心に向かって移動（プレイヤー速度で）
         Vector2 toCenter = clusterCenter - currentPos;
         float distToCenter = toCenter.Length();
-        if (distToCenter > kFollowStartDistance) {
+        if (distToCenter > GameConstants::kLoveFollowStartDistance) {
             toCenter.Normalize();
-            float moveAmount = kLoveFollowSpeed * dt;
+            float moveAmount = GameConstants::kLoveFollowSpeed * dt;
             Vector2 newPos = currentPos + toCenter * moveAmount;
             owner_->SetPosition(newPos);
             return;
@@ -335,7 +330,7 @@ void GroupAI::UpdateWander(float dt)
             // クラスタ中心から新しい目標を設定（最初のグループのみが計算）
             if (loveCluster[0] == owner_) {
                 std::uniform_real_distribution<float> angleDist(0.0f, kTwoPi);
-                std::uniform_real_distribution<float> radiusDist(kMinMeleeAttackRange, wanderRadius_);
+                std::uniform_real_distribution<float> radiusDist(GameConstants::kMinMeleeAttackRange, wanderRadius_);
                 float angle = angleDist(rng_);
                 float radius = radiusDist(rng_);
                 wanderTarget_ = clusterCenter + Vector2(std::cos(angle) * radius, std::sin(angle) * radius);
@@ -414,8 +409,8 @@ void GroupAI::UpdateSeek(float dt)
 
     // 攻撃範囲内なら移動しない（遠距離攻撃ユニットは近づかない）
     float attackRange = owner_->GetMaxAttackRange();
-    if (attackRange < kMinMeleeAttackRange) {
-        attackRange = kMinMeleeAttackRange;  // 最低でも近接用の範囲
+    if (attackRange < GameConstants::kMinMeleeAttackRange) {
+        attackRange = GameConstants::kMinMeleeAttackRange;  // 最低でも近接用の範囲
     }
 
     if (distance > attackRange) {
@@ -541,7 +536,7 @@ void GroupAI::SetNewWanderTarget()
     Vector2 currentPos = owner_->GetPosition();
 
     std::uniform_real_distribution<float> angleDist(0.0f, kTwoPi);
-    std::uniform_real_distribution<float> radiusDist(kMinMeleeAttackRange, wanderRadius_);
+    std::uniform_real_distribution<float> radiusDist(GameConstants::kMinMeleeAttackRange, wanderRadius_);
 
     float angle = angleDist(rng_);
     float radius = radiusDist(rng_);
@@ -562,9 +557,6 @@ bool GroupAI::IsMoving() const
     Vector2 diff = targetPos - currentPos;
     float distance = diff.Length();
 
-    // Wander状態でのLove縁処理（UpdateWanderと同じ閾値を使用）
-    constexpr float kFollowStartDistance = 100.0f;
-
     if (state_ == AIState::Wander) {
         // プレイヤーとのLove縁
         if (player_) {
@@ -574,7 +566,7 @@ bool GroupAI::IsMoving() const
             if (playerBond && playerBond->GetType() == BondType::Love) {
                 Vector2 playerPos = player_->GetPosition();
                 float playerDist = (playerPos - owner_->GetPosition()).Length();
-                return playerDist > kFollowStartDistance;
+                return playerDist > GameConstants::kLoveFollowStartDistance;
             }
         }
 
@@ -590,12 +582,12 @@ bool GroupAI::IsMoving() const
 
             // 中心からの距離で判定
             float distToCenter = (clusterCenter - owner_->GetPosition()).Length();
-            if (distToCenter > kFollowStartDistance) {
+            if (distToCenter > GameConstants::kLoveFollowStartDistance) {
                 return true;  // クラスタ中心に向かって移動中
             }
 
             // 通常のwander移動
-            return distance > 5.0f;
+            return distance > GameConstants::kLoveStopDistance;
         }
     }
 
@@ -603,20 +595,18 @@ bool GroupAI::IsMoving() const
     if (state_ == AIState::Seek) {
         // プレイヤーをターゲットにしている場合は通常の判定
         if (std::holds_alternative<Player*>(target_)) {
-            constexpr float kStopDistance = 5.0f;
-            return distance > kStopDistance;
+            return distance > GameConstants::kLoveStopDistance;
         }
         // グループターゲットの場合は攻撃範囲で判定
         float attackRange = owner_->GetMaxAttackRange();
-        if (attackRange < kMinMeleeAttackRange) {
-            attackRange = kMinMeleeAttackRange;
+        if (attackRange < GameConstants::kMinMeleeAttackRange) {
+            attackRange = GameConstants::kMinMeleeAttackRange;
         }
         return distance > attackRange;
     }
 
-    // 通常は5以上で移動中
-    constexpr float kStopDistance = 5.0f;
-    return distance > kStopDistance;
+    // 通常は停止距離以上で移動中
+    return distance > GameConstants::kLoveStopDistance;
 }
 
 //----------------------------------------------------------------------------
@@ -641,9 +631,6 @@ bool GroupAI::CheckLovePartnerDistance() const
 {
     if (!owner_) return false;
 
-    // 攻撃中断距離
-    constexpr float kInterruptDistance = 350.0f;
-
     Vector2 myPos = owner_->GetPosition();
 
     // プレイヤーとのLove縁チェック
@@ -653,7 +640,7 @@ bool GroupAI::CheckLovePartnerDistance() const
         Bond* playerBond = BondManager::Get().GetBond(groupEntity, playerEntity);
         if (playerBond && playerBond->GetType() == BondType::Love) {
             float dist = (player_->GetPosition() - myPos).Length();
-            if (dist > kInterruptDistance) {
+            if (dist > GameConstants::kLoveInterruptDistance) {
                 return true;
             }
         }
@@ -665,7 +652,7 @@ bool GroupAI::CheckLovePartnerDistance() const
         for (Group* partner : loveCluster) {
             if (partner == owner_) continue;
             float dist = (partner->GetPosition() - myPos).Length();
-            if (dist > kInterruptDistance) {
+            if (dist > GameConstants::kLoveInterruptDistance) {
                 return true;
             }
         }

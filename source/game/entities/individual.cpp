@@ -569,12 +569,10 @@ void Individual::EndAttack()
     // 攻撃終了後、ターゲットが死亡していれば再選択
     if (attackTarget_ && !attackTarget_->IsAlive()) {
         SelectAttackTarget();
-
-        // グループ全滅ならIdle/Walk に戻る
-        if (!attackTarget_) {
-            action_ = IndividualAction::Idle;
-        }
     }
+
+    // アクションを非攻撃状態にリセット（呼び出し側で必要に応じて上書き可能）
+    action_ = IndividualAction::Idle;
 }
 
 //----------------------------------------------------------------------------
@@ -657,8 +655,7 @@ AnimationState Individual::DetermineAnimationState() const
 
 #ifdef _DEBUG
     // デバッグ: 意図とアニメーション状態をログ
-    static int logCounter = 0;
-    if (++logCounter % 60 == 0) {  // 1秒に1回
+    if (++debugLogCounter_ % 60 == 0) {  // 1秒に1回
         std::string indIntentStr;
         switch (indIntent) {
         case IndividualIntent::AtSlot: indIntentStr = "AtSlot"; break;

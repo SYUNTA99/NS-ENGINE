@@ -6,6 +6,7 @@
 #include "stagger_system.h"
 #include "faction_manager.h"
 #include "love_bond_system.h"
+#include "game_constants.h"
 #include "game/entities/group.h"
 #include "game/entities/individual.h"
 #include "game/entities/player.h"
@@ -191,7 +192,6 @@ bool CombatSystem::ShouldSkipCombatForLove(Group* group) const
 {
     if (!group) return false;
 
-    constexpr float kInterruptDistance = 350.0f;
     Vector2 groupPos = group->GetPosition();
 
     // プレイヤーとのLove縁チェック
@@ -201,7 +201,7 @@ bool CombatSystem::ShouldSkipCombatForLove(Group* group) const
         Bond* playerBond = BondManager::Get().GetBond(groupEntity, playerEntity);
         if (playerBond && playerBond->GetType() == BondType::Love) {
             float dist = (player_->GetPosition() - groupPos).Length();
-            if (dist > kInterruptDistance) {
+            if (dist > GameConstants::kLoveInterruptDistance) {
                 return true;
             }
         }
@@ -213,7 +213,7 @@ bool CombatSystem::ShouldSkipCombatForLove(Group* group) const
         for (Group* partner : loveCluster) {
             if (partner == group) continue;
             float dist = (partner->GetPosition() - groupPos).Length();
-            if (dist > kInterruptDistance) {
+            if (dist > GameConstants::kLoveInterruptDistance) {
                 return true;
             }
         }

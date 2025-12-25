@@ -7,11 +7,11 @@
 #include "individual.h"
 #include "game/bond/bond_manager.h"
 #include "game/bond/bond.h"
-#include "game/systems/love_bond_system.h"
 #include "engine/input/input_manager.h"
 #include "engine/texture/texture_manager.h"
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/c_systems/collision_layers.h"
+#include "game/systems/game_constants.h"
 #include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
@@ -109,47 +109,45 @@ void Player::HandleInput(float dt, Camera2D& /*camera*/)
         if (sprite_ && move.x != 0.0f) {
             sprite_->SetFlipX(move.x > 0.0f);
         }
+    }
 
-        // Love縁グループが攻撃中の場合、移動を制限
-        constexpr float kAttackTetherDistance = 350.0f;  // 攻撃中の移動制限距離
+    // Love縁グループが攻撃中の場合、移動を制限（移動有無に関わらず毎フレーム適用）
+    // Love縁のある全グループをチェック
+    std::vector<Bond*> bonds = BondManager::Get().GetBondsFor(this);
+    for (Bond* bond : bonds) {
+        if (bond->GetType() != BondType::Love) continue;
 
-        // Love縁のある全グループをチェック
-        std::vector<Bond*> bonds = BondManager::Get().GetBondsFor(this);
-        for (Bond* bond : bonds) {
-            if (bond->GetType() != BondType::Love) continue;
+        // 相手がGroupか確認
+        BondableEntity other = (bond->GetEntityA() == BondableEntity(this))
+                                   ? bond->GetEntityB()
+                                   : bond->GetEntityA();
+        Group** groupPtr = std::get_if<Group*>(&other);
+        if (!groupPtr || !*groupPtr) continue;
+        Group* group = *groupPtr;
 
-            // 相手がGroupか確認
-            BondableEntity other = (bond->GetEntityA() == BondableEntity(this))
-                                       ? bond->GetEntityB()
-                                       : bond->GetEntityA();
-            Group** groupPtr = std::get_if<Group*>(&other);
-            if (!groupPtr || !*groupPtr) continue;
-            Group* group = *groupPtr;
-
-            // グループ内に攻撃中の個体がいるかチェック
-            bool groupAttacking = false;
-            for (Individual* ind : group->GetAliveIndividuals()) {
-                if (ind->IsAttacking()) {
-                    groupAttacking = true;
-                    break;
-                }
+        // グループ内に攻撃中の個体がいるかチェック
+        bool groupAttacking = false;
+        for (Individual* ind : group->GetAliveIndividuals()) {
+            if (ind->IsAttacking()) {
+                groupAttacking = true;
+                break;
             }
+        }
 
-            if (groupAttacking) {
-                // 攻撃中のグループとの距離を制限
-                Vector2 playerPos = transform_->GetPosition();
-                Vector2 groupPos = group->GetPosition();
-                Vector2 diff = playerPos - groupPos;
-                float distance = diff.Length();
+        if (groupAttacking) {
+            // 攻撃中のグループとの距離を制限
+            Vector2 playerPos = transform_->GetPosition();
+            Vector2 groupPos = group->GetPosition();
+            Vector2 diff = playerPos - groupPos;
+            float distance = diff.Length();
 
-                if (distance > kAttackTetherDistance) {
-                    // 制限距離に押し戻す
-                    diff.Normalize();
-                    Vector2 constrainedPos = groupPos + diff * kAttackTetherDistance;
-                    transform_->SetPosition(constrainedPos);
-                }
-                break;  // 1つでも攻撃中なら制限適用
+            if (distance > GameConstants::kLoveInterruptDistance) {
+                // 制限距離に押し戻す
+                diff.Normalize();
+                Vector2 constrainedPos = groupPos + diff * GameConstants::kLoveInterruptDistance;
+                transform_->SetPosition(constrainedPos);
             }
+            break;  // 1つでも攻撃中なら制限適用
         }
     }
 }

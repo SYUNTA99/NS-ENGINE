@@ -329,4 +329,9 @@ protected:
 
     // AnimationController
     AnimationController animationController_;
+
+#ifdef _DEBUG
+    // デバッグログ用カウンター（const関数内で使用するためmutable）
+    mutable int debugLogCounter_ = 0;
+#endif
 };
