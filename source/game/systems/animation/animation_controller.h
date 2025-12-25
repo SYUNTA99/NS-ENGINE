@@ -73,6 +73,9 @@ public:
     //! @brief ロック中か判定
     [[nodiscard]] bool IsLocked() const { return isLocked_; }
 
+    //! @brief ロックを強制解除（攻撃中断時などに使用）
+    void ForceUnlock() { isLocked_ = false; }
+
     //! @brief アニメーション再生中か判定
     [[nodiscard]] bool IsPlaying() const;
 

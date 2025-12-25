@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "group_ai.h"
 #include "game/entities/group.h"
+#include "game/entities/individual.h"
 #include "game/entities/player.h"
 #include "game/systems/stagger_system.h"
 #include "game/systems/combat_system.h"
@@ -50,6 +51,28 @@ void GroupAI::Update(float dt)
         return;
     }
 
+    // Love縁相手との距離チェック（離れすぎたら追従に切り替え）
+    // ただし攻撃モーション中の個体がいる場合は、攻撃完了を待つ
+    if (state_ == AIState::Seek) {
+        if (CheckLovePartnerDistance()) {
+            // 攻撃中の個体がいるかチェック
+            bool anyAttacking = false;
+            for (Individual* ind : owner_->GetAliveIndividuals()) {
+                if (ind->IsAttacking()) {
+                    anyAttacking = true;
+                    break;
+                }
+            }
+
+            // 全員の攻撃が終わってから追従に切り替え
+            if (!anyAttacking) {
+                SetState(AIState::Wander);
+                ClearTarget();
+                inCombat_ = false;
+            }
+        }
+    }
+
     // 状態遷移チェック
     CheckStateTransition();
 
@@ -65,6 +88,9 @@ void GroupAI::Update(float dt)
         UpdateFlee(scaledDt);
         break;
     }
+
+    // 移動状態の変化を個体に通知
+    NotifyMovementChange();
 }
 
 //----------------------------------------------------------------------------
@@ -194,6 +220,21 @@ void GroupAI::FindTarget()
 //----------------------------------------------------------------------------
 Vector2 GroupAI::GetTargetPosition() const
 {
+    // Wander状態の場合
+    if (state_ == AIState::Wander) {
+        // プレイヤーとラブ縁で結ばれている場合はプレイヤー位置を返す
+        if (player_) {
+            BondableEntity groupEntity = owner_;
+            BondableEntity playerEntity = player_;
+            Bond* playerBond = BondManager::Get().GetBond(groupEntity, playerEntity);
+            if (playerBond && playerBond->GetType() == BondType::Love) {
+                return player_->GetPosition();
+            }
+        }
+        return wanderTarget_;
+    }
+
+    // Seek/Flee状態の場合はターゲットの位置を返す
     if (std::holds_alternative<Group*>(target_)) {
         Group* group = std::get<Group*>(target_);
         if (group) return group->GetPosition();
@@ -222,6 +263,10 @@ void GroupAI::UpdateWander(float dt)
 {
     wanderTimer_ += dt;
 
+    // Love追従速度（プレイヤーと同じ速度）
+    constexpr float kLoveFollowSpeed = 200.0f;
+    constexpr float kFollowStartDistance = 100.0f;
+
     // プレイヤーとラブ縁で結ばれているかチェック
     bool followPlayer = false;
     if (player_) {
@@ -240,18 +285,42 @@ void GroupAI::UpdateWander(float dt)
         Vector2 direction = playerPos - currentPos;
         float distance = direction.Length();
 
-        // プレイヤーから一定距離離れていたら近づく
-        if (distance > 100.0f) {
+        // プレイヤーから一定距離離れていたら近づく（プレイヤー速度で）
+        if (distance > kFollowStartDistance) {
             direction.Normalize();
-            Vector2 newPos = currentPos + direction * moveSpeed_ * dt;
+            float moveAmount = kLoveFollowSpeed * dt;
+            Vector2 newPos = currentPos + direction * moveAmount;
             owner_->SetPosition(newPos);
         }
         return;
     }
 
-    // ラブパートナー（グループ同士）がいる場合は一緒に徘徊
+    // ラブパートナー（グループ同士）がいる場合
     std::vector<Group*> loveCluster = LoveBondSystem::Get().GetLoveCluster(owner_);
     bool hasLovePartners = loveCluster.size() > 1;
+
+    // グループ同士のLove縁：離れすぎたらお互いを追いかける
+    if (hasLovePartners) {
+        Vector2 currentPos = owner_->GetPosition();
+
+        // クラスタ中心を計算
+        Vector2 clusterCenter = Vector2::Zero;
+        for (Group* g : loveCluster) {
+            clusterCenter = clusterCenter + g->GetPosition();
+        }
+        clusterCenter = clusterCenter * (1.0f / static_cast<float>(loveCluster.size()));
+
+        // 中心から離れすぎていたら中心に向かって移動（プレイヤー速度で）
+        Vector2 toCenter = clusterCenter - currentPos;
+        float distToCenter = toCenter.Length();
+        if (distToCenter > kFollowStartDistance) {
+            toCenter.Normalize();
+            float moveAmount = kLoveFollowSpeed * dt;
+            Vector2 newPos = currentPos + toCenter * moveAmount;
+            owner_->SetPosition(newPos);
+            return;
+        }
+    }
 
     // 一定時間ごとに新しい目標を設定
     if (wanderTimer_ >= wanderInterval_) {
@@ -449,7 +518,12 @@ void GroupAI::CheckStateTransition()
     }
 
     // Wander中に敵を発見したらSeekに移行
+    // ただしLove縁相手との距離が離れすぎていたら戦闘に入らない
     if (state_ == AIState::Wander) {
+        if (CheckLovePartnerDistance()) {
+            // Love相手が遠いので追従優先
+            return;
+        }
         FindTarget();
         if (HasTarget()) {
             LOG_INFO("[GroupAI] " + owner_->GetId() + " found target, entering combat");
@@ -476,4 +550,126 @@ void GroupAI::SetNewWanderTarget()
         std::cos(angle) * radius,
         std::sin(angle) * radius
     );
+}
+
+//----------------------------------------------------------------------------
+bool GroupAI::IsMoving() const
+{
+    if (!owner_) return false;
+
+    Vector2 currentPos = owner_->GetPosition();
+    Vector2 targetPos = GetTargetPosition();
+    Vector2 diff = targetPos - currentPos;
+    float distance = diff.Length();
+
+    // Wander状態でのLove縁処理（UpdateWanderと同じ閾値を使用）
+    constexpr float kFollowStartDistance = 100.0f;
+
+    if (state_ == AIState::Wander) {
+        // プレイヤーとのLove縁
+        if (player_) {
+            BondableEntity groupEntity = owner_;
+            BondableEntity playerEntity = player_;
+            Bond* playerBond = BondManager::Get().GetBond(groupEntity, playerEntity);
+            if (playerBond && playerBond->GetType() == BondType::Love) {
+                Vector2 playerPos = player_->GetPosition();
+                float playerDist = (playerPos - owner_->GetPosition()).Length();
+                return playerDist > kFollowStartDistance;
+            }
+        }
+
+        // グループ同士のLove縁（クラスタ中心への移動）
+        std::vector<Group*> loveCluster = LoveBondSystem::Get().GetLoveCluster(owner_);
+        if (loveCluster.size() > 1) {
+            // クラスタ中心を計算
+            Vector2 clusterCenter = Vector2::Zero;
+            for (Group* g : loveCluster) {
+                clusterCenter = clusterCenter + g->GetPosition();
+            }
+            clusterCenter = clusterCenter * (1.0f / static_cast<float>(loveCluster.size()));
+
+            // 中心からの距離で判定
+            float distToCenter = (clusterCenter - owner_->GetPosition()).Length();
+            if (distToCenter > kFollowStartDistance) {
+                return true;  // クラスタ中心に向かって移動中
+            }
+
+            // 通常のwander移動
+            return distance > 5.0f;
+        }
+    }
+
+    // Seek状態では攻撃範囲内なら移動しない（ただしプレイヤーターゲット時は除く）
+    if (state_ == AIState::Seek) {
+        // プレイヤーをターゲットにしている場合は通常の判定
+        if (std::holds_alternative<Player*>(target_)) {
+            constexpr float kStopDistance = 5.0f;
+            return distance > kStopDistance;
+        }
+        // グループターゲットの場合は攻撃範囲で判定
+        float attackRange = owner_->GetMaxAttackRange();
+        if (attackRange < kMinMeleeAttackRange) {
+            attackRange = kMinMeleeAttackRange;
+        }
+        return distance > attackRange;
+    }
+
+    // 通常は5以上で移動中
+    constexpr float kStopDistance = 5.0f;
+    return distance > kStopDistance;
+}
+
+//----------------------------------------------------------------------------
+void GroupAI::NotifyMovementChange()
+{
+    if (!owner_) return;
+
+    bool isMoving = IsMoving();
+
+    // 状態変化があれば全個体に通知
+    if (wasMoving_ != isMoving) {
+        wasMoving_ = isMoving;
+
+        for (Individual* ind : owner_->GetAliveIndividuals()) {
+            ind->SetGroupMoving(isMoving);
+        }
+    }
+}
+
+//----------------------------------------------------------------------------
+bool GroupAI::CheckLovePartnerDistance() const
+{
+    if (!owner_) return false;
+
+    // 攻撃中断距離
+    constexpr float kInterruptDistance = 350.0f;
+
+    Vector2 myPos = owner_->GetPosition();
+
+    // プレイヤーとのLove縁チェック
+    if (player_) {
+        BondableEntity groupEntity = owner_;
+        BondableEntity playerEntity = player_;
+        Bond* playerBond = BondManager::Get().GetBond(groupEntity, playerEntity);
+        if (playerBond && playerBond->GetType() == BondType::Love) {
+            float dist = (player_->GetPosition() - myPos).Length();
+            if (dist > kInterruptDistance) {
+                return true;
+            }
+        }
+    }
+
+    // グループ同士のLove縁チェック
+    std::vector<Group*> loveCluster = LoveBondSystem::Get().GetLoveCluster(owner_);
+    if (loveCluster.size() > 1) {
+        for (Group* partner : loveCluster) {
+            if (partner == owner_) continue;
+            float dist = (partner->GetPosition() - myPos).Length();
+            if (dist > kInterruptDistance) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
