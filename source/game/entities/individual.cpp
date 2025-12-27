@@ -738,7 +738,8 @@ void Individual::UpdateFacingDirection()
     if (!sprite_) return;
 
     // 向き変更の水平成分しきい値（この比率以上の水平成分がないと反転しない）
-    // 0.3 = 約±72度の範囲（水平から±36度）で反転
+    // absDx/(absDx+absDy) >= 0.3 → 角度 = arctan((1-0.3)/0.3) ≈ 66.8°
+    // つまり水平から約±66.8度以内の移動でのみ反転
     constexpr float kHorizontalThreshold = 0.3f;
 
     // 水平成分が十分かチェックするヘルパー

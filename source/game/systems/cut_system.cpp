@@ -105,10 +105,13 @@ void CutSystem::SelectBond(Bond* bond)
     if (!isEnabled_ || !bond) return;
 
     selectedBond_ = bond;
+    // use-after-free防止: 選択時にエンティティをコピー
+    selectedEntityA_ = bond->GetEntityA();
+    selectedEntityB_ = bond->GetEntityB();
 
     LOG_INFO("[CutSystem] Bond selected: " +
-             BondableHelper::GetId(bond->GetEntityA()) + " <-> " +
-             BondableHelper::GetId(bond->GetEntityB()));
+             BondableHelper::GetId(selectedEntityA_) + " <-> " +
+             BondableHelper::GetId(selectedEntityB_));
 
     if (onBondSelected_) {
         onBondSelected_(bond);
@@ -142,11 +145,16 @@ bool CutSystem::CutBond(Bond* bond)
     BondableEntity a = bond->GetEntityA();
     BondableEntity b = bond->GetEntityB();
 
+    // 先にRelationshipFacadeから削除（失敗時はロールバック不要）
+    bool cutSuccess = RelationshipFacade::Get().Cut(a, b);
+    if (!cutSuccess) {
+        LOG_WARN("[CutSystem] Failed to cut from RelationshipFacade");
+        // 処理は続行（BondManagerとの同期を優先）
+    }
+
     // 縁を削除
     bool removed = BondManager::Get().RemoveBond(bond);
     if (removed) {
-        // RelationshipFacadeにも同期
-        RelationshipFacade::Get().Cut(a, b);
 
         LOG_INFO("[CutSystem] Bond cut between " +
                  BondableHelper::GetId(a) + " and " + BondableHelper::GetId(b));
@@ -185,6 +193,8 @@ bool CutSystem::CutBond(Bond* bond)
 void CutSystem::ClearSelection()
 {
     selectedBond_ = nullptr;
+    selectedEntityA_ = static_cast<Player*>(nullptr);
+    selectedEntityB_ = static_cast<Player*>(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -203,15 +213,13 @@ void CutSystem::OnBondRemoved(const BondableEntity& a, const BondableEntity& b)
     // 選択中のBondが削除されたらクリア
     if (!selectedBond_) return;
 
-    BondableEntity selectedA = selectedBond_->GetEntityA();
-    BondableEntity selectedB = selectedBond_->GetEntityB();
-
-    // 削除されたBondと選択中のBondが一致するかチェック
-    bool match = (selectedA == a && selectedB == b) ||
-                 (selectedA == b && selectedB == a);
+    // use-after-free防止: 保存済みのエンティティIDで比較
+    // selectedBond_を直接参照しない（既に削除されている可能性があるため）
+    bool match = (selectedEntityA_ == a && selectedEntityB_ == b) ||
+                 (selectedEntityA_ == b && selectedEntityB_ == a);
 
     if (match) {
         LOG_INFO("[CutSystem] Selected bond was removed externally, clearing selection");
-        selectedBond_ = nullptr;
+        ClearSelection();
     }
 }

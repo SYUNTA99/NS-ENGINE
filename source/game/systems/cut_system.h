@@ -106,6 +106,8 @@ private:
 
     bool isEnabled_ = false;        //!< モード有効フラグ
     Bond* selectedBond_ = nullptr;  //!< 選択中の縁
+    BondableEntity selectedEntityA_;  //!< 選択時のエンティティA（use-after-free防止用）
+    BondableEntity selectedEntityB_;  //!< 選択時のエンティティB（use-after-free防止用）
     float cutCost_ = 10.0f;         //!< 縁を切るFEコスト
 
     //! @brief BondRemovedEventの購読ID

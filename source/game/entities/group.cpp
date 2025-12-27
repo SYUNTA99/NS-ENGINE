@@ -292,8 +292,8 @@ void Group::CheckDefeated()
 //----------------------------------------------------------------------------
 void Group::OnIndividualDied([[maybe_unused]] Individual* individual, Group* ownerGroup)
 {
-    // 自分のグループの個体が死亡した場合のみ処理
-    if (ownerGroup != this) return;
+    // nullチェック + 自分のグループの個体が死亡した場合のみ処理
+    if (ownerGroup == nullptr || ownerGroup != this) return;
 
     LOG_INFO("[Group] " + id_ + " individual died, rebuilding formation");
 

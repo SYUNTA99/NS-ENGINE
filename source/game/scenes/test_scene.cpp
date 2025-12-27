@@ -183,9 +183,13 @@ void TestScene::OnEnter()
             } else if (bd.type == "Love") {
                 bondType = BondType::Love;
             }
-            BondManager::Get().CreateBond(fromGroup, toGroup, bondType);
-            // RelationshipFacadeにも同期
-            RelationshipFacade::Get().Bind(fromGroup, toGroup, bondType);
+            Bond* bond = BondManager::Get().CreateBond(fromGroup, toGroup, bondType);
+            if (bond) {
+                // RelationshipFacadeにも同期
+                RelationshipFacade::Get().Bind(fromGroup, toGroup, bondType);
+            } else {
+                LOG_WARN("[TestScene] Failed to create bond: " + bd.fromId + " <-> " + bd.toId);
+            }
         }
     }
     LOG_INFO("[TestScene] Bonds created: " + std::to_string(BondManager::Get().GetAllBonds().size()));

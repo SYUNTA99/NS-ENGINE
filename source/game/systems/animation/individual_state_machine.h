@@ -125,7 +125,8 @@ private:
     void EnterState(AnimState state);
 
     //! @brief 状態から出る
-    void ExitState(AnimState state);
+    //! @param newState 次に入る状態（攻撃終了判定に使用）
+    void ExitState(AnimState newState);
 
     //! @brief 攻撃フェーズを更新
     void UpdateAttackPhase(float dt);

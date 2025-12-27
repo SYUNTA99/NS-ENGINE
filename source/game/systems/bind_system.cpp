@@ -123,29 +123,36 @@ bool BindSystem::MarkEntity(BondableEntity entity)
 
     // 縁を作成（選択中のタイプで）
     Bond* bond = BondManager::Get().CreateBond(first, entity, pendingBondType_);
-    if (bond) {
-        // RelationshipFacadeにも同期
-        RelationshipFacade::Get().Bind(first, entity, pendingBondType_);
-
-        LOG_INFO("[BindSystem] Bond created between " +
-                 BondableHelper::GetId(first) + " and " + BondableHelper::GetId(entity));
-
-        // EventBus通知
-        EventBus::Get().Publish(BondCreatedEvent{ first, entity, bond });
-
-        if (onBondCreated_) {
-            onBondCreated_(first, entity);
-        }
-
-        ClearMark();
-
-        // 縁作成後に自動でモード終了（時間再開）
-        Disable();
-
-        return true;
+    if (!bond) {
+        LOG_WARN("[BindSystem] Failed to create bond");
+        return false;
     }
 
-    return false;
+    // RelationshipFacadeにも同期
+    bool syncSuccess = RelationshipFacade::Get().Bind(first, entity, pendingBondType_);
+    if (!syncSuccess) {
+        // ロールバック: BondManagerから削除
+        LOG_WARN("[BindSystem] Failed to sync with RelationshipFacade, rolling back");
+        BondManager::Get().RemoveBond(bond);
+        return false;
+    }
+
+    LOG_INFO("[BindSystem] Bond created between " +
+             BondableHelper::GetId(first) + " and " + BondableHelper::GetId(entity));
+
+    // EventBus通知
+    EventBus::Get().Publish(BondCreatedEvent{ first, entity, bond });
+
+    if (onBondCreated_) {
+        onBondCreated_(first, entity);
+    }
+
+    ClearMark();
+
+    // 縁作成後に自動でモード終了（時間再開）
+    Disable();
+
+    return true;
 }
 
 //----------------------------------------------------------------------------
