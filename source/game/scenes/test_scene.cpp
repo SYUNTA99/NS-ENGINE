@@ -188,7 +188,8 @@ void TestScene::OnEnter()
                 // RelationshipFacadeにも同期
                 RelationshipFacade::Get().Bind(fromGroup, toGroup, bondType);
             } else {
-                LOG_WARN("[TestScene] Failed to create bond: " + bd.fromId + " <-> " + bd.toId);
+                LOG_WARN("[TestScene] Failed to create bond: " + bd.fromId + " <-> " + bd.toId +
+                         " (type=" + bd.type + ")");
             }
         }
     }

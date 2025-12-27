@@ -145,11 +145,14 @@ bool CutSystem::CutBond(Bond* bond)
     BondableEntity a = bond->GetEntityA();
     BondableEntity b = bond->GetEntityB();
 
-    // 先にRelationshipFacadeから削除（失敗時はロールバック不要）
+    // 先にRelationshipFacadeから削除
     bool cutSuccess = RelationshipFacade::Get().Cut(a, b);
     if (!cutSuccess) {
-        LOG_WARN("[CutSystem] Failed to cut from RelationshipFacade");
-        // 処理は続行（BondManagerとの同期を優先）
+        // FEをリファンドして早期リターン
+        LOG_WARN("[CutSystem] Failed to cut from RelationshipFacade, rolling back");
+        FESystem::Get().Recover(cutCost_);
+        LOG_INFO("[CutSystem] Refunded " + std::to_string(cutCost_) + " FE");
+        return false;
     }
 
     // 縁を削除

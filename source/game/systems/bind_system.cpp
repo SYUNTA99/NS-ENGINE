@@ -131,9 +131,11 @@ bool BindSystem::MarkEntity(BondableEntity entity)
     // RelationshipFacadeにも同期
     bool syncSuccess = RelationshipFacade::Get().Bind(first, entity, pendingBondType_);
     if (!syncSuccess) {
-        // ロールバック: BondManagerから削除
+        // ロールバック: BondManagerから削除 + FEリファンド
         LOG_WARN("[BindSystem] Failed to sync with RelationshipFacade, rolling back");
         BondManager::Get().RemoveBond(bond);
+        FESystem::Get().Recover(bindCost_);
+        LOG_INFO("[BindSystem] Refunded " + std::to_string(bindCost_) + " FE");
         return false;
     }
 

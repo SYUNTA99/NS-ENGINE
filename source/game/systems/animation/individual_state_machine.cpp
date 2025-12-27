@@ -241,8 +241,8 @@ void IndividualStateMachine::EnterState(AnimState state)
 {
     if (currentState_ == state) return;
 
-    // 前の状態から出る（新しい状態を渡して遷移判定）
-    ExitState(state);
+    // 状態遷移時のクリーンアップ（新しい状態を渡して遷移判定）
+    HandleStateExit(state);
 
     // 新しい状態に入る
     currentState_ = state;
@@ -293,7 +293,7 @@ void IndividualStateMachine::EnterState(AnimState state)
 }
 
 //----------------------------------------------------------------------------
-void IndividualStateMachine::ExitState(AnimState newState)
+void IndividualStateMachine::HandleStateExit(AnimState newState)
 {
     // 攻撃フェーズからの離脱時（現在の状態が攻撃で、次の状態が非攻撃）
     if (IsAttackState(currentState_) && !IsAttackState(newState)) {
