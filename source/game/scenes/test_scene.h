@@ -17,9 +17,11 @@
 #include "game/ai/group_ai.h"
 #include "game/bond/bondable_entity.h"
 #include "game/bond/bond.h"
+#include "game/stage/stage_data.h"
 #include <memory>
 #include <vector>
 #include <cstdint>
+#include <unordered_map>
 
 //----------------------------------------------------------------------------
 //! @brief テストシーン - A-RAS!ゲームプロトタイプ
@@ -127,9 +129,23 @@ private:
     //! @brief プレイヤーとグループを結ぶ（簡易操作）
     void BindPlayerToGroup(Group* group);
 
+    //! @brief グループをスポーン（WaveManagerから呼ばれる）
+    //! @param data グループデータ
+    //! @return 生成したGroupポインタ
+    Group* SpawnGroup(const GroupData& data);
+
+    //! @brief 保存されたステージデータ（ウェーブスポーン用）
+    StageData stageData_;
+
     //! @brief デバッグ描画表示フラグ（F1で切替）
     bool showDebugDraw_ = true;
 
     //! @brief システム初期化完了フラグ（OnExit時のShutdown呼び出し制御用）
     bool systemsInitialized_ = false;
+
+    //! @brief トランジション開始時のプレイヤーY座標
+    float transitionPlayerStartY_ = 0.0f;
+
+    //! @brief トランジション開始時の味方グループY座標
+    std::unordered_map<Group*, float> transitionAllyStartY_;
 };

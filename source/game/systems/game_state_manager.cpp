@@ -6,6 +6,7 @@
 #include "game/entities/group.h"
 #include "game/entities/player.h"
 #include "game/bond/bond_manager.h"
+#include "game/systems/wave_manager.h"
 #include "common/logging/logging.h"
 #include <algorithm>
 
@@ -93,6 +94,17 @@ void GameStateManager::ClearEnemyGroups()
 //----------------------------------------------------------------------------
 bool GameStateManager::CheckVictoryCondition() const
 {
+    // ウェーブシステムが有効な場合、全ウェーブクリアが必要
+    if (WaveManager::Get().GetTotalWaves() > 0) {
+        // 全ウェーブクリア + トランジション中でない
+        if (!WaveManager::Get().IsAllWavesCleared()) {
+            return false;
+        }
+        if (WaveManager::Get().IsTransitioning()) {
+            return false;
+        }
+    }
+
     // 条件1: 全敵全滅
     if (AreAllEnemiesDefeated()) {
         return true;
@@ -156,7 +168,9 @@ bool GameStateManager::AreAllEnemiesDefeated() const
     if (enemyGroups_.empty()) return true;
 
     for (Group* group : enemyGroups_) {
-        if (group && !group->IsDefeated()) {
+        if (!group) continue;
+        if (group->IsAlly()) continue;  // 味方化したグループはスキップ
+        if (!group->IsDefeated()) {
             return false;
         }
     }
@@ -176,6 +190,7 @@ bool GameStateManager::AreAllEnemiesInPlayerNetwork() const
     // 全生存敵がネットワーク内にいるかチェック
     for (Group* group : enemyGroups_) {
         if (!group || group->IsDefeated()) continue;
+        if (group->IsAlly()) continue;  // 味方化したグループはスキップ
 
         BondableEntity groupEntity = group;
         bool inNetwork = false;
