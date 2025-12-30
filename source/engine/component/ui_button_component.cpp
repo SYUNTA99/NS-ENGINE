@@ -45,7 +45,7 @@ void UIButtonComponent::Update([[maybe_unused]] float deltaTime)
 bool UIButtonComponent::IsMouseOver() const
 {
     auto& input = InputManager::Get();
-    Vector2 mouse = input.GetMouse().GestPosition();
+    Vector2 mouse = input.GetMouse().GetPosition();
     Vector2 pos = GetPosition();
 
     // ボタンの範囲を計算

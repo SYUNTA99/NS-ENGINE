@@ -6,6 +6,7 @@
 #include "engine/component/game_object.h"
 #include "engine/component/transform2d.h"
 #include "engine/debug/debug_draw.h"
+#include <algorithm>
 
 //----------------------------------------------------------------------------
 void UIGaugeComponent::Update([[maybe_unused]] float deltaTime)
@@ -45,14 +46,7 @@ void UIGaugeComponent::Render()
 //----------------------------------------------------------------------------
 void UIGaugeComponent::SetValue(float value)
 {
-    // 0.0〜1.0の範囲にクランプ
-    if (value < 0.0f) {
-        value_ = 0.0f;
-    } else if (value > 1.0f) {
-        value_ = 1.0f;
-    } else {
-        value_ = value;
-    }
+    value_ = std::clamp(value, 0.0f, 1.0f);
 }
 
 //----------------------------------------------------------------------------

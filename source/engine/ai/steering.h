@@ -7,8 +7,7 @@
 #include <DirectXMath.h>
 #include <vector>
 #include <cmath>
-
-using DirectX::SimpleMath::Vector2;
+#include <random>
 
 //----------------------------------------------------------------------------
 //! @brief ステアリング行動名前空間
@@ -16,6 +15,7 @@ using DirectX::SimpleMath::Vector2;
 //----------------------------------------------------------------------------
 namespace Steering
 {
+    using DirectX::SimpleMath::Vector2;
     //------------------------------------------------------------------------
     //! @brief 目標に向かう（Seek）
     //! @param position 現在位置
@@ -68,10 +68,14 @@ namespace Steering
     //! @param angleChange 1フレームあたりの角度変化量（ラジアン）
     //! @return 速度ベクトル（正規化済み）
     //------------------------------------------------------------------------
-    inline Vector2 Wander(const Vector2& position, float wanderRadius, float& wanderAngle, float angleChange = 0.5f)
+    inline Vector2 Wander([[maybe_unused]] const Vector2& position, float wanderRadius, float& wanderAngle, float angleChange = 0.5f)
     {
+        // スレッドセーフな乱数生成
+        static thread_local std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
         // ランダムに角度を変更
-        wanderAngle += (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f * angleChange;
+        wanderAngle += dist(rng) * angleChange;
 
         // 徘徊ターゲットを計算
         Vector2 wanderTarget;
