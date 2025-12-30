@@ -10,8 +10,22 @@
 //----------------------------------------------------------------------------
 TimeManager& TimeManager::Get()
 {
-    static TimeManager instance;
-    return instance;
+    assert(instance_ && "TimeManager::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void TimeManager::Create()
+{
+    if (!instance_) {
+        instance_.reset(new TimeManager());
+    }
+}
+
+//----------------------------------------------------------------------------
+void TimeManager::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

@@ -10,7 +10,7 @@
 #include "game/entities/individual.h"
 #include "game/entities/player.h"
 #include "game/relationships/relationship_facade.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "common/logging/logging.h"
 #include <algorithm>
@@ -38,8 +38,22 @@ CombatSystem::~CombatSystem()
 //----------------------------------------------------------------------------
 CombatSystem& CombatSystem::Get()
 {
-    static CombatSystem instance;
-    return instance;
+    assert(instance_ && "CombatSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void CombatSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new CombatSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void CombatSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

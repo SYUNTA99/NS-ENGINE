@@ -5,7 +5,7 @@
 #include "group.h"
 #include "game/ai/group_ai.h"
 #include "game/systems/stagger_system.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "game/bond/bond_manager.h"
 #include "game/bond/bond.h"

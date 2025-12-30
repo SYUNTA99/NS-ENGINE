@@ -3,7 +3,7 @@
 //! @brief  硬直システム実装
 //----------------------------------------------------------------------------
 #include "stagger_system.h"
-#include "time_manager.h"
+#include "engine/time/time_manager.h"
 #include "game/entities/group.h"
 #include "common/logging/logging.h"
 #include <vector>
@@ -11,8 +11,22 @@
 //----------------------------------------------------------------------------
 StaggerSystem& StaggerSystem::Get()
 {
-    static StaggerSystem instance;
-    return instance;
+    assert(instance_ && "StaggerSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void StaggerSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new StaggerSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void StaggerSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

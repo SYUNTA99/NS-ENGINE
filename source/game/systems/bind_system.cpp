@@ -3,21 +3,35 @@
 //! @brief  結システム実装
 //----------------------------------------------------------------------------
 #include "bind_system.h"
-#include "time_manager.h"
+#include "engine/time/time_manager.h"
 #include "cut_system.h"
 #include "fe_system.h"
 #include "insulation_system.h"
 #include "game/bond/bond_manager.h"
 #include "game/relationships/relationship_facade.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
 BindSystem& BindSystem::Get()
 {
-    static BindSystem instance;
-    return instance;
+    assert(instance_ && "BindSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void BindSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new BindSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void BindSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

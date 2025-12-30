@@ -3,7 +3,7 @@
 //! @brief  切システム実装
 //----------------------------------------------------------------------------
 #include "cut_system.h"
-#include "time_manager.h"
+#include "engine/time/time_manager.h"
 #include "bind_system.h"
 #include "fe_system.h"
 #include "stagger_system.h"
@@ -11,7 +11,7 @@
 #include "game/bond/bond_manager.h"
 #include "game/relationships/relationship_facade.h"
 #include "game/entities/group.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "common/logging/logging.h"
 
@@ -38,8 +38,22 @@ CutSystem::~CutSystem()
 //----------------------------------------------------------------------------
 CutSystem& CutSystem::Get()
 {
-    static CutSystem instance;
-    return instance;
+    assert(instance_ && "CutSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void CutSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new CutSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void CutSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------
