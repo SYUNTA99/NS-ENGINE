@@ -88,10 +88,9 @@ void Player::Update(float dt, Camera2D& camera)
 //----------------------------------------------------------------------------
 void Player::HandleInput(float dt, Camera2D& /*camera*/)
 {
-    InputManager* inputMgr = InputManager::GetInstance();
-    if (!inputMgr || !transform_) return;
+    if (!transform_) return;
 
-    Keyboard& keyboard = inputMgr->GetKeyboard();
+    Keyboard& keyboard = InputManager::Get().GetKeyboard();
 
     // 移動入力
     Vector2 move = Vector2::Zero;

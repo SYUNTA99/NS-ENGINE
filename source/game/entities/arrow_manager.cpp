@@ -11,8 +11,22 @@
 //----------------------------------------------------------------------------
 ArrowManager& ArrowManager::Get()
 {
-    static ArrowManager instance;
-    return instance;
+    assert(instance_ && "ArrowManager::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void ArrowManager::Create()
+{
+    if (!instance_) {
+        instance_.reset(new ArrowManager());
+    }
+}
+
+//----------------------------------------------------------------------------
+void ArrowManager::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

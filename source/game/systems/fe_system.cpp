@@ -9,8 +9,22 @@
 //----------------------------------------------------------------------------
 FESystem& FESystem::Get()
 {
-    static FESystem instance;
-    return instance;
+    assert(instance_ && "FESystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void FESystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new FESystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void FESystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

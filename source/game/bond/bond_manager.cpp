@@ -12,8 +12,22 @@
 //----------------------------------------------------------------------------
 BondManager& BondManager::Get()
 {
-    static BondManager instance;
-    return instance;
+    assert(instance_ && "BondManager::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void BondManager::Create()
+{
+    if (!instance_) {
+        instance_.reset(new BondManager());
+    }
+}
+
+//----------------------------------------------------------------------------
+void BondManager::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

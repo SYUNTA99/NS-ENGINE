@@ -9,8 +9,22 @@
 //----------------------------------------------------------------------------
 InsulationSystem& InsulationSystem::Get()
 {
-    static InsulationSystem instance;
-    return instance;
+    assert(instance_ && "InsulationSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void InsulationSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new InsulationSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void InsulationSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

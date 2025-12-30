@@ -27,8 +27,12 @@ int WINAPI WinMain(
     desc.enableDebugLayer = true;
     desc.vsync = VSyncMode::On;
 
+    // エンジンシングルトン生成
+    Application::Create();
+
     // 初期化
     if (!Application::Get().Initialize(desc)) {
+        Application::Destroy();
         return -1;
     }
 
@@ -45,6 +49,7 @@ int WINAPI WinMain(
     // 終了
     game.Shutdown();
     Application::Get().Shutdown();
+    Application::Destroy();
 
     return 0;
 }

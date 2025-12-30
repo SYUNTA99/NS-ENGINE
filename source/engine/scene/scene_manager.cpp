@@ -6,11 +6,7 @@
 #include <chrono>
 
 //----------------------------------------------------------------------------
-SceneManager& SceneManager::Get() noexcept
-{
-    static SceneManager instance;
-    return instance;
-}
+// ※ Create()/Destroy()はヘッダーでインライン実装
 
 //----------------------------------------------------------------------------
 void SceneManager::ApplyPendingChange(std::unique_ptr<Scene>& current)

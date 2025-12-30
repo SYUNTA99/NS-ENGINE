@@ -6,6 +6,8 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
+#include <cassert>
 
 // 前方宣言
 class Group;
@@ -30,6 +32,15 @@ class GameStateManager
 public:
     //! @brief シングルトンインスタンス取得
     static GameStateManager& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~GameStateManager() = default;
 
     //------------------------------------------------------------------------
     // 初期化・更新
@@ -106,7 +117,6 @@ public:
 
 private:
     GameStateManager() = default;
-    ~GameStateManager() = default;
     GameStateManager(const GameStateManager&) = delete;
     GameStateManager& operator=(const GameStateManager&) = delete;
 
@@ -118,6 +128,8 @@ private:
 
     //! @brief 全敵がプレイヤーネットワーク内か判定
     [[nodiscard]] bool AreAllEnemiesInPlayerNetwork() const;
+
+    static inline std::unique_ptr<GameStateManager> instance_ = nullptr;
 
     GameState state_ = GameState::Playing;  //!< 現在の状態
     Player* player_ = nullptr;              //!< プレイヤー参照

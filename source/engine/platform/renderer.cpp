@@ -11,11 +11,16 @@
 //----------------------------------------------------------------------------
 // シングルトン
 //----------------------------------------------------------------------------
-
-Renderer& Renderer::Get() noexcept
+void Renderer::Create()
 {
-    static Renderer instance;
-    return instance;
+    if (!instance_) {
+        instance_ = std::unique_ptr<Renderer>(new Renderer());
+    }
+}
+
+void Renderer::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

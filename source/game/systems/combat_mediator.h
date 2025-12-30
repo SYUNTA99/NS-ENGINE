@@ -9,6 +9,8 @@
 #include <shared_mutex>
 #include <cstdint>
 #include <vector>
+#include <memory>
+#include <cassert>
 
 class Group;
 class Player;
@@ -27,6 +29,15 @@ class CombatMediator
 public:
     //! @brief シングルトンインスタンス取得
     static CombatMediator& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~CombatMediator() = default;
 
     //------------------------------------------------------------------------
     // 初期化・終了
@@ -59,7 +70,6 @@ public:
 
 private:
     CombatMediator() = default;
-    ~CombatMediator() = default;
     CombatMediator(const CombatMediator&) = delete;
     CombatMediator& operator=(const CombatMediator&) = delete;
     CombatMediator(CombatMediator&&) = delete;
@@ -94,6 +104,8 @@ private:
     //------------------------------------------------------------------------
     // メンバ変数
     //------------------------------------------------------------------------
+
+    static inline std::unique_ptr<CombatMediator> instance_ = nullptr;
 
     mutable std::shared_mutex mutex_;                      //!< 読み書きロック（マルチスレッド対応）
     std::unordered_set<Group*> attackableGroups_;          //!< 攻撃許可されたグループ

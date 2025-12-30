@@ -9,6 +9,8 @@
 #include "game/ai/group_ai.h"
 #include <vector>
 #include <functional>
+#include <memory>
+#include <cassert>
 
 // 前方宣言
 class Group;
@@ -27,6 +29,15 @@ class RelationshipFacade
 public:
     //! @brief シングルトンインスタンス取得
     static RelationshipFacade& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~RelationshipFacade() = default;
 
     //------------------------------------------------------------------------
     // 初期化・シャットダウン
@@ -164,12 +175,13 @@ public:
 
 private:
     RelationshipFacade() = default;
-    ~RelationshipFacade() = default;
     RelationshipFacade(const RelationshipFacade&) = delete;
     RelationshipFacade& operator=(const RelationshipFacade&) = delete;
 
     //! @brief ターゲットの脅威度を取得
     [[nodiscard]] float GetTargetThreat(const AITarget& target) const;
+
+    static inline std::unique_ptr<RelationshipFacade> instance_ = nullptr;
 
     RelationshipGraph graph_;           //!< 内部グラフ
     Player* player_ = nullptr;          //!< プレイヤー参照

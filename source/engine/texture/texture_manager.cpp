@@ -112,11 +112,19 @@ namespace
 //============================================================================
 // TextureManager 実装
 //============================================================================
-TextureManager& TextureManager::Get() noexcept
+void TextureManager::Create()
 {
-    static TextureManager instance;
-    return instance;
+    if (!instance_) {
+        instance_ = std::unique_ptr<TextureManager>(new TextureManager());
+    }
 }
+
+void TextureManager::Destroy()
+{
+    instance_.reset();
+}
+
+TextureManager::~TextureManager() = default;
 
 void TextureManager::Initialize(IReadableFileSystem* fileSystem)
 {

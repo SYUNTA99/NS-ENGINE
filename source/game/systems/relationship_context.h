@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory>
+#include <cassert>
 
 // 前方宣言
 class Individual;
@@ -25,6 +27,15 @@ class RelationshipContext
 public:
     //! @brief シングルトンインスタンスを取得
     static RelationshipContext& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~RelationshipContext() = default;
 
     //! @brief 初期化（EventBus購読開始）
     void Initialize();
@@ -86,7 +97,6 @@ public:
 
 private:
     RelationshipContext() = default;
-    ~RelationshipContext() = default;
     RelationshipContext(const RelationshipContext&) = delete;
     RelationshipContext& operator=(const RelationshipContext&) = delete;
 
@@ -101,6 +111,8 @@ private:
 
     //! @brief target → attackers (逆引き: Individualが攻撃されている)
     std::unordered_map<Individual*, std::unordered_set<Individual*>> targetToAttackers_;
+
+    static inline std::unique_ptr<RelationshipContext> instance_ = nullptr;
 
     //! @brief player → attackers (逆引き: Playerが攻撃されている)
     std::unordered_map<Player*, std::unordered_set<Individual*>> playerToAttackers_;

@@ -11,8 +11,22 @@
 //----------------------------------------------------------------------------
 RelationshipFacade& RelationshipFacade::Get()
 {
-    static RelationshipFacade instance;
-    return instance;
+    assert(instance_ && "RelationshipFacade::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void RelationshipFacade::Create()
+{
+    if (!instance_) {
+        instance_.reset(new RelationshipFacade());
+    }
+}
+
+//----------------------------------------------------------------------------
+void RelationshipFacade::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 #include <future>
 #include <atomic>
 #include <functional>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief シーンマネージャー（シングルトン）
@@ -20,19 +21,28 @@ class SceneManager final
 {
 public:
     //! @brief シングルトンインスタンス取得
-    static SceneManager& Get() noexcept;
+    static SceneManager& Get()
+    {
+        assert(instance_ && "SceneManager::Create() must be called first");
+        return *instance_;
+    }
 
-private:
-    SceneManager() = default;
+    //! @brief インスタンス生成
+    static void Create()
+    {
+        if (!instance_) {
+            instance_ = std::unique_ptr<SceneManager>(new SceneManager());
+        }
+    }
+
+    //! @brief インスタンス破棄
+    static void Destroy()
+    {
+        instance_.reset();
+    }
+
+    //! @brief デストラクタ
     ~SceneManager() = default;
-
-    // コピー・ムーブ禁止
-    SceneManager(const SceneManager&) = delete;
-    SceneManager& operator=(const SceneManager&) = delete;
-    SceneManager(SceneManager&&) = delete;
-    SceneManager& operator=(SceneManager&&) = delete;
-
-public:
 
     //----------------------------------------------------------
     //! @name シーン切り替え（同期）
@@ -92,6 +102,12 @@ public:
     //!@}
 
 private:
+    SceneManager() = default;
+    SceneManager(const SceneManager&) = delete;
+    SceneManager& operator=(const SceneManager&) = delete;
+
+    static inline std::unique_ptr<SceneManager> instance_ = nullptr;
+
     //! シーン生成ヘルパー
     template<typename T>
     static std::unique_ptr<Scene> CreateScene()

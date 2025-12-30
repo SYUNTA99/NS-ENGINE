@@ -9,6 +9,7 @@
 #include "dx11/gpu/gpu.h"
 #include <memory>
 #include <cstdint>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief レンダラー管理クラス（シングルトン）
@@ -21,7 +22,20 @@ class Renderer final : private NonCopyableNonMovable
 {
 public:
     //! @brief シングルトンインスタンス取得
-    static Renderer& Get() noexcept;
+    static Renderer& Get()
+    {
+        assert(instance_ && "Renderer::Create() must be called first");
+        return *instance_;
+    }
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~Renderer() = default;
 
     //----------------------------------------------------------
     //! @name ライフサイクル
@@ -94,7 +108,10 @@ public:
 
 private:
     Renderer() = default;
-    ~Renderer() = default;
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+
+    static inline std::unique_ptr<Renderer> instance_ = nullptr;
 
     bool CreateRenderTargets(uint32_t width, uint32_t height);
 

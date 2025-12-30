@@ -8,6 +8,7 @@
 #include "dx11/gpu/gpu.h"
 #include <memory>
 #include <string>
+#include <cassert>
 
 class IReadableFileSystem;
 class ITextureLoader;
@@ -55,8 +56,21 @@ struct TextureCacheStats
 class TextureManager final : private NonCopyableNonMovable
 {
 public:
-    //! シングルトンインスタンスを取得
-    static TextureManager& Get() noexcept;
+    //! シングルトンインスタンス取得
+    static TextureManager& Get()
+    {
+        assert(instance_ && "TextureManager::Create() must be called first");
+        return *instance_;
+    }
+
+    //! インスタンス生成
+    static void Create();
+
+    //! インスタンス破棄
+    static void Destroy();
+
+    //! デストラクタ
+    ~TextureManager();
 
     //----------------------------------------------------------
     //! @name   初期化・終了
@@ -169,7 +183,10 @@ public:
 
 private:
     TextureManager() = default;
-    ~TextureManager() = default;
+    TextureManager(const TextureManager&) = delete;
+    TextureManager& operator=(const TextureManager&) = delete;
+
+    static inline std::unique_ptr<TextureManager> instance_ = nullptr;
 
     //! 拡張子に対応するローダーを取得
     [[nodiscard]] ITextureLoader* GetLoaderForExtension(const std::string& path) const;

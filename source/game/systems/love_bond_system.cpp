@@ -14,8 +14,22 @@
 //----------------------------------------------------------------------------
 LoveBondSystem& LoveBondSystem::Get()
 {
-    static LoveBondSystem instance;
-    return instance;
+    assert(instance_ && "LoveBondSystem::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void LoveBondSystem::Create()
+{
+    if (!instance_) {
+        instance_.reset(new LoveBondSystem());
+    }
+}
+
+//----------------------------------------------------------------------------
+void LoveBondSystem::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------
