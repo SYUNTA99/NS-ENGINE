@@ -7,6 +7,8 @@
 #include "game/bond/bond.h"
 #include <functional>
 #include <optional>
+#include <memory>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief 切システム（シングルトン）
@@ -17,6 +19,15 @@ class CutSystem
 public:
     //! @brief シングルトンインスタンス取得
     static CutSystem& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~CutSystem();
 
     //------------------------------------------------------------------------
     // モード制御
@@ -97,12 +108,13 @@ public:
 
 private:
     CutSystem();
-    ~CutSystem();
     CutSystem(const CutSystem&) = delete;
     CutSystem& operator=(const CutSystem&) = delete;
 
     //! @brief BondRemovedEventハンドラ
     void OnBondRemoved(const BondableEntity& a, const BondableEntity& b);
+
+    static inline std::unique_ptr<CutSystem> instance_ = nullptr;
 
     bool isEnabled_ = false;        //!< モード有効フラグ
     Bond* selectedBond_ = nullptr;  //!< 選択中の縁

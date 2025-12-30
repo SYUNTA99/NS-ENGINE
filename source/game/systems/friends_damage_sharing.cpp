@@ -13,8 +13,22 @@
 //----------------------------------------------------------------------------
 FriendsDamageSharing& FriendsDamageSharing::Get()
 {
-    static FriendsDamageSharing instance;
-    return instance;
+    assert(instance_ && "FriendsDamageSharing::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void FriendsDamageSharing::Create()
+{
+    if (!instance_) {
+        instance_.reset(new FriendsDamageSharing());
+    }
+}
+
+//----------------------------------------------------------------------------
+void FriendsDamageSharing::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

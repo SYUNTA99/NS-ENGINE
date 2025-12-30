@@ -17,35 +17,42 @@
 
 #include "scenes/title_scene.h"
 #include "scenes/test_scene.h"
+#include "systems/system_manager.h"
 #include "dx11/graphics_context.h"
 #include "engine/platform/renderer.h"
 #include "engine/graphics2d/render_state_manager.h"
 #include "engine/c_systems/sprite_batch.h"
-#ifdef _DEBUG
 #include "engine/debug/debug_draw.h"
 #include "engine/debug/circle_renderer.h"
-#endif
 
 // シェーダーコンパイラ（グローバルインスタンス）
 static std::unique_ptr<D3DShaderCompiler> g_shaderCompiler;
 
 //----------------------------------------------------------------------------
-Game::Game()
-    : sceneManager_(SceneManager::Get())
-{
-}
+Game::Game() = default;
 
 //----------------------------------------------------------------------------
 bool Game::Initialize()
 {
+    // 0. エンジンシングルトン生成
+    // Note: TextureManager, Renderer は Application層で管理
+    InputManager::Create();
+    FileSystemManager::Create();
+    ShaderManager::Create();
+    RenderStateManager::Create();
+    SpriteBatch::Create();
+    CollisionManager::Create();
+    SceneManager::Create();
+#ifdef _DEBUG
+    DebugDraw::Create();
+    CircleRenderer::Create();
+#endif
+
     std::wstring projectRoot = FileSystemManager::GetProjectRoot();
     std::wstring assetsRoot = FileSystemManager::GetAssetsDirectory();
 
-    // 1. InputManager初期化
-    if (!InputManager::Initialize()) {
-        LOG_ERROR("[Game] InputManagerの初期化に失敗");
-        return false;
-    }
+    // 1. ゲームシステム一括生成（シングルトン初期化）
+    SystemManager::CreateAll();
 
     // 2. CollisionManager初期化（セルサイズはコライダーサイズの2倍が適切）
     CollisionManager::Get().Initialize(64);
@@ -59,11 +66,9 @@ bool Game::Initialize()
     fsManager.Mount("textures", std::make_unique<HostFileSystem>(assetsRoot + L"texture/"));
     fsManager.Mount("stages", std::make_unique<HostFileSystem>(assetsRoot + L"stages/"));
 
-    // 4. TextureManager初期化
+    // 4. TextureManager初期化（Application層でCreate済み）
     auto* textureFs = fsManager.GetFileSystem("textures");
-    if (textureFs) {
-        TextureManager::Get().Initialize(textureFs);
-    }
+    TextureManager::Get().Initialize(textureFs);
 
     // 5. ShaderManager初期化
     auto* shaderFs = fsManager.GetFileSystem("shaders");
@@ -87,8 +92,8 @@ bool Game::Initialize()
     LOG_INFO("[Game] サブシステム初期化完了");
 
     // 8. 初期シーンを設定
-    sceneManager_.Load<Title_Scene>();
-    sceneManager_.ApplyPendingChange(currentScene_);
+    SceneManager::Get().Load<Title_Scene>();
+    SceneManager::Get().ApplyPendingChange(currentScene_);
 
     return true;
 }
@@ -119,8 +124,24 @@ void Game::Shutdown() noexcept
     TextureManager::Get().Shutdown();
     FileSystemManager::Get().UnmountAll();
     CollisionManager::Get().Shutdown();
-    InputManager::Uninit();
     g_shaderCompiler.reset();
+
+    // ゲームシステム一括破棄
+    SystemManager::DestroyAll();
+
+    // エンジンシングルトン破棄（逆順）
+    // Note: TextureManager, Renderer は Application層で管理
+#ifdef _DEBUG
+    CircleRenderer::Destroy();
+    DebugDraw::Destroy();
+#endif
+    SceneManager::Destroy();
+    CollisionManager::Destroy();
+    SpriteBatch::Destroy();
+    RenderStateManager::Destroy();
+    ShaderManager::Destroy();
+    FileSystemManager::Destroy();
+    InputManager::Destroy();
 
     LOG_INFO("[Game] シャットダウン完了");
 }
@@ -144,5 +165,5 @@ void Game::Render()
 //----------------------------------------------------------------------------
 void Game::EndFrame()
 {
-    sceneManager_.ApplyPendingChange(currentScene_);
+    SceneManager::Get().ApplyPendingChange(currentScene_);
 }

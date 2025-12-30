@@ -13,6 +13,8 @@
 #include <functional>
 #include <cstdint>
 #include <optional>
+#include <memory>
+#include <cassert>
 
 class Collider2D;
 class GameObject;
@@ -102,10 +104,29 @@ struct RaycastHit {
 //============================================================================
 class CollisionManager final : private NonCopyableNonMovable {
 public:
-    static CollisionManager& Get() noexcept {
-        static CollisionManager instance;
-        return instance;
+    //! @brief シングルトンインスタンス取得
+    static CollisionManager& Get()
+    {
+        assert(instance_ && "CollisionManager::Create() must be called first");
+        return *instance_;
     }
+
+    //! @brief インスタンス生成
+    static void Create()
+    {
+        if (!instance_) {
+            instance_ = std::unique_ptr<CollisionManager>(new CollisionManager());
+        }
+    }
+
+    //! @brief インスタンス破棄
+    static void Destroy()
+    {
+        instance_.reset();
+    }
+
+    //! @brief デストラクタ
+    ~CollisionManager() = default;
 
     //------------------------------------------------------------------------
     // 初期化・終了
@@ -212,7 +233,10 @@ public:
 
 private:
     CollisionManager() = default;
-    ~CollisionManager() = default;
+    CollisionManager(const CollisionManager&) = delete;
+    CollisionManager& operator=(const CollisionManager&) = delete;
+
+    static inline std::unique_ptr<CollisionManager> instance_ = nullptr;
 
     //! @brief 固定タイムステップの衝突判定（内部用）
     void FixedUpdate();

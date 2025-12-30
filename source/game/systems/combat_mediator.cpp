@@ -3,7 +3,7 @@
 //! @brief  戦闘調整システム実装
 //----------------------------------------------------------------------------
 #include "combat_mediator.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "game/entities/group.h"
 #include "game/entities/player.h"
@@ -16,8 +16,22 @@
 //----------------------------------------------------------------------------
 CombatMediator& CombatMediator::Get()
 {
-    static CombatMediator instance;
-    return instance;
+    assert(instance_ && "CombatMediator::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void CombatMediator::Create()
+{
+    if (!instance_) {
+        instance_.reset(new CombatMediator());
+    }
+}
+
+//----------------------------------------------------------------------------
+void CombatMediator::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

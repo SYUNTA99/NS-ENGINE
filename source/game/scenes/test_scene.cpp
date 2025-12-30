@@ -23,7 +23,7 @@
 #include "game/entities/knight.h"
 #include "game/entities/arrow_manager.h"
 #include "game/bond/bond_manager.h"
-#include "game/systems/time_manager.h"
+#include "engine/time/time_manager.h"
 #include "game/systems/bind_system.h"
 #include "game/systems/cut_system.h"
 #include "game/systems/combat_system.h"
@@ -34,7 +34,7 @@
 #include "game/systems/stagger_system.h"
 #include "game/systems/insulation_system.h"
 #include "game/systems/faction_manager.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 #include "game/ui/radial_menu.h"
 #include "game/systems/love_bond_system.h"
@@ -411,11 +411,10 @@ void TestScene::Update()
 //----------------------------------------------------------------------------
 void TestScene::HandleInput(float /*dt*/)
 {
-    InputManager* input = InputManager::GetInstance();
-    if (!input) return;
+    auto& input = InputManager::Get();
 
-    Keyboard& kb = input->GetKeyboard();
-    Mouse& mouse = input->GetMouse();
+    Keyboard& kb = input.GetKeyboard();
+    Mouse& mouse = input.GetMouse();
     Vector2 mouseScreenPos(static_cast<float>(mouse.GetX()), static_cast<float>(mouse.GetY()));
 
     RadialMenu& radialMenu = RadialMenu::Get();
@@ -604,10 +603,9 @@ void TestScene::BindPlayerToGroup(Group* group)
 //----------------------------------------------------------------------------
 Group* TestScene::GetGroupUnderCursor() const
 {
-    InputManager* input = InputManager::GetInstance();
-    if (!input || !camera_) return nullptr;
+    if (!camera_) return nullptr;
 
-    Mouse& mouse = input->GetMouse();
+    Mouse& mouse = InputManager::Get().GetMouse();
     Vector2 mouseWorld = camera_->ScreenToWorld(
         Vector2(static_cast<float>(mouse.GetX()), static_cast<float>(mouse.GetY()))
     );

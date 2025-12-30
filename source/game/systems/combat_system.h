@@ -7,6 +7,8 @@
 #include <vector>
 #include <functional>
 #include <set>
+#include <memory>
+#include <cassert>
 
 // 前方宣言
 class Group;
@@ -22,6 +24,15 @@ class CombatSystem
 public:
     //! @brief シングルトンインスタンス取得
     static CombatSystem& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~CombatSystem();
 
     //------------------------------------------------------------------------
     // 初期化・更新
@@ -91,7 +102,6 @@ public:
 
 private:
     CombatSystem();
-    ~CombatSystem();
     CombatSystem(const CombatSystem&) = delete;
     CombatSystem& operator=(const CombatSystem&) = delete;
 
@@ -109,6 +119,8 @@ private:
 
     //! @brief 個体死亡イベントハンドラ（attackTarget_クリア用）
     void OnIndividualDied(Individual* diedIndividual);
+
+    static inline std::unique_ptr<CombatSystem> instance_ = nullptr;
 
     std::vector<Group*> groups_;            //!< 登録されたグループ
     std::vector<Group*> pendingRemovals_;   //!< 削除予約されたグループ

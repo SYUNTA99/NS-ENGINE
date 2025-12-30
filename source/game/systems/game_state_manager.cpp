@@ -12,8 +12,22 @@
 //----------------------------------------------------------------------------
 GameStateManager& GameStateManager::Get()
 {
-    static GameStateManager instance;
-    return instance;
+    assert(instance_ && "GameStateManager::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void GameStateManager::Create()
+{
+    if (!instance_) {
+        instance_.reset(new GameStateManager());
+    }
+}
+
+//----------------------------------------------------------------------------
+void GameStateManager::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

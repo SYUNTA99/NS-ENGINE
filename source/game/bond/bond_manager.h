@@ -10,6 +10,7 @@
 #include <functional>
 #include <unordered_map>
 #include <string>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief 縁マネージャー（シングルトン）
@@ -20,6 +21,15 @@ class BondManager
 public:
     //! @brief シングルトンインスタンス取得
     static BondManager& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~BondManager() = default;
 
     //------------------------------------------------------------------------
     // 縁の作成・削除
@@ -106,12 +116,13 @@ public:
 
 private:
     BondManager() = default;
-    ~BondManager() = default;
     BondManager(const BondManager&) = delete;
     BondManager& operator=(const BondManager&) = delete;
 
     //! @brief キャッシュを再構築
     void RebuildCache();
+
+    static inline std::unique_ptr<BondManager> instance_ = nullptr;
 
     std::vector<std::unique_ptr<Bond>> bonds_;  //!< 全ての縁
 

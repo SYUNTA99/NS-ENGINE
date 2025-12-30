@@ -5,6 +5,8 @@
 #pragma once
 
 #include <functional>
+#include <memory>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief 時間状態
@@ -26,6 +28,15 @@ class TimeManager
 public:
     //! @brief シングルトンインスタンス取得
     static TimeManager& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~TimeManager() = default;
 
     //------------------------------------------------------------------------
     // 時間制御
@@ -81,9 +92,10 @@ public:
 
 private:
     TimeManager() = default;
-    ~TimeManager() = default;
     TimeManager(const TimeManager&) = delete;
     TimeManager& operator=(const TimeManager&) = delete;
+
+    static inline std::unique_ptr<TimeManager> instance_ = nullptr;
 
     TimeState state_ = TimeState::Normal;   //!< 現在の時間状態
     float timeScale_ = 1.0f;                //!< タイムスケール

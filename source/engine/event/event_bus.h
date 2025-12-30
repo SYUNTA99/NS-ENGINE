@@ -11,6 +11,7 @@
 #include <memory>
 #include <cstdint>
 #include <mutex>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief イベントハンドラの基底クラス
@@ -71,9 +72,24 @@ class EventBus
 public:
     //! @brief シングルトン取得
     static EventBus& Get() {
-        static EventBus instance;
-        return instance;
+        assert(instance_ && "EventBus::Create() not called");
+        return *instance_;
     }
+
+    //! @brief インスタンス生成（スレッドセーフ）
+    static void Create() {
+        std::call_once(initFlag_, []() {
+            instance_.reset(new EventBus());
+        });
+    }
+
+    //! @brief インスタンス破棄
+    static void Destroy() {
+        instance_.reset();
+    }
+
+    //! @brief デストラクタ
+    ~EventBus() = default;
 
     //------------------------------------------------------------------------
     // 購読
@@ -143,7 +159,6 @@ public:
 
 private:
     EventBus() = default;
-    ~EventBus() = default;
     EventBus(const EventBus&) = delete;
     EventBus& operator=(const EventBus&) = delete;
 
@@ -171,6 +186,9 @@ private:
         }
         return static_cast<EventHandler<TEvent>*>(it->second.get());
     }
+
+    static inline std::unique_ptr<EventBus> instance_ = nullptr;
+    static inline std::once_flag initFlag_;
 
     std::unordered_map<std::type_index, std::unique_ptr<IEventHandler>> handlers_;
     mutable std::mutex mutex_;

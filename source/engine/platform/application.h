@@ -10,6 +10,7 @@
 #include "window.h"
 #include <memory>
 #include <cstdint>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief アプリケーション設定
@@ -35,7 +36,20 @@ class Application final : private NonCopyableNonMovable
 {
 public:
     //! @brief シングルトンインスタンス取得
-    static Application& Get() noexcept;
+    static Application& Get()
+    {
+        assert(instance_ && "Application::Create() must be called first");
+        return *instance_;
+    }
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~Application() = default;
 
     //----------------------------------------------------------
     //! @name ライフサイクル
@@ -107,7 +121,10 @@ public:
 
 private:
     Application() = default;
-    ~Application() = default;
+    Application(const Application&) = delete;
+    Application& operator=(const Application&) = delete;
+
+    static inline std::unique_ptr<Application> instance_ = nullptr;
 
     template<typename TGame>
     void MainLoop(TGame& game);

@@ -4,14 +4,28 @@
 //----------------------------------------------------------------------------
 #include "relationship_context.h"
 #include "game/entities/individual.h"
-#include "game/systems/event/event_bus.h"
+#include "engine/event/event_bus.h"
 #include "game/systems/event/game_events.h"
 
 //----------------------------------------------------------------------------
 RelationshipContext& RelationshipContext::Get()
 {
-    static RelationshipContext instance;
-    return instance;
+    assert(instance_ && "RelationshipContext::Create() not called");
+    return *instance_;
+}
+
+//----------------------------------------------------------------------------
+void RelationshipContext::Create()
+{
+    if (!instance_) {
+        instance_.reset(new RelationshipContext());
+    }
+}
+
+//----------------------------------------------------------------------------
+void RelationshipContext::Destroy()
+{
+    instance_.reset();
 }
 
 //----------------------------------------------------------------------------

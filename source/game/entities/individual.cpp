@@ -8,7 +8,7 @@
 #include "game/ai/group_ai.h"
 #include "game/systems/bind_system.h"
 #include "game/systems/friends_damage_sharing.h"
-#include "game/systems/time_manager.h"
+#include "engine/time/time_manager.h"
 #include "game/systems/relationship_context.h"
 #include "game/systems/game_constants.h"
 #include "game/relationships/relationship_facade.h"

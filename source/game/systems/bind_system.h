@@ -8,6 +8,8 @@
 #include "game/bond/bondable_entity.h"
 #include <functional>
 #include <optional>
+#include <memory>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //! @brief 結システム（シングルトン）
@@ -18,6 +20,15 @@ class BindSystem
 public:
     //! @brief シングルトンインスタンス取得
     static BindSystem& Get();
+
+    //! @brief インスタンス生成
+    static void Create();
+
+    //! @brief インスタンス破棄
+    static void Destroy();
+
+    //! @brief デストラクタ
+    ~BindSystem() = default;
 
     //------------------------------------------------------------------------
     // モード制御
@@ -101,9 +112,10 @@ public:
 
 private:
     BindSystem() = default;
-    ~BindSystem() = default;
     BindSystem(const BindSystem&) = delete;
     BindSystem& operator=(const BindSystem&) = delete;
+
+    static inline std::unique_ptr<BindSystem> instance_ = nullptr;
 
     bool isEnabled_ = false;                            //!< モード有効フラグ
     std::optional<BondableEntity> markedEntity_;        //!< マーク済みエンティティ

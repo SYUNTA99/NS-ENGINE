@@ -12,6 +12,8 @@
 #include "engine/math/color.h"
 #include "engine/component/sprite_renderer.h"
 #include <vector>
+#include <memory>
+#include <cassert>
 
 // 前方宣言
 class Transform2D;
@@ -35,10 +37,28 @@ public:
     //------------------------------------------------------------------------
     //! @brief シングルトンインスタンス取得
     //------------------------------------------------------------------------
-    static SpriteBatch& Get() noexcept {
-        static SpriteBatch instance;
-        return instance;
+    static SpriteBatch& Get()
+    {
+        assert(instance_ && "SpriteBatch::Create() must be called first");
+        return *instance_;
     }
+
+    //! @brief インスタンス生成
+    static void Create()
+    {
+        if (!instance_) {
+            instance_ = std::unique_ptr<SpriteBatch>(new SpriteBatch());
+        }
+    }
+
+    //! @brief インスタンス破棄
+    static void Destroy()
+    {
+        instance_.reset();
+    }
+
+    //! @brief デストラクタ
+    ~SpriteBatch() = default;
 
     //------------------------------------------------------------------------
     //! @brief 初期化
@@ -172,7 +192,10 @@ public:
 
 private:
     SpriteBatch() = default;
-    ~SpriteBatch() = default;
+    SpriteBatch(const SpriteBatch&) = delete;
+    SpriteBatch& operator=(const SpriteBatch&) = delete;
+
+    static inline std::unique_ptr<SpriteBatch> instance_ = nullptr;
 
     //! @brief スプライト頂点データ
     struct SpriteVertex {
