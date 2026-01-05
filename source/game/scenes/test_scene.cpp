@@ -79,9 +79,12 @@ void TestScene::OnEnter()
     );
 
     // 縁描画用テクスチャをロード
-    ropeNormalTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_normal.png");
-    ropeFriendsTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_friends.png");
-    ropeLoveTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_love.png");
+    ropeNormalTexture_ = TextureManager::Get().LoadTexture2D("rope_normal.png");
+    ropeFriendsTexture_ = TextureManager::Get().LoadTexture2D("rope_friends.png");
+    ropeLoveTexture_ = TextureManager::Get().LoadTexture2D("rope_love.png");
+    LOG_INFO("[TestScene] Rope textures loaded: normal=" + std::to_string(ropeNormalTexture_ != nullptr) +
+             ", friends=" + std::to_string(ropeFriendsTexture_ != nullptr) +
+             ", love=" + std::to_string(ropeLoveTexture_ != nullptr));
 
     // ステージ背景初期化（3エリア分）
     stageBackground_.Initialize("stage1", kMapWidth, kMapHeight);
@@ -991,27 +994,22 @@ void TestScene::DrawBondTexture(const Vector2& posA, const Vector2& posB, Textur
     // 2点間の距離と角度を計算
     Vector2 delta = posB - posA;
     float distance = delta.Length();
+    if (distance < 1.0f) return;  // 距離が短すぎる場合はスキップ
+
     float angle = std::atan2(delta.y, delta.x);
-
-    // セグメントの長さ（テクスチャ幅をベースに）
-    float segmentLength = texWidth * 0.8f;  // 少し重ねてタイリング
-    int segmentCount = static_cast<int>(std::ceil(distance / segmentLength));
-    if (segmentCount < 1) segmentCount = 1;
-
-    // 実際のセグメント間隔
-    float actualSegmentLength = distance / segmentCount;
+    Vector2 direction = delta / distance;  // 正規化
 
     // 原点をテクスチャ中央に設定
     Vector2 origin(texWidth * 0.5f, texHeight * 0.5f);
 
-    // スケール（Y方向は固定、X方向はセグメント長に合わせる）
-    float scaleX = actualSegmentLength / texWidth;
-    float scaleY = 1.0f;
+    // セグメント間隔（テクスチャ幅の40%で大きく重ねる）
+    float spacing = texWidth * 0.4f;
 
-    // 各セグメントを描画
-    for (int i = 0; i < segmentCount; ++i) {
-        float t = (i + 0.5f) / segmentCount;  // セグメント中央の位置
-        Vector2 segmentPos = posA + delta * t;
+    // 始点から終点まで等間隔でテクスチャを配置
+    float currentDist = 0.0f;
+    int order = 0;
+    while (currentDist < distance) {
+        Vector2 segmentPos = posA + direction * currentDist;
 
         spriteBatch.Draw(
             texture,
@@ -1019,11 +1017,13 @@ void TestScene::DrawBondTexture(const Vector2& posA, const Vector2& posB, Textur
             color,
             angle,
             origin,
-            Vector2(scaleX, scaleY),
+            Vector2::One,
             false, false,
             -50,  // sortingLayer: 縁は背景より手前、キャラより奥
-            i     // orderInLayer
+            order++
         );
+
+        currentDist += spacing;
     }
 }
 
@@ -1031,6 +1031,11 @@ void TestScene::DrawBondTexture(const Vector2& posA, const Vector2& posB, Textur
 void TestScene::DrawBonds()
 {
     const std::vector<std::unique_ptr<Bond>>& bonds = BondManager::Get().GetAllBonds();
+
+    static int logCounter = 0;
+    if (++logCounter % 60 == 1) {  // 1秒に1回ログ
+        LOG_DEBUG("[DrawBonds] Bond count: " + std::to_string(bonds.size()));
+    }
 
     for (const std::unique_ptr<Bond>& bond : bonds) {
         // 全滅したグループの縁は描画しない
