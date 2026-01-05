@@ -100,6 +100,18 @@ private:
     // UI用テクスチャ
     TexturePtr whiteTexture_;
 
+    // 縁描画用テクスチャ
+    TexturePtr ropeNormalTexture_;      //!< Basic縁用ロープ
+    TexturePtr ropeFriendsTexture_;     //!< Friends縁用ロープ
+    TexturePtr ropeLoveTexture_;        //!< Love縁用ロープ
+
+    //! @brief 縁をテクスチャで描画
+    //! @param posA 始点
+    //! @param posB 終点
+    //! @param texture ロープテクスチャ
+    //! @param color 色調整
+    void DrawBondTexture(const Vector2& posA, const Vector2& posB, Texture* texture, const Color& color);
+
     // 画面サイズ
     float screenWidth_ = 0.0f;
     float screenHeight_ = 0.0f;

@@ -45,6 +45,7 @@
 #include "game/systems/group_manager.h"
 #include <set>
 #include <unordered_map>
+#include <cmath>
 
 //----------------------------------------------------------------------------
 void TestScene::OnEnter()
@@ -76,6 +77,11 @@ void TestScene::OnEnter()
         whitePixels.data(),
         32 * sizeof(uint32_t)
     );
+
+    // 縁描画用テクスチャをロード
+    ropeNormalTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_normal.png");
+    ropeFriendsTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_friends.png");
+    ropeLoveTexture_ = TextureManager::Get().LoadTexture2D("assets:/texture/rope_love.png");
 
     // ステージ背景初期化（3エリア分）
     stageBackground_.Initialize("stage1", kMapWidth, kMapHeight);
@@ -972,6 +978,56 @@ void TestScene::Render()
 }
 
 //----------------------------------------------------------------------------
+void TestScene::DrawBondTexture(const Vector2& posA, const Vector2& posB, Texture* texture, const Color& color)
+{
+    if (!texture) return;
+
+    SpriteBatch& spriteBatch = SpriteBatch::Get();
+
+    // テクスチャサイズ取得
+    float texWidth = static_cast<float>(texture->Width());
+    float texHeight = static_cast<float>(texture->Height());
+
+    // 2点間の距離と角度を計算
+    Vector2 delta = posB - posA;
+    float distance = delta.Length();
+    float angle = std::atan2(delta.y, delta.x);
+
+    // セグメントの長さ（テクスチャ幅をベースに）
+    float segmentLength = texWidth * 0.8f;  // 少し重ねてタイリング
+    int segmentCount = static_cast<int>(std::ceil(distance / segmentLength));
+    if (segmentCount < 1) segmentCount = 1;
+
+    // 実際のセグメント間隔
+    float actualSegmentLength = distance / segmentCount;
+
+    // 原点をテクスチャ中央に設定
+    Vector2 origin(texWidth * 0.5f, texHeight * 0.5f);
+
+    // スケール（Y方向は固定、X方向はセグメント長に合わせる）
+    float scaleX = actualSegmentLength / texWidth;
+    float scaleY = 1.0f;
+
+    // 各セグメントを描画
+    for (int i = 0; i < segmentCount; ++i) {
+        float t = (i + 0.5f) / segmentCount;  // セグメント中央の位置
+        Vector2 segmentPos = posA + delta * t;
+
+        spriteBatch.Draw(
+            texture,
+            segmentPos,
+            color,
+            angle,
+            origin,
+            Vector2(scaleX, scaleY),
+            false, false,
+            -50,  // sortingLayer: 縁は背景より手前、キャラより奥
+            i     // orderInLayer
+        );
+    }
+}
+
+//----------------------------------------------------------------------------
 void TestScene::DrawBonds()
 {
     const std::vector<std::unique_ptr<Bond>>& bonds = BondManager::Get().GetAllBonds();
@@ -988,23 +1044,31 @@ void TestScene::DrawBonds()
         Vector2 posA = BondableHelper::GetPosition(bond->GetEntityA());
         Vector2 posB = BondableHelper::GetPosition(bond->GetEntityB());
 
-        // 縁タイプ別の色
-        Color bondColor;
+        // 縁タイプ別のテクスチャと色を選択
+        Texture* ropeTexture = nullptr;
+        Color bondColor = Colors::White;
+
         switch (bond->GetType()) {
         case BondType::Basic:
-            bondColor = Color(0.9f, 0.9f, 0.9f, 0.8f);  // 白
+            ropeTexture = ropeNormalTexture_.get();
+            bondColor = Color(1.0f, 1.0f, 1.0f, 0.9f);
             break;
         case BondType::Friends:
-            bondColor = Color(0.3f, 1.0f, 0.3f, 0.8f);  // 緑
+            ropeTexture = ropeFriendsTexture_.get();
+            bondColor = Color(1.0f, 1.0f, 1.0f, 0.9f);
             break;
         case BondType::Love:
-            bondColor = Color(1.0f, 0.5f, 0.7f, 0.8f);  // ピンク
+            ropeTexture = ropeLoveTexture_.get();
+            bondColor = Color(1.0f, 1.0f, 1.0f, 0.9f);
             break;
         default:
-            bondColor = Color(0.8f, 0.8f, 0.2f, 0.8f);  // デフォルト（黄色）
+            ropeTexture = ropeNormalTexture_.get();
+            bondColor = Color(0.8f, 0.8f, 0.2f, 0.9f);
             break;
         }
-        DEBUG_LINE(posA, posB, bondColor, 3.0f);
+
+        // テクスチャで縁を描画
+        DrawBondTexture(posA, posB, ropeTexture, bondColor);
     }
 
     // 個体コライダーの描画（デバッグ用）
