@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "wave_manager.h"
 #include "game/entities/group.h"
+#include "game/systems/group_manager.h"
 #include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
@@ -12,7 +13,6 @@ void WaveManager::Initialize(const std::vector<WaveData>& waves)
     waves_ = waves;
     currentWave_ = 1;
     waveCleared_ = false;
-    waveTransitionTimer_ = 0.0f;
 
     LOG_INFO("[WaveManager] Initialized with " + std::to_string(waves_.size()) + " waves");
 }
@@ -57,7 +57,6 @@ void WaveManager::Reset()
 {
     currentWave_ = 1;
     waveCleared_ = false;
-    waveTransitionTimer_ = 0.0f;
     GroupManager::Get().ClearWaveAssignments();
 
     LOG_INFO("[WaveManager] Reset");

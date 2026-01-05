@@ -95,7 +95,10 @@ public:
     //------------------------------------------------------------------------
 
     //! @brief 切る回数上限を設定（-1で無制限）
-    void SetMaxCutCount(int count) { maxCutCount_ = count; }
+    void SetMaxCutCount(int count) {
+        assert((count == -1 || count >= 0) && "maxCutCount must be -1 or non-negative");
+        maxCutCount_ = count;
+    }
 
     //! @brief 切る回数上限を取得
     [[nodiscard]] int GetMaxCutCount() const { return maxCutCount_; }

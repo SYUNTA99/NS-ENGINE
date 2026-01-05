@@ -133,6 +133,9 @@ public:
     //! @param spawner GroupDataを受け取り、生成したGroupポインタを返す関数
     void SetGroupSpawner(std::function<Group*(const GroupData&)> spawner) { groupSpawner_ = spawner; }
 
+    //! @brief トランジション完了時コールバック
+    void SetOnTransitionComplete(std::function<void()> callback) { onTransitionComplete_ = callback; }
+
 private:
     WaveManager() = default;
     WaveManager(const WaveManager&) = delete;
@@ -143,7 +146,6 @@ private:
     std::vector<WaveData> waves_;                   //!< ウェーブデータ
     int currentWave_ = 1;                           //!< 現在のウェーブ番号（1始まり）
     bool waveCleared_ = false;                      //!< 現在ウェーブクリア済みフラグ
-    float waveTransitionTimer_ = 0.0f;              //!< ウェーブ間遷移タイマー
 
     // トランジション関連
     bool isTransitioning_ = false;                  //!< トランジション中フラグ

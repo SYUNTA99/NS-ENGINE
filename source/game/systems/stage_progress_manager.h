@@ -102,6 +102,8 @@ public:
     //! @brief 使用した結ぶ/切る回数を保存
     void AddActionCounts(int bindCount, int cutCount)
     {
+        assert(bindCount >= 0 && "bindCount must be non-negative");
+        assert(cutCount >= 0 && "cutCount must be non-negative");
         totalBindsUsed_ += bindCount;
         totalCutsUsed_ += cutCount;
     }
