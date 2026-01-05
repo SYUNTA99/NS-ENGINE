@@ -134,6 +134,8 @@ public:
     //! @param path マウントパス
     //! @param sRGB sRGBフォーマットとして扱う
     //! @return テクスチャハンドル（失敗時Invalid）
+    //! @warning OnLoadAsync()内で使用禁止。OnEnter()またはOnLoadComplete()で使用すること。
+    //!          非同期ロード中はスコープが確定していないため、正しいスコープに紐付けられない。
     [[nodiscard]] TextureHandle Load(const std::string& path, bool sRGB = true);
 
     //! @brief 2Dテクスチャをグローバルスコープでロード（永続）

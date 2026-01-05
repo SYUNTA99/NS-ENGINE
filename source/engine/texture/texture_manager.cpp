@@ -22,6 +22,7 @@
 #endif
 
 #include <algorithm>
+#include <vector>
 
 namespace
 {
@@ -248,17 +249,30 @@ Texture* TextureManager::Get(TextureHandle handle) const noexcept
 
 void TextureManager::GarbageCollect()
 {
+    // 解放対象のスロットインデックスを収集
+    std::vector<uint16_t> freedIndices;
+
     for (size_t i = 0; i < slots_.size(); ++i) {
         TextureSlot& slot = slots_[i];
         if (slot.inUse && slot.refCount == 0) {
-            // handleCacheからも削除（キーを探す必要あり）
-            // Note: 逆引きが必要だが、パフォーマンスのため省略
-            // GC時点でキャッシュから消えなくても、Get()でgeneration不一致で弾かれる
-
             slot.texture.reset();
             slot.inUse = false;
             slot.generation++;  // 世代を進める
             freeIndices_.push(static_cast<uint16_t>(i));
+            freedIndices.push_back(static_cast<uint16_t>(i));
+        }
+    }
+
+    // handleCache_から解放されたスロットのエントリを削除
+    if (!freedIndices.empty()) {
+        for (auto it = handleCache_.begin(); it != handleCache_.end(); ) {
+            uint16_t index = it->second.GetIndex();
+            bool shouldErase = std::find(freedIndices.begin(), freedIndices.end(), index) != freedIndices.end();
+            if (shouldErase) {
+                it = handleCache_.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }

@@ -33,8 +33,9 @@ struct TextureHandle
     }
 
     //! @brief 世代番号取得
+    //! @note Create()で+1されているため、-1して元の値を返す
     [[nodiscard]] uint16_t GetGeneration() const noexcept {
-        return static_cast<uint16_t>(id >> 16);
+        return static_cast<uint16_t>((id >> 16) - 1);
     }
 
     //! @brief ハンドル生成
