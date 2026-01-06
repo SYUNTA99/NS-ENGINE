@@ -37,38 +37,37 @@ enum class JobPriority : uint8_t {
 class JobCounter
 {
 public:
-    JobCounter() = default;
+    JobCounter();
 
     //! @brief 初期カウント指定コンストラクタ
     //! @param initialCount 初期カウント値
-    explicit JobCounter(uint32_t initialCount) : count_(initialCount) {}
+    explicit JobCounter(uint32_t initialCount);
+
+    ~JobCounter();
+
+    // コピー禁止（mutex/condition_variableはコピー不可）
+    JobCounter(const JobCounter&) = delete;
+    JobCounter& operator=(const JobCounter&) = delete;
 
     //! @brief カウントをデクリメント（ジョブ完了時に呼び出し）
     void Decrement() noexcept;
 
     //! @brief カウントが0になるまで待機
-    //! @note ビジーウェイトを避けるため、内部でスリープを使用
     void Wait() const noexcept;
 
     //! @brief カウントが0かどうか
-    [[nodiscard]] bool IsComplete() const noexcept {
-        return count_.load(std::memory_order_acquire) == 0;
-    }
+    [[nodiscard]] bool IsComplete() const noexcept;
 
     //! @brief 現在のカウント
-    [[nodiscard]] uint32_t GetCount() const noexcept {
-        return count_.load(std::memory_order_acquire);
-    }
+    [[nodiscard]] uint32_t GetCount() const noexcept;
 
     //! @brief カウントをリセット
     //! @param count 新しいカウント値
-    void Reset(uint32_t count) noexcept {
-        count_.store(count, std::memory_order_release);
-    }
+    void Reset(uint32_t count) noexcept;
 
 private:
-    std::atomic<uint32_t> count_{0};
-    mutable std::atomic<bool> waiting_{false};
+    class Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
 using JobCounterPtr = std::shared_ptr<JobCounter>;

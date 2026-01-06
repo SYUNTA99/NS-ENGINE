@@ -26,50 +26,70 @@
 #undef min
 
 //----------------------------------------------------------------------------
-// JobCounter 実装
+// JobCounter::Impl 実装
 //----------------------------------------------------------------------------
 
-void JobCounter::Decrement() noexcept
+class JobCounter::Impl
 {
-    uint32_t prev = count_.fetch_sub(1, std::memory_order_acq_rel);
-    // カウントが1から0になった場合、待機中のスレッドに通知
-    // Note: 通知は waiting_ フラグで最適化（誰も待っていなければスキップ）
-    if (prev == 1 && waiting_.load(std::memory_order_acquire)) {
-        waiting_.store(false, std::memory_order_release);
-    }
-}
+public:
+    Impl() = default;
+    explicit Impl(uint32_t initialCount) : count_(initialCount) {}
 
-void JobCounter::Wait() const noexcept
-{
-    // 既に完了していれば即座にリターン
-    if (count_.load(std::memory_order_acquire) == 0) {
-        return;
-    }
-
-    // 待機中フラグを立てる
-    waiting_.store(true, std::memory_order_release);
-
-    // スピンウェイト + バックオフ
-    uint32_t spinCount = 0;
-    constexpr uint32_t kMaxSpinCount = 1000;
-
-    while (count_.load(std::memory_order_acquire) != 0) {
-        if (spinCount < kMaxSpinCount) {
-            // スピンウェイト（CPU負荷軽減のためpause命令）
-            #if defined(_MSC_VER)
-                _mm_pause();
-            #else
-                __builtin_ia32_pause();
-            #endif
-            ++spinCount;
-        } else {
-            // スピン上限に達したらスリープ
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+    void Decrement() noexcept
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (count_ > 0) {
+            --count_;
+            if (count_ == 0) {
+                // 待機中のスレッドに通知
+                cv_.notify_all();
+            }
         }
     }
 
-    waiting_.store(false, std::memory_order_release);
-}
+    void Wait() const noexcept
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cv_.wait(lock, [this] { return count_ == 0; });
+    }
+
+    [[nodiscard]] bool IsComplete() const noexcept
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return count_ == 0;
+    }
+
+    [[nodiscard]] uint32_t GetCount() const noexcept
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return count_;
+    }
+
+    void Reset(uint32_t count) noexcept
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        count_ = count;
+    }
+
+private:
+    mutable std::mutex mutex_;
+    mutable std::condition_variable cv_;
+    uint32_t count_ = 0;
+};
+
+//----------------------------------------------------------------------------
+// JobCounter 実装
+//----------------------------------------------------------------------------
+
+JobCounter::JobCounter() : impl_(std::make_unique<Impl>()) {}
+JobCounter::JobCounter(uint32_t initialCount) : impl_(std::make_unique<Impl>(initialCount)) {}
+JobCounter::~JobCounter() = default;
+
+void JobCounter::Decrement() noexcept { impl_->Decrement(); }
+void JobCounter::Wait() const noexcept { impl_->Wait(); }
+bool JobCounter::IsComplete() const noexcept { return impl_->IsComplete(); }
+uint32_t JobCounter::GetCount() const noexcept { return impl_->GetCount(); }
+void JobCounter::Reset(uint32_t count) noexcept { impl_->Reset(count); }
 
 //----------------------------------------------------------------------------
 // JobSystem::Impl
