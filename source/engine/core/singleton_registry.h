@@ -102,10 +102,11 @@ public:
                       std::to_string(missing) + ")");
             assert(false && "Singleton dependency not initialized");
 #else
-            // Releaseビルドでは警告ログを出力して続行
+            // Releaseビルドでは警告ログを出力し、登録をスキップ
             LOG_WARN("[SingletonRegistry] " + std::string(name) +
                      " の依存関係が満たされていません (missing bits: " +
                      std::to_string(missing) + ")");
+            return;  // 依存が満たされていない場合は登録しない
 #endif
         }
 

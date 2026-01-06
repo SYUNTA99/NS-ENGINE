@@ -439,17 +439,38 @@ void CollisionManager::ProcessEventQueue()
         Collider2D* colB = colliders_[evt.indexB];
         if (!colA || !colB) continue;
 
+        // 1つ目のコールバックを発火
         switch (evt.type) {
         case CollisionEventType::Enter:
             if (onEnter_[evt.indexA]) onEnter_[evt.indexA](colA, colB);
-            if (onEnter_[evt.indexB]) onEnter_[evt.indexB](colB, colA);
             break;
         case CollisionEventType::Stay:
             if (onCollision_[evt.indexA]) onCollision_[evt.indexA](colA, colB);
-            if (onCollision_[evt.indexB]) onCollision_[evt.indexB](colB, colA);
             break;
         case CollisionEventType::Exit:
             if (onExit_[evt.indexA]) onExit_[evt.indexA](colA, colB);
+            break;
+        }
+
+        // 1つ目のコールバック内でBが削除された可能性があるため再検証
+        if (generations_[evt.indexB] != evt.generationB) continue;
+        colB = colliders_[evt.indexB];
+        if (!colB) continue;
+
+        // 同様にAも再検証（1つ目のコールバックがAを削除した場合）
+        if (generations_[evt.indexA] != evt.generationA) continue;
+        colA = colliders_[evt.indexA];
+        if (!colA) continue;
+
+        // 2つ目のコールバックを発火
+        switch (evt.type) {
+        case CollisionEventType::Enter:
+            if (onEnter_[evt.indexB]) onEnter_[evt.indexB](colB, colA);
+            break;
+        case CollisionEventType::Stay:
+            if (onCollision_[evt.indexB]) onCollision_[evt.indexB](colB, colA);
+            break;
+        case CollisionEventType::Exit:
             if (onExit_[evt.indexB]) onExit_[evt.indexB](colB, colA);
             break;
         }
