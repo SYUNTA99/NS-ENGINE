@@ -120,6 +120,11 @@ void Camera3D::LookAt(const Vector3& target, const Vector3& up)
 
     Vector3 position = GetPosition();
     Vector3 forward = target - position;
+
+    // ゼロベクトルガード: target == position の場合は何もしない
+    float lengthSq = forward.x * forward.x + forward.y * forward.y + forward.z * forward.z;
+    if (lengthSq < 1e-8f) return;
+
     forward.Normalize();
 
     // forward方向からQuaternionを計算
@@ -154,11 +159,19 @@ Vector2 Camera3D::WorldToScreen(const Vector3& worldPos,
     Matrix projection = BuildProjectionMatrix();
     Matrix viewProj = view * projection;
 
-    Vector3 ndcPos = Vector3::Transform(worldPos, viewProj);
+    // Vector4で変換して透視除算（w除算）を実行
+    Vector4 v4(worldPos.x, worldPos.y, worldPos.z, 1.0f);
+    Vector4 result = Vector4::Transform(v4, viewProj);
+
+    // 透視除算: w成分で割ってNDC座標を取得
+    if (result.w != 0.0f) {
+        result.x /= result.w;
+        result.y /= result.w;
+    }
 
     // NDC座標をスクリーン座標に変換
-    float screenX = (ndcPos.x + 1.0f) * kHalf * screenWidth;
-    float screenY = (1.0f - ndcPos.y) * kHalf * screenHeight;
+    float screenX = (result.x + 1.0f) * kHalf * screenWidth;
+    float screenY = (1.0f - result.y) * kHalf * screenHeight;
     return Vector2(screenX, screenY);
 }
 

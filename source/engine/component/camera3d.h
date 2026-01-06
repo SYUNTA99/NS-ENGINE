@@ -79,7 +79,9 @@ public:
 
     //! @brief ビューポートサイズからアスペクト比を設定
     void SetViewportSize(float width, float height) noexcept {
-        aspectRatio_ = width / height;
+        if (height > 0.0f) {
+            aspectRatio_ = width / height;
+        }
     }
 
     //------------------------------------------------------------------------
