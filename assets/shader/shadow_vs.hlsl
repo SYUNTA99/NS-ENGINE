@@ -42,7 +42,7 @@ struct VSOutput
 // メイン
 //============================================================================
 
-VSOutput main(VSInput input)
+VSOutput VSMain(VSInput input)
 {
     VSOutput output;
 

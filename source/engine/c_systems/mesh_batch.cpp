@@ -107,26 +107,26 @@ bool MeshBatch::CreateShaders()
     auto& shaderMgr = ShaderManager::Get();
 
     // メインパスシェーダー
-    vertexShader_ = shaderMgr.LoadVertexShader("shaders:/mesh_vs.hlsl");
+    vertexShader_ = shaderMgr.LoadVertexShader("mesh_vs.hlsl");
     if (!vertexShader_) {
         LOG_ERROR("[MeshBatch] mesh_vs.hlsl のロードに失敗");
         return false;
     }
 
-    pixelShader_ = shaderMgr.LoadPixelShader("shaders:/mesh_ps.hlsl");
+    pixelShader_ = shaderMgr.LoadPixelShader("mesh_ps.hlsl");
     if (!pixelShader_) {
         LOG_ERROR("[MeshBatch] mesh_ps.hlsl のロードに失敗");
         return false;
     }
 
     // シャドウパスシェーダー
-    shadowVertexShader_ = shaderMgr.LoadVertexShader("shaders:/shadow_vs.hlsl");
+    shadowVertexShader_ = shaderMgr.LoadVertexShader("shadow_vs.hlsl");
     if (!shadowVertexShader_) {
         LOG_ERROR("[MeshBatch] shadow_vs.hlsl のロードに失敗");
         return false;
     }
 
-    shadowPixelShader_ = shaderMgr.LoadPixelShader("shaders:/shadow_ps.hlsl");
+    shadowPixelShader_ = shaderMgr.LoadPixelShader("shadow_ps.hlsl");
     if (!shadowPixelShader_) {
         LOG_ERROR("[MeshBatch] shadow_ps.hlsl のロードに失敗");
         return false;

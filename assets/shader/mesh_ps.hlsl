@@ -230,7 +230,7 @@ float CalculateShadow(float3 worldPos, float3 normal)
 // メイン
 //============================================================================
 
-float4 main(PSInput input) : SV_TARGET
+float4 PSMain(PSInput input) : SV_TARGET
 {
     // マテリアルパラメータ取得
     float3 albedo = albedoColor.rgb * input.color.rgb;

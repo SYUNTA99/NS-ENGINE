@@ -18,7 +18,7 @@ struct PSInput
 
 // シャドウパスでは深度のみを出力
 // カラー出力なし（デプスバッファへの書き込みのみ）
-void main(PSInput input)
+void PSMain(PSInput input)
 {
     // 何も出力しない
     // デプスバッファへの書き込みは自動的に行われる
