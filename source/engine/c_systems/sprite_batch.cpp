@@ -3,7 +3,7 @@
 //! @brief  スプライトバッチ描画システム実装
 //----------------------------------------------------------------------------
 #include "sprite_batch.h"
-#include "engine/component/transform2d.h"
+#include "engine/component/transform.h"
 #include "engine/component/camera2d.h"
 #include "engine/component/animator.h"
 #include "engine/graphics2d/render_state_manager.h"
@@ -336,7 +336,7 @@ void SpriteBatch::Draw(
     spriteQueue_.push_back(info);
 }
 
-void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transform) {
+void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform& transform) {
     if (!isBegun_ || !renderer.GetTexture()) {
         return;
     }
@@ -352,7 +352,7 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transf
         );
     }
 
-    // Transform2Dからパラメータ取得
+    // Transformからパラメータ取得
     Vector2 position = transform.GetPosition();
     float rotation = transform.GetRotation();
     Vector2 scale = transform.GetScale();
@@ -366,7 +366,7 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transf
          renderer.GetSortingLayer(), renderer.GetOrderInLayer());
 }
 
-void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transform, const Animator& animator) {
+void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform& transform, const Animator& animator) {
     if (!isBegun_ || !renderer.GetTexture()) {
         return;
     }
@@ -381,7 +381,7 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform2D& transf
     float frameWidth = static_cast<float>(texture->Width()) * std::abs(uvSize.x);
     float frameHeight = static_cast<float>(texture->Height()) * std::abs(uvSize.y);
 
-    // Transform2Dからパラメータ取得
+    // Transformからパラメータ取得
     Vector2 position = transform.GetPosition();
     float rotation = transform.GetRotation();
     Vector2 scale = transform.GetScale();
