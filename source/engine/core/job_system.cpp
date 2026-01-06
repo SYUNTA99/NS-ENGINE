@@ -443,8 +443,9 @@ private:
         auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
-        // ジョブ実行
-        if (job.cancellableFunction && job.cancelToken) {
+        // ジョブ実行（function と cancellableFunction は排他）
+        if (job.cancellableFunction) {
+            assert(job.cancelToken && "CancellableFunction requires CancelToken");
             job.cancellableFunction(*job.cancelToken);
         } else if (job.function) {
             job.function();

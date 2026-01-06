@@ -127,13 +127,18 @@ public:
     explicit JobDesc(JobFunction func) : function_(std::move(func)) {}
 
     //! @brief ジョブ関数を設定
+    //! @note SetCancellableFunctionと排他。両方設定不可
     JobDesc& SetFunction(JobFunction func) {
+        assert(!cancellableFunction_ && "SetFunction and SetCancellableFunction are mutually exclusive");
         function_ = std::move(func);
         return *this;
     }
 
     //! @brief キャンセル対応ジョブ関数を設定
+    //! @note SetFunctionと排他。両方設定不可
+    //! @note SetCancelToken()も必ず呼び出すこと
     JobDesc& SetCancellableFunction(CancellableJobFunction func) {
+        assert(!function_ && "SetFunction and SetCancellableFunction are mutually exclusive");
         cancellableFunction_ = std::move(func);
         return *this;
     }
