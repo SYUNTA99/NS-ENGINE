@@ -24,6 +24,7 @@
 #include "engine/c_systems/sprite_batch.h"
 #include "engine/debug/debug_draw.h"
 #include "engine/debug/circle_renderer.h"
+#include "engine/core/job_system.h"
 
 // シェーダーコンパイラ（グローバルインスタンス）
 static std::unique_ptr<D3DShaderCompiler> g_shaderCompiler;
@@ -36,6 +37,7 @@ bool Game::Initialize()
 {
     // 0. エンジンシングルトン生成
     // Note: TextureManager, Renderer は Application層で管理
+    JobSystem::Create();  // 最初に初期化（他システムが使用する可能性あり）
     InputManager::Create();
     FileSystemManager::Create();
     ShaderManager::Create();
@@ -149,6 +151,7 @@ void Game::Shutdown() noexcept
     ShaderManager::Destroy();
     FileSystemManager::Destroy();
     InputManager::Destroy();
+    JobSystem::Destroy();  // 最後に破棄（他システムが使用している可能性あり）
 
     LOG_INFO("[Game] シャットダウン完了");
 }
