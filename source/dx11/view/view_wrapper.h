@@ -110,8 +110,8 @@ class ViewWrapper final : private NonCopyable
 {
 public:
     using Traits = ViewTraits<ViewType>;
-    using DescType = typename Traits::DescType;
-    using Ptr = std::unique_ptr<ViewWrapper>;
+    using ViewDesc = typename Traits::DescType;  //!< ビュー記述子型
+    using ViewPtr = std::unique_ptr<ViewWrapper>;  //!< ラッパーポインタ型
 
     //----------------------------------------------------------
     //! @name   直接生成（ComPtr返却、ラッパー不要時に使用）
@@ -121,7 +121,7 @@ public:
     //! Texture2DからComPtrを直接生成（効率的）
     [[nodiscard]] static ComPtr<ViewType> CreateViewFromTexture2D(
         ID3D11Texture2D* texture,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateViewDirect(texture, desc, "CreateViewFromTexture2D");
     }
@@ -131,7 +131,7 @@ public:
     [[nodiscard]] static std::enable_if_t<ViewTraits<T>::SupportsBuffer, ComPtr<ViewType>>
     CreateViewFromBuffer(
         ID3D11Buffer* buffer,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateViewDirect(buffer, desc, "CreateViewFromBuffer");
     }
@@ -145,9 +145,9 @@ public:
     //! 任意のリソースからビューを作成
     //! @param [in] resource D3D11リソース
     //! @param [in] desc     ビュー記述子
-    [[nodiscard]] static Ptr Create(
+    [[nodiscard]] static ViewPtr Create(
         ID3D11Resource* resource,
-        const DescType& desc)
+        const ViewDesc& desc)
     {
         if (!resource) {
             LOG_ERROR(std::string("ViewWrapper<") + Traits::Name + ">::Create - resource is null");
@@ -160,7 +160,7 @@ public:
             return nullptr;
         }
 
-        auto wrapper = Ptr(new ViewWrapper());
+        auto wrapper = ViewPtr(new ViewWrapper());
         HRESULT hr = Traits::Create(device, resource, &desc, wrapper->view_.GetAddressOf());
         if (FAILED(hr)) {
             LOG_ERROR(std::string("ViewWrapper<") + Traits::Name + ">::Create failed");
@@ -172,14 +172,14 @@ public:
 
     //! 既存のビューからラッパーを作成
     //! @param [in] view 既存のD3D11ビュー
-    [[nodiscard]] static Ptr FromD3DView(ComPtr<ViewType> view)
+    [[nodiscard]] static ViewPtr FromD3DView(ComPtr<ViewType> view)
     {
         if (!view) {
             LOG_ERROR(std::string("ViewWrapper<") + Traits::Name + ">::FromD3DView - view is null");
             return nullptr;
         }
 
-        auto wrapper = Ptr(new ViewWrapper());
+        auto wrapper = ViewPtr(new ViewWrapper());
         wrapper->view_ = std::move(view);
         return wrapper;
     }
@@ -191,27 +191,27 @@ public:
     //!@{
 
     //! Texture1Dからビューを作成
-    [[nodiscard]] static Ptr CreateFromTexture1D(
+    [[nodiscard]] static ViewPtr CreateFromTexture1D(
         ID3D11Texture1D* texture,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateFromResourceImpl(texture, desc, "CreateFromTexture1D");
     }
 
     //! Texture2Dからビューを作成
-    [[nodiscard]] static Ptr CreateFromTexture2D(
+    [[nodiscard]] static ViewPtr CreateFromTexture2D(
         ID3D11Texture2D* texture,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateFromResourceImpl(texture, desc, "CreateFromTexture2D");
     }
 
     //! Texture3Dからビューを作成（DSV非対応）
     template<typename T = ViewType>
-    [[nodiscard]] static std::enable_if_t<ViewTraits<T>::SupportsTexture3D, Ptr>
+    [[nodiscard]] static std::enable_if_t<ViewTraits<T>::SupportsTexture3D, ViewPtr>
     CreateFromTexture3D(
         ID3D11Texture3D* texture,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateFromResourceImpl(texture, desc, "CreateFromTexture3D");
     }
@@ -224,10 +224,10 @@ public:
 
     //! バッファからビューを作成（DSV非対応）
     template<typename T = ViewType>
-    [[nodiscard]] static std::enable_if_t<ViewTraits<T>::SupportsBuffer, Ptr>
+    [[nodiscard]] static std::enable_if_t<ViewTraits<T>::SupportsBuffer, ViewPtr>
     CreateFromBuffer(
         ID3D11Buffer* buffer,
-        const DescType* desc = nullptr)
+        const ViewDesc* desc = nullptr)
     {
         return CreateFromResourceImpl(buffer, desc, "CreateFromBuffer");
     }
@@ -246,9 +246,9 @@ public:
     [[nodiscard]] ComPtr<ViewType> Detach() noexcept { return std::move(view_); }
 
     //! 記述子を取得
-    [[nodiscard]] DescType GetDesc() const noexcept
+    [[nodiscard]] ViewDesc GetDesc() const noexcept
     {
-        DescType desc = {};
+        ViewDesc desc = {};
         if (view_) {
             view_->GetDesc(&desc);
         }
@@ -274,7 +274,7 @@ private:
     template<typename ResourceType>
     [[nodiscard]] static ComPtr<ViewType> CreateViewDirect(
         ResourceType* resource,
-        const DescType* desc,
+        const ViewDesc* desc,
         const char* methodName)
     {
         if (!resource) {
@@ -300,9 +300,9 @@ private:
 
     //! リソースからビュー作成の共通実装（ラッパー返却）
     template<typename ResourceType>
-    [[nodiscard]] static Ptr CreateFromResourceImpl(
+    [[nodiscard]] static ViewPtr CreateFromResourceImpl(
         ResourceType* resource,
-        const DescType* desc,
+        const ViewDesc* desc,
         const char* methodName)
     {
         if (!resource) {
@@ -316,7 +316,7 @@ private:
             return nullptr;
         }
 
-        auto wrapper = Ptr(new ViewWrapper());
+        auto wrapper = ViewPtr(new ViewWrapper());
         HRESULT hr = Traits::Create(device, resource, desc, wrapper->view_.GetAddressOf());
         if (FAILED(hr)) {
             LOG_ERROR(std::string("ViewWrapper<") + Traits::Name + ">::" + methodName + " failed");
