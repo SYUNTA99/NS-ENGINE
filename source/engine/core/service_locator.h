@@ -15,6 +15,7 @@ class SpriteBatch;
 class SceneManager;
 class FileSystemManager;
 class ShaderManager;
+class IJobSystem;
 
 //============================================================================
 //! @brief サービスロケーター
@@ -46,6 +47,7 @@ public:
     static void Provide(SceneManager* sm) noexcept { sceneManager_ = sm; }
     static void Provide(FileSystemManager* fs) noexcept { fileSystem_ = fs; }
     static void Provide(ShaderManager* shader) noexcept { shaderManager_ = shader; }
+    static void Provide(IJobSystem* js) noexcept { jobSystem_ = js; }
 
     //------------------------------------------------------------------------
     // サービス取得
@@ -91,6 +93,11 @@ public:
         return *shaderManager_;
     }
 
+    [[nodiscard]] static IJobSystem& Jobs() noexcept {
+        assert(jobSystem_ && "JobSystem not provided");
+        return *jobSystem_;
+    }
+
     //------------------------------------------------------------------------
     // 存在確認（オプショナル取得用）
     //------------------------------------------------------------------------
@@ -103,6 +110,7 @@ public:
     [[nodiscard]] static bool HasScenes() noexcept { return sceneManager_ != nullptr; }
     [[nodiscard]] static bool HasFileSystem() noexcept { return fileSystem_ != nullptr; }
     [[nodiscard]] static bool HasShaders() noexcept { return shaderManager_ != nullptr; }
+    [[nodiscard]] static bool HasJobs() noexcept { return jobSystem_ != nullptr; }
 
     //------------------------------------------------------------------------
     // クリーンアップ
@@ -117,6 +125,7 @@ public:
         sceneManager_ = nullptr;
         fileSystem_ = nullptr;
         shaderManager_ = nullptr;
+        jobSystem_ = nullptr;
     }
 
 private:
@@ -130,4 +139,5 @@ private:
     static inline SceneManager* sceneManager_ = nullptr;
     static inline FileSystemManager* fileSystem_ = nullptr;
     static inline ShaderManager* shaderManager_ = nullptr;
+    static inline IJobSystem* jobSystem_ = nullptr;
 };

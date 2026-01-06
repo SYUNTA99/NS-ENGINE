@@ -25,6 +25,7 @@
 #include "engine/debug/debug_draw.h"
 #include "engine/debug/circle_renderer.h"
 #include "engine/core/job_system.h"
+#include "engine/core/service_locator.h"
 
 // シェーダーコンパイラ（グローバルインスタンス）
 static std::unique_ptr<D3DShaderCompiler> g_shaderCompiler;
@@ -38,6 +39,7 @@ bool Game::Initialize()
     // 0. エンジンシングルトン生成
     // Note: TextureManager, Renderer は Application層で管理
     JobSystem::Create();  // 最初に初期化（他システムが使用する可能性あり）
+    Services::Provide(&JobSystem::Get());  // ServiceLocatorに登録
     InputManager::Create();
     FileSystemManager::Create();
     ShaderManager::Create();
