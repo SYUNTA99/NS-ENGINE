@@ -502,6 +502,8 @@ void SpriteBatch::SortSprites() {
     }
 
     // インデックスをソート（SpriteInfo自体は移動しない）
+    // ソートキー: 1) sortingLayer, 2) orderInLayer, 3) textureポインタ
+    // 同一深度のスプライトをテクスチャでグループ化し、描画状態変更を削減
     std::stable_sort(sortIndices_.begin(), sortIndices_.end(),
         [this](uint32_t a, uint32_t b) {
             const SpriteInfo& sa = spriteQueue_[a];
@@ -509,7 +511,11 @@ void SpriteBatch::SortSprites() {
             if (sa.sortingLayer != sb.sortingLayer) {
                 return sa.sortingLayer < sb.sortingLayer;
             }
-            return sa.orderInLayer < sb.orderInLayer;
+            if (sa.orderInLayer != sb.orderInLayer) {
+                return sa.orderInLayer < sb.orderInLayer;
+            }
+            // 同一深度ならテクスチャでグループ化
+            return sa.texture < sb.texture;
         });
 }
 
