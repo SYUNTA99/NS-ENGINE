@@ -5,11 +5,8 @@
 #pragma once
 
 #include "dx11/gpu_common.h"
+#include "dx11/view/view_wrapper.h"
 #include "gpu_resource.h"
-
-// 前方宣言
-class ShaderResourceView;
-class UnorderedAccessView;
 
 //===========================================================================
 //! @brief バッファ記述子
