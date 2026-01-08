@@ -26,6 +26,7 @@
 
 MeshBatch& MeshBatch::Get()
 {
+    assert(instance_ && "MeshBatch::Create() must be called first");
     return *instance_;
 }
 

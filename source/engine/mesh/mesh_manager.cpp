@@ -9,6 +9,11 @@
 #include <cassert>
 #include <cmath>
 #include <cfloat>
+#include <numbers>
+
+namespace {
+    constexpr float kPi = std::numbers::pi_v<float>;
+}
 
 //============================================================================
 // シングルトン管理
@@ -193,7 +198,16 @@ void MeshManager::GarbageCollect()
         }
     }
 
+    // キャッシュから無効なエントリを削除
     if (freed > 0) {
+        for (auto it = handleCache_.begin(); it != handleCache_.end(); ) {
+            if (!IsValid(it->second)) {
+                it = handleCache_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
         stats_.meshCount -= freed;
         LOG_INFO("[MeshManager] GC: freed " + std::to_string(freed) + " meshes");
     }
@@ -276,16 +290,14 @@ MeshHandle MeshManager::CreateSphere(float radius, uint32_t segments)
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
 
-    const float pi = 3.14159265358979323846f;
-
     // 頂点生成
     for (uint32_t lat = 0; lat <= segments; ++lat) {
-        float theta = static_cast<float>(lat) * pi / segments;
+        float theta = static_cast<float>(lat) * kPi / segments;
         float sinTheta = std::sin(theta);
         float cosTheta = std::cos(theta);
 
         for (uint32_t lon = 0; lon <= segments; ++lon) {
-            float phi = static_cast<float>(lon) * 2.0f * pi / segments;
+            float phi = static_cast<float>(lon) * 2.0f * kPi / segments;
             float sinPhi = std::sin(phi);
             float cosPhi = std::cos(phi);
 
@@ -389,12 +401,11 @@ MeshHandle MeshManager::CreateCylinder(float radius, float height, uint32_t segm
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
 
-    const float pi = 3.14159265358979323846f;
     float hh = height * 0.5f;
 
     // 側面の頂点
     for (uint32_t i = 0; i <= segments; ++i) {
-        float angle = static_cast<float>(i) * 2.0f * pi / segments;
+        float angle = static_cast<float>(i) * 2.0f * kPi / segments;
         float c = std::cos(angle);
         float s = std::sin(angle);
 
@@ -449,7 +460,7 @@ MeshHandle MeshManager::CreateCylinder(float radius, float height, uint32_t segm
     // 上面の頂点
     uint32_t topStart = static_cast<uint32_t>(vertices.size());
     for (uint32_t i = 0; i <= segments; ++i) {
-        float angle = static_cast<float>(i) * 2.0f * pi / segments;
+        float angle = static_cast<float>(i) * 2.0f * kPi / segments;
         float c = std::cos(angle);
         float s = std::sin(angle);
 
@@ -482,7 +493,7 @@ MeshHandle MeshManager::CreateCylinder(float radius, float height, uint32_t segm
     // 下面の頂点
     uint32_t bottomStart = static_cast<uint32_t>(vertices.size());
     for (uint32_t i = 0; i <= segments; ++i) {
-        float angle = static_cast<float>(i) * 2.0f * pi / segments;
+        float angle = static_cast<float>(i) * 2.0f * kPi / segments;
         float c = std::cos(angle);
         float s = std::sin(angle);
 

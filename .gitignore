@@ -3,6 +3,10 @@ build/
 bin/
 obj/
 
+# Assimp DLLは必要なので例外
+!external/assimp/bin/
+!external/assimp/bin/**
+
 # Visual Studio
 *.user
 *.suo
