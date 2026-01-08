@@ -14,10 +14,6 @@
 #include "common/logging/logging.h"
 #include "engine/scene/scene_manager.h"
 #include "engine/c_systems/collision_manager.h"
-
-#include "scenes/title_scene.h"
-#include "scenes/test_scene.h"
-#include "systems/system_manager.h"
 #include "dx11/graphics_context.h"
 #include "engine/platform/renderer.h"
 #include "engine/graphics2d/render_state_manager.h"
@@ -42,8 +38,7 @@ bool Game::Initialize()
 {
     // 0. エンジンシングルトン生成
     // Note: TextureManager, Renderer は Application層で管理
-    JobSystem::Create();  // 最初に初期化（他システムが使用する可能性あり）
-    Services::Provide(&JobSystem::Get());  // ServiceLocatorに登録
+    JobSystem::Create();
     InputManager::Create();
     FileSystemManager::Create();
     ShaderManager::Create();
@@ -60,49 +55,56 @@ bool Game::Initialize()
     CircleRenderer::Create();
 #endif
 
+    // ServiceLocatorに登録
+    Services::Provide(&JobSystem::Get());
+    Services::Provide(&InputManager::Get());
+    Services::Provide(&FileSystemManager::Get());
+    Services::Provide(&ShaderManager::Get());
+    Services::Provide(&SpriteBatch::Get());
+    Services::Provide(&CollisionManager::Get());
+    Services::Provide(&SceneManager::Get());
+
     std::wstring projectRoot = FileSystemManager::GetProjectRoot();
     std::wstring assetsRoot = FileSystemManager::GetAssetsDirectory();
 
-    // 1. ゲームシステム一括生成（シングルトン初期化）
-    SystemManager::CreateAll();
-
-    // 2. CollisionManager初期化（セルサイズはコライダーサイズの2倍が適切）
+    // 1. CollisionManager初期化
     CollisionManager::Get().Initialize(64);
 
-    // 3. ファイルシステムマウント
+    // 2. ファイルシステムマウント
     LOG_INFO("[Game] Project root: " + PathUtility::toNarrowString(projectRoot));
     LOG_INFO("[Game] Assets root: " + PathUtility::toNarrowString(assetsRoot));
 
     auto& fsManager = FileSystemManager::Get();
     fsManager.Mount("shaders", std::make_unique<HostFileSystem>(assetsRoot + L"shader/"));
     fsManager.Mount("textures", std::make_unique<HostFileSystem>(assetsRoot + L"texture/"));
-    fsManager.Mount("stages", std::make_unique<HostFileSystem>(assetsRoot + L"stages/"));
     fsManager.Mount("models", std::make_unique<HostFileSystem>(assetsRoot + L"models/"));
+    fsManager.Mount("materials", std::make_unique<HostFileSystem>(assetsRoot + L"materials/"));
 
-    // 4. TextureManager初期化（Application層でCreate済み）
+    // 3. TextureManager初期化（Application層でCreate済み）
     auto* textureFs = fsManager.GetFileSystem("textures");
     TextureManager::Get().Initialize(textureFs);
+    Services::Provide(&TextureManager::Get());
 
-    // 5. ShaderManager初期化
+    // 4. ShaderManager初期化
     auto* shaderFs = fsManager.GetFileSystem("shaders");
     if (shaderFs) {
         g_shaderCompiler = std::make_unique<D3DShaderCompiler>();
         ShaderManager::Get().Initialize(shaderFs, g_shaderCompiler.get());
     }
 
-    // 6. RenderStateManager初期化
+    // 5. RenderStateManager初期化
     if (!RenderStateManager::Get().Initialize()) {
         LOG_ERROR("[Game] RenderStateManagerの初期化に失敗");
         return false;
     }
 
-    // 7. SpriteBatch初期化
+    // 6. SpriteBatch初期化
     if (!SpriteBatch::Get().Initialize()) {
         LOG_ERROR("[Game] SpriteBatchの初期化に失敗");
         return false;
     }
 
-    // 7.5. MeshBatch初期化
+    // 7. MeshBatch初期化
     if (!MeshBatch::Get().Initialize()) {
         LOG_ERROR("[Game] MeshBatchの初期化に失敗");
         return false;
@@ -120,9 +122,7 @@ bool Game::Initialize()
 
     LOG_INFO("[Game] サブシステム初期化完了");
 
-    // 8. 初期シーンを設定
-    SceneManager::Get().Load<Title_Scene>();
-    SceneManager::Get().ApplyPendingChange(currentScene_);
+    // 初期シーンなし（必要に応じてシーンを追加）
 
     return true;
 }
@@ -158,19 +158,18 @@ void Game::Shutdown() noexcept
     SpriteBatch::Get().Shutdown();
     RenderStateManager::Get().Shutdown();
     ShaderManager::Get().Shutdown();
-    MaterialManager::Get().Shutdown();  // TextureManagerより先に解放（テクスチャを参照）
+    MaterialManager::Get().Shutdown();
     MeshManager::Get().Shutdown();
-    Renderer::Get().Shutdown();  // TextureManagerより先に解放（colorBuffer_/depthBuffer_がTexturePtr）
+    Renderer::Get().Shutdown();
     TextureManager::Get().Shutdown();
     FileSystemManager::Get().UnmountAll();
     CollisionManager::Get().Shutdown();
     g_shaderCompiler.reset();
 
-    // ゲームシステム一括破棄
-    SystemManager::DestroyAll();
+    // ServiceLocatorをクリア
+    Services::Clear();
 
     // エンジンシングルトン破棄（逆順）
-    // Note: TextureManager, Renderer は Application層で管理
 #ifdef _DEBUG
     CircleRenderer::Destroy();
     DebugDraw::Destroy();
@@ -186,7 +185,7 @@ void Game::Shutdown() noexcept
     ShaderManager::Destroy();
     FileSystemManager::Destroy();
     InputManager::Destroy();
-    JobSystem::Destroy();  // 最後に破棄（他システムが使用している可能性あり）
+    JobSystem::Destroy();
 
     LOG_INFO("[Game] シャットダウン完了");
 }

@@ -3,6 +3,7 @@
 //! @brief  マテリアルマネージャー実装
 //----------------------------------------------------------------------------
 #include "material_manager.h"
+#include "engine/core/singleton_registry.h"
 #include "common/logging/logging.h"
 #include <cassert>
 
@@ -20,6 +21,7 @@ void MaterialManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<MaterialManager>(new MaterialManager());
+        SINGLETON_REGISTER(MaterialManager, SingletonId::GraphicsDevice | SingletonId::TextureManager);
         LOG_INFO("[MaterialManager] Created");
     }
 }
@@ -27,6 +29,7 @@ void MaterialManager::Create()
 void MaterialManager::Destroy()
 {
     if (instance_) {
+        SINGLETON_UNREGISTER(MaterialManager);
         instance_->Shutdown();
         instance_.reset();
         LOG_INFO("[MaterialManager] Destroyed");

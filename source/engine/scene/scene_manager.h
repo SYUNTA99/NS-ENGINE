@@ -6,6 +6,7 @@
 
 #include "scene.h"
 #include "engine/core/job_system.h"
+#include "engine/core/singleton_registry.h"
 #include <memory>
 #include <atomic>
 #include <cassert>
@@ -31,13 +32,17 @@ public:
     {
         if (!instance_) {
             instance_ = std::unique_ptr<SceneManager>(new SceneManager());
+            SINGLETON_REGISTER(SceneManager, SingletonId::JobSystem | SingletonId::TextureManager);
         }
     }
 
     //! @brief インスタンス破棄
     static void Destroy()
     {
-        instance_.reset();
+        if (instance_) {
+            SINGLETON_UNREGISTER(SceneManager);
+            instance_.reset();
+        }
     }
 
     //! @brief デストラクタ

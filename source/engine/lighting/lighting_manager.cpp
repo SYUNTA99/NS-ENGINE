@@ -3,6 +3,7 @@
 //! @brief  ライティングマネージャー実装
 //----------------------------------------------------------------------------
 #include "lighting_manager.h"
+#include "engine/core/singleton_registry.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
 #include <cassert>
@@ -22,6 +23,7 @@ void LightingManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<LightingManager>(new LightingManager());
+        SINGLETON_REGISTER(LightingManager, SingletonId::GraphicsDevice);
         LOG_INFO("[LightingManager] Created");
     }
 }
@@ -29,6 +31,7 @@ void LightingManager::Create()
 void LightingManager::Destroy()
 {
     if (instance_) {
+        SINGLETON_UNREGISTER(LightingManager);
         instance_->Shutdown();
         instance_.reset();
         LOG_INFO("[LightingManager] Destroyed");

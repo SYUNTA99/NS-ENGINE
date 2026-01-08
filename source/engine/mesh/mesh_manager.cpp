@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "mesh_manager.h"
 #include "mesh_loader.h"
+#include "engine/core/singleton_registry.h"
 #include "common/logging/logging.h"
 #include "common/utility/hash.h"
 #include <cassert>
@@ -29,6 +30,7 @@ void MeshManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<MeshManager>(new MeshManager());
+        SINGLETON_REGISTER(MeshManager, SingletonId::GraphicsDevice | SingletonId::FileSystemManager);
         LOG_INFO("[MeshManager] Created");
     }
 }
@@ -36,6 +38,7 @@ void MeshManager::Create()
 void MeshManager::Destroy()
 {
     if (instance_) {
+        SINGLETON_UNREGISTER(MeshManager);
         instance_->Shutdown();
         instance_.reset();
         LOG_INFO("[MeshManager] Destroyed");

@@ -17,6 +17,7 @@
 
 #include "common/utility/non_copyable.h"
 #include "engine/math/math_types.h"
+#include "engine/core/singleton_registry.h"
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -148,13 +149,17 @@ public:
     {
         if (!instance_) {
             instance_ = std::unique_ptr<CollisionManager>(new CollisionManager());
+            SINGLETON_REGISTER(CollisionManager, SingletonId::None);
         }
     }
 
     //! @brief インスタンス破棄
     static void Destroy()
     {
-        instance_.reset();
+        if (instance_) {
+            SINGLETON_UNREGISTER(CollisionManager);
+            instance_.reset();
+        }
     }
 
     //! @brief デストラクタ

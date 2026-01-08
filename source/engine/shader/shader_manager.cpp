@@ -8,6 +8,7 @@
 #include "dx11/compile/shader_compiler.h"
 #include "shader_cache.h"
 #include "engine/fs/file_system.h"
+#include "engine/core/singleton_registry.h"
 #include "dx11/graphics_device.h"
 #include "common/logging/logging.h"
 #include "common/utility/hash.h"
@@ -126,12 +127,16 @@ void ShaderManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<ShaderManager>(new ShaderManager());
+        SINGLETON_REGISTER(ShaderManager, SingletonId::FileSystemManager | SingletonId::GraphicsDevice);
     }
 }
 
 void ShaderManager::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(ShaderManager);
+        instance_.reset();
+    }
 }
 
 ShaderManager::~ShaderManager() = default;

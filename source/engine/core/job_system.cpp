@@ -12,6 +12,7 @@
 #endif
 
 #include "job_system.h"
+#include "singleton_registry.h"
 #include "common/logging/logging.h"
 
 #include <thread>
@@ -778,12 +779,14 @@ void JobSystem::Create(uint32_t numWorkers)
     if (!instance_) {
         instance_ = std::unique_ptr<JobSystem>(new JobSystem());
         instance_->Initialize(numWorkers);
+        SINGLETON_REGISTER(JobSystem, SingletonId::None);
     }
 }
 
 void JobSystem::Destroy()
 {
     if (instance_) {
+        SINGLETON_UNREGISTER(JobSystem);
         instance_->Shutdown();
         instance_.reset();
     }

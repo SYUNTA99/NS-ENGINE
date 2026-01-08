@@ -48,12 +48,16 @@ enum class SingletonId : uint32_t {
     CollisionManager    = 1 << 9,
     SceneManager        = 1 << 10,
     Renderer            = 1 << 11,
+    MeshBatch           = 1 << 12,
+    MeshManager         = 1 << 13,
+    MaterialManager     = 1 << 14,
+    LightingManager     = 1 << 15,
     //! @}
 
     //! @name Debug
     //! @{
-    DebugDraw       = 1 << 12,
-    CircleRenderer  = 1 << 13,
+    DebugDraw       = 1 << 16,
+    CircleRenderer  = 1 << 17,
     //! @}
 };
 

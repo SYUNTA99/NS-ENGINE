@@ -169,61 +169,65 @@ float CalculateSpotFalloff(float3 lightDir, float3 spotDir, float innerCos, floa
 // シャドウ係数計算（PCF）
 float CalculateShadow(float3 worldPos, float3 normal)
 {
-    // シャドウが無効の場合
-    if (shadowParams.w < 0.5)
+    float shadow = 1.0;  // デフォルト値（シャドウなし）
+
+    // シャドウが有効な場合のみ計算
+    [branch]
+    if (shadowParams.w >= 0.5)
     {
-        return 1.0;
-    }
+        // ライト空間座標に変換
+        float4 lightSpacePos = mul(float4(worldPos, 1.0), lightViewProjection);
 
-    // ライト空間座標に変換
-    float4 lightSpacePos = mul(float4(worldPos, 1.0), lightViewProjection);
+        // NDC座標に変換
+        float3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
 
-    // NDC座標に変換
-    float3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+        // [-1,1] を [0,1] に変換
+        projCoords.x = projCoords.x * 0.5 + 0.5;
+        projCoords.y = projCoords.y * -0.5 + 0.5;  // Y軸反転
 
-    // [-1,1] を [0,1] に変換
-    projCoords.x = projCoords.x * 0.5 + 0.5;
-    projCoords.y = projCoords.y * -0.5 + 0.5;  // Y軸反転
+        // シャドウマップ範囲内チェック
+        bool inBounds = projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
+                        projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
+                        projCoords.z >= 0.0 && projCoords.z <= 1.0;
 
-    // シャドウマップ範囲外チェック
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-        projCoords.y < 0.0 || projCoords.y > 1.0 ||
-        projCoords.z < 0.0 || projCoords.z > 1.0)
-    {
-        return 1.0;
-    }
-
-    // バイアス適用
-    float depthBias = shadowParams.x;
-    float normalBias = shadowParams.y;
-
-    // 法線バイアス（シャドウアクネ対策）
-    float3 lightDir = lights[0].direction.xyz;
-    float NdotL = max(dot(normal, -lightDir), 0.0);
-    float bias = depthBias + normalBias * (1.0 - NdotL);
-
-    float currentDepth = projCoords.z - bias;
-
-    // PCFフィルタリング（3x3）
-    float shadow = 0.0;
-    float2 texelSize = float2(1.0 / 2048.0, 1.0 / 2048.0);  // シャドウマップ解像度
-
-    [unroll]
-    for (int x = -1; x <= 1; x++)
-    {
-        [unroll]
-        for (int y = -1; y <= 1; y++)
+        [branch]
+        if (inBounds)
         {
-            float2 offset = float2(x, y) * texelSize;
-            float pcfDepth = shadowMap.Sample(linearSampler, projCoords.xy + offset).r;
-            shadow += currentDepth > pcfDepth ? 0.0 : 1.0;
+            // バイアス適用
+            float depthBias = shadowParams.x;
+            float normalBias = shadowParams.y;
+
+            // 法線バイアス（シャドウアクネ対策）
+            float3 lightDir = lights[0].direction.xyz;
+            float NdotL = max(dot(normal, -lightDir), 0.0);
+            float bias = depthBias + normalBias * (1.0 - NdotL);
+
+            float currentDepth = projCoords.z - bias;
+
+            // PCFフィルタリング（3x3）
+            float pcfShadow = 0.0;
+            float2 texelSize = float2(1.0 / 2048.0, 1.0 / 2048.0);  // シャドウマップ解像度
+
+            [unroll]
+            for (int x = -1; x <= 1; x++)
+            {
+                [unroll]
+                for (int y = -1; y <= 1; y++)
+                {
+                    float2 offset = float2(x, y) * texelSize;
+                    float pcfDepth = shadowMap.Sample(linearSampler, projCoords.xy + offset).r;
+                    pcfShadow += currentDepth > pcfDepth ? 0.0 : 1.0;
+                }
+            }
+            pcfShadow /= 9.0;
+
+            // シャドウ強度を適用
+            float shadowStrength = shadowParams.z;
+            shadow = lerp(1.0, pcfShadow, shadowStrength);
         }
     }
-    shadow /= 9.0;
 
-    // シャドウ強度を適用
-    float shadowStrength = shadowParams.z;
-    return lerp(1.0, shadow, shadowStrength);
+    return shadow;
 }
 
 //============================================================================

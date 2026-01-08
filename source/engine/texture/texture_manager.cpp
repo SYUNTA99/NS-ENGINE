@@ -6,6 +6,7 @@
 #include "texture_cache.h"
 #include "texture_loader.h"
 #include "engine/fs/file_system.h"
+#include "engine/core/singleton_registry.h"
 #include "dx11/graphics_device.h"
 #include "common/logging/logging.h"
 #include "dx11/graphics_context.h"
@@ -106,12 +107,16 @@ void TextureManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<TextureManager>(new TextureManager());
+        SINGLETON_REGISTER(TextureManager, SingletonId::GraphicsDevice | SingletonId::GraphicsContext);
     }
 }
 
 void TextureManager::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(TextureManager);
+        instance_.reset();
+    }
 }
 
 TextureManager::~TextureManager() = default;

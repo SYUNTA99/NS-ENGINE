@@ -15,6 +15,7 @@
 #include "engine/shader/shader_manager.h"
 #include "engine/graphics2d/render_state_manager.h"
 #include "engine/texture/texture_manager.h"
+#include "engine/core/singleton_registry.h"
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
@@ -34,12 +35,16 @@ void MeshBatch::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<MeshBatch>(new MeshBatch());
+        SINGLETON_REGISTER(MeshBatch, SingletonId::GraphicsDevice | SingletonId::ShaderManager | SingletonId::RenderStateManager);
     }
 }
 
 void MeshBatch::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(MeshBatch);
+        instance_.reset();
+    }
 }
 
 MeshBatch::~MeshBatch()

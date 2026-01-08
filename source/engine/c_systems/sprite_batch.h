@@ -18,6 +18,7 @@
 #include "engine/math/math_types.h"
 #include "engine/math/color.h"
 #include "engine/component/sprite_renderer.h"
+#include "engine/core/singleton_registry.h"
 #include <vector>
 #include <memory>
 #include <cassert>
@@ -55,13 +56,17 @@ public:
     {
         if (!instance_) {
             instance_ = std::unique_ptr<SpriteBatch>(new SpriteBatch());
+            SINGLETON_REGISTER(SpriteBatch, SingletonId::GraphicsDevice | SingletonId::RenderStateManager);
         }
     }
 
     //! @brief インスタンス破棄
     static void Destroy()
     {
-        instance_.reset();
+        if (instance_) {
+            SINGLETON_UNREGISTER(SpriteBatch);
+            instance_.reset();
+        }
     }
 
     //! @brief デストラクタ

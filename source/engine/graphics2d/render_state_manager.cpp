@@ -3,6 +3,7 @@
 //! @brief  レンダーステートマネージャー実装
 //----------------------------------------------------------------------------
 #include "render_state_manager.h"
+#include "engine/core/singleton_registry.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
 
@@ -13,12 +14,16 @@ void RenderStateManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<RenderStateManager>(new RenderStateManager());
+        SINGLETON_REGISTER(RenderStateManager, SingletonId::GraphicsDevice);
     }
 }
 
 void RenderStateManager::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(RenderStateManager);
+        instance_.reset();
+    }
 }
 
 //----------------------------------------------------------------------------

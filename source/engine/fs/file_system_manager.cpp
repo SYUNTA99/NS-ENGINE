@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "file_system_manager.h"
 #include "file_system_types.h"
+#include "engine/core/singleton_registry.h"
 #include <algorithm>
 #include <filesystem>
 
@@ -39,12 +40,16 @@ void FileSystemManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<FileSystemManager>(new FileSystemManager());
+        SINGLETON_REGISTER(FileSystemManager, SingletonId::None);
     }
 }
 
 void FileSystemManager::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(FileSystemManager);
+        instance_.reset();
+    }
 }
 
 std::wstring FileSystemManager::GetExecutableDirectory()

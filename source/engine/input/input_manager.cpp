@@ -1,4 +1,5 @@
 #include "input_manager.h"
+#include "engine/core/singleton_registry.h"
 
 InputManager::InputManager() noexcept
     : keyboard_(std::make_unique<Keyboard>())
@@ -11,12 +12,16 @@ void InputManager::Create()
 {
     if (!instance_) {
         instance_ = std::unique_ptr<InputManager>(new InputManager());
+        SINGLETON_REGISTER(InputManager, SingletonId::None);
     }
 }
 
 void InputManager::Destroy()
 {
-    instance_.reset();
+    if (instance_) {
+        SINGLETON_UNREGISTER(InputManager);
+        instance_.reset();
+    }
 }
 
 void InputManager::Update(float deltaTime) noexcept

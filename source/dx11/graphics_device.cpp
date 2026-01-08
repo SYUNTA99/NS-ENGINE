@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
+#include "engine/core/singleton_registry.h"
 #include "common/logging/logging.h"
 
 //----------------------------------------------------------------------------
@@ -48,6 +49,7 @@ bool GraphicsDevice::Initialize(bool enableDebug)
     hr = device.As(&device_);
     RETURN_FALSE_IF_FAILED(hr, "[GraphicsDevice] ID3D11Device5へのアップグレードに失敗しました");
 
+    SINGLETON_REGISTER(GraphicsDevice, SingletonId::None);
     return true;
 }
 
@@ -57,6 +59,7 @@ void GraphicsDevice::Shutdown() noexcept
     // GraphicsContextは既にApplication::Shutdown()で解放済み
     // ここでは冗長な呼び出しは行わない
 
+    SINGLETON_UNREGISTER(GraphicsDevice);
     device_.Reset();
 
 #ifdef _DEBUG
