@@ -4,7 +4,7 @@
 --============================================================================
 
 -- ワークスペース設定
-workspace "HEW2026"
+workspace "NS-ENGINE"
     configurations { "Debug", "Release" }
     platforms { "x64" }
     location "build"

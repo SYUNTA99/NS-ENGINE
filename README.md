@@ -1,155 +1,155 @@
-# HEW2026
+# NS-ENGINE
 
-[![Discord Notification](https://github.com/HEW2026-Nihonium113/HEW2026/actions/workflows/discord-pr.yml/badge.svg)](https://github.com/HEW2026-Nihonium113/HEW2026/actions/workflows/discord-pr.yml)
-
-
+[![Discord Notification](https://github.com/NS-ENGINE-Nihonium113/NS-ENGINE/actions/workflows/discord-pr.yml/badge.svg)](https://github.com/NS-ENGINE-Nihonium113/NS-ENGINE/actions/workflows/discord-pr.yml)
 
 
-## ç’°å¢ƒ
 
-- OS: Windows 10 ä»¥ä¸Š
+
+## ŠÂ‹«
+
+- OS: Windows 10 ˆÈã
 - IDE: Visual Studio 2022
-- è¨€èª: C++20
-- ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚¹: DirectX 11
+- Œ¾Œê: C++20
+- ƒOƒ‰ƒtƒBƒbƒNƒX: DirectX 11
 
-## ãƒ“ãƒ«ãƒ‰æ–¹æ³•
+## ƒrƒ‹ƒh•û–@
 
-### ã‚¯ãƒ­ãƒ¼ãƒ³
+### ƒNƒ[ƒ“
 
 ```bash
-git clone --recursive https://github.com/HEW2026-Nihonium113/HEW2026.git
-cd HEW2026
+git clone --recursive https://github.com/NS-ENGINE-Nihonium113/NS-ENGINE.git
+cd NS-ENGINE
 ```
 
-### ãƒ“ãƒ«ãƒ‰ãƒ»å®Ÿè¡Œ
+### ƒrƒ‹ƒhEÀs
 
 ```bash
-# ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆç”Ÿæˆ + ãƒ“ãƒ«ãƒ‰
+# ƒvƒƒWƒFƒNƒg¶¬ + ƒrƒ‹ƒh
 @make_project.cmd
 
-# å®Ÿè¡Œ
+# Às
 build\bin\Debug-windows-x86_64\game\game.exe
 ```
 
-### ãã®ä»–ã®ã‚³ãƒãƒ³ãƒ‰
+### ‚»‚Ì‘¼‚ÌƒRƒ}ƒ“ƒh
 
-| ã‚³ãƒãƒ³ãƒ‰ | èª¬æ˜ |
+| ƒRƒ}ƒ“ƒh | à–¾ |
 |---------|------|
-| `@make_project.cmd` | ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆç”Ÿæˆ + ãƒ“ãƒ«ãƒ‰ |
-| `@open_project.cmd` | Visual Studioã§é–‹ã |
-| `@cleanup.cmd` | ãƒ“ãƒ«ãƒ‰æˆæœç‰©ã‚’å‰Šé™¤ |
-| `build_debug.cmd` | Debugãƒ“ãƒ«ãƒ‰ã®ã¿ |
-| `build_release.cmd` | Releaseãƒ“ãƒ«ãƒ‰ã®ã¿ |
+| `@make_project.cmd` | ƒvƒƒWƒFƒNƒg¶¬ + ƒrƒ‹ƒh |
+| `@open_project.cmd` | Visual Studio‚ÅŠJ‚­ |
+| `@cleanup.cmd` | ƒrƒ‹ƒh¬‰Ê•¨‚ğíœ |
+| `build_debug.cmd` | Debugƒrƒ‹ƒh‚Ì‚İ |
+| `build_release.cmd` | Releaseƒrƒ‹ƒh‚Ì‚İ |
 
-## ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªæ§‹æˆ
+## ƒfƒBƒŒƒNƒgƒŠ\¬
 
 ```
 source/
-â”œâ”€â”€ common/                 # å…±é€šãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ï¼ˆãƒ˜ãƒƒãƒ€ãƒ¼ã‚ªãƒ³ãƒªãƒ¼ï¼‰
-â”‚   â”œâ”€â”€ logging/            # ãƒ­ã‚°å‡ºåŠ›ï¼ˆLOG_*ãƒã‚¯ãƒ­ï¼‰
-â”‚   â””â”€â”€ utility/            # ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ï¼ˆnon_copyable, hashï¼‰
-â”‚
-â”œâ”€â”€ dx11/                   # DirectX 11 ãƒ©ãƒƒãƒ‘ãƒ¼ãƒ©ã‚¤ãƒ–ãƒ©ãƒª
-â”‚   â”œâ”€â”€ gpu_common.h        # å…±é€šãƒ˜ãƒƒãƒ€ãƒ¼ï¼ˆComPtrç­‰ï¼‰
-â”‚   â”œâ”€â”€ graphics_device     # D3D11ãƒ‡ãƒã‚¤ã‚¹ç®¡ç†ï¼ˆã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³ï¼‰
-â”‚   â”œâ”€â”€ graphics_context    # D3D11ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆç®¡ç†
-â”‚   â”œâ”€â”€ swap_chain          # ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³
-â”‚   â”œâ”€â”€ gpu/                # GPUãƒªã‚½ãƒ¼ã‚¹ï¼ˆBuffer, Texture, Shaderï¼‰
-â”‚   â”œâ”€â”€ view/               # ãƒªã‚½ãƒ¼ã‚¹ãƒ“ãƒ¥ãƒ¼ï¼ˆSRV, RTV, DSV, UAVï¼‰
-â”‚   â”œâ”€â”€ state/              # ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆ
-â”‚   â”œâ”€â”€ format/             # DXGIãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
-â”‚   â””â”€â”€ compile/            # ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ©ãƒ»ã‚­ãƒ£ãƒƒã‚·ãƒ¥
-â”‚
-â”œâ”€â”€ engine/                 # ã‚²ãƒ¼ãƒ ã‚¨ãƒ³ã‚¸ãƒ³å±¤
-â”‚   â”œâ”€â”€ engine.h            # ã‚¨ãƒ³ã‚¸ãƒ³åˆæœŸåŒ–
-â”‚   â”œâ”€â”€ fs/                 # ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ æŠ½è±¡åŒ–
-â”‚   â”œâ”€â”€ input/              # å…¥åŠ›ã‚·ã‚¹ãƒ†ãƒ ï¼ˆã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã€ãƒã‚¦ã‚¹ã€ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰ï¼‰
-â”‚   â”œâ”€â”€ platform/           # ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¯ãƒ¼ã‚¯
-â”‚   â”œâ”€â”€ shader/             # ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ç®¡ç†
-â”‚   â”œâ”€â”€ texture/            # ãƒ†ã‚¯ã‚¹ãƒãƒ£ç®¡ç†ï¼ˆãƒ­ãƒ¼ãƒ€ãƒ¼ã€ã‚­ãƒ£ãƒƒã‚·ãƒ¥ï¼‰
-â”‚   â”œâ”€â”€ scene/              # ã‚·ãƒ¼ãƒ³ç®¡ç†
-â”‚   â”œâ”€â”€ component/          # ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆï¼ˆTransform2D, SpriteRendererç­‰ï¼‰
-â”‚   â””â”€â”€ graphics2d/         # 2Dæç”»ï¼ˆSpriteBatchï¼‰
-â”‚
-â””â”€â”€ game/                   # ã‚²ãƒ¼ãƒ æœ¬ä½“
-    â”œâ”€â”€ main.cpp            # ã‚¨ãƒ³ãƒˆãƒªãƒ¼ãƒã‚¤ãƒ³ãƒˆ
-    â”œâ”€â”€ game.h/.cpp         # ã‚²ãƒ¼ãƒ ã‚¯ãƒ©ã‚¹
-    â””â”€â”€ scenes/             # ã‚²ãƒ¼ãƒ ã‚·ãƒ¼ãƒ³
+„¥„Ÿ„Ÿ common/                 # ‹¤’Êƒ†[ƒeƒBƒŠƒeƒBiƒwƒbƒ_[ƒIƒ“ƒŠ[j
+„    „¥„Ÿ„Ÿ logging/            # ƒƒOo—ÍiLOG_*ƒ}ƒNƒj
+„    „¤„Ÿ„Ÿ utility/            # ƒ†[ƒeƒBƒŠƒeƒBinon_copyable, hashj
+„ 
+„¥„Ÿ„Ÿ dx11/                   # DirectX 11 ƒ‰ƒbƒp[ƒ‰ƒCƒuƒ‰ƒŠ
+„    „¥„Ÿ„Ÿ gpu_common.h        # ‹¤’Êƒwƒbƒ_[iComPtr“™j
+„    „¥„Ÿ„Ÿ graphics_device     # D3D11ƒfƒoƒCƒXŠÇ—iƒVƒ“ƒOƒ‹ƒgƒ“j
+„    „¥„Ÿ„Ÿ graphics_context    # D3D11ƒRƒ“ƒeƒLƒXƒgŠÇ—
+„    „¥„Ÿ„Ÿ swap_chain          # ƒXƒƒbƒvƒ`ƒF[ƒ“
+„    „¥„Ÿ„Ÿ gpu/                # GPUƒŠƒ\[ƒXiBuffer, Texture, Shaderj
+„    „¥„Ÿ„Ÿ view/               # ƒŠƒ\[ƒXƒrƒ…[iSRV, RTV, DSV, UAVj
+„    „¥„Ÿ„Ÿ state/              # ƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒg
+„    „¥„Ÿ„Ÿ format/             # DXGIƒtƒH[ƒ}ƒbƒgƒ†[ƒeƒBƒŠƒeƒB
+„    „¤„Ÿ„Ÿ compile/            # ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‰EƒLƒƒƒbƒVƒ…
+„ 
+„¥„Ÿ„Ÿ engine/                 # ƒQ[ƒ€ƒGƒ“ƒWƒ“‘w
+„    „¥„Ÿ„Ÿ engine.h            # ƒGƒ“ƒWƒ“‰Šú‰»
+„    „¥„Ÿ„Ÿ fs/                 # ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€’ŠÛ‰»
+„    „¥„Ÿ„Ÿ input/              # “ü—ÍƒVƒXƒeƒ€iƒL[ƒ{[ƒhAƒ}ƒEƒXAƒQ[ƒ€ƒpƒbƒhj
+„    „¥„Ÿ„Ÿ platform/           # ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ƒtƒŒ[ƒ€ƒ[ƒN
+„    „¥„Ÿ„Ÿ shader/             # ƒVƒF[ƒ_[ŠÇ—
+„    „¥„Ÿ„Ÿ texture/            # ƒeƒNƒXƒ`ƒƒŠÇ—iƒ[ƒ_[AƒLƒƒƒbƒVƒ…j
+„    „¥„Ÿ„Ÿ scene/              # ƒV[ƒ“ŠÇ—
+„    „¥„Ÿ„Ÿ component/          # ƒRƒ“ƒ|[ƒlƒ“ƒgiTransform2D, SpriteRenderer“™j
+„    „¤„Ÿ„Ÿ graphics2d/         # 2D•`‰æiSpriteBatchj
+„ 
+„¤„Ÿ„Ÿ game/                   # ƒQ[ƒ€–{‘Ì
+    „¥„Ÿ„Ÿ main.cpp            # ƒGƒ“ƒgƒŠ[ƒ|ƒCƒ“ƒg
+    „¥„Ÿ„Ÿ game.h/.cpp         # ƒQ[ƒ€ƒNƒ‰ƒX
+    „¤„Ÿ„Ÿ scenes/             # ƒQ[ƒ€ƒV[ƒ“
 ```
 
-## é–‹ç™ºã®æµã‚Œ
+## ŠJ”­‚Ì—¬‚ê
 
-### ãƒ—ãƒ­ã‚°ãƒ©ãƒãƒ¼å‘ã‘ï¼ˆã‚³ãƒ¼ãƒ‰å¤‰æ›´ï¼‰
+### ƒvƒƒOƒ‰ƒ}[Œü‚¯iƒR[ƒh•ÏXj
 
-**masterã¸ã®ç›´æ¥pushã¯ç¦æ­¢ã•ã‚Œã¦ã„ã¾ã™ã€‚** å¿…ãšPRï¼ˆPull Requestï¼‰ã‚’ä½œæˆã—ã¦ãã ã•ã„ã€‚
+**master‚Ö‚Ì’¼Úpush‚Í‹Ö~‚³‚ê‚Ä‚¢‚Ü‚·B** •K‚¸PRiPull Requestj‚ğì¬‚µ‚Ä‚­‚¾‚³‚¢B
 
 ```bash
-# 1. masterã‹ã‚‰ä½œæ¥­ãƒ–ãƒ©ãƒ³ãƒã‚’ä½œæˆ
+# 1. master‚©‚çì‹Æƒuƒ‰ƒ“ƒ`‚ğì¬
 git checkout master
 git pull
-git checkout -b feature/ä½œæ¥­å†…å®¹
+git checkout -b feature/ì‹Æ“à—e
 
-# 2. ä½œæ¥­ã—ã¦ã‚³ãƒŸãƒƒãƒˆ
+# 2. ì‹Æ‚µ‚ÄƒRƒ~ƒbƒg
 git add .
-git commit -m "å¤‰æ›´å†…å®¹ã‚’æ—¥æœ¬èªã§æ›¸ã"
+git commit -m "•ÏX“à—e‚ğ“ú–{Œê‚Å‘‚­"
 
-# 3. pushã—ã¦PRä½œæˆ
-git push -u origin feature/ä½œæ¥­å†…å®¹
+# 3. push‚µ‚ÄPRì¬
+git push -u origin feature/ì‹Æ“à—e
 ```
 
-ãƒ–ãƒ©ãƒ³ãƒåã®ä¾‹ï¼š
-- `feature/player-movement` - æ–°æ©Ÿèƒ½
-- `fix/collision-bug` - ãƒã‚°ä¿®æ­£
-- `refactor/shader-manager` - ãƒªãƒ•ã‚¡ã‚¯ã‚¿ãƒªãƒ³ã‚°
+ƒuƒ‰ƒ“ƒ`–¼‚Ì—áF
+- `feature/player-movement` - V‹@”\
+- `fix/collision-bug` - ƒoƒOC³
+- `refactor/shader-manager` - ƒŠƒtƒ@ƒNƒ^ƒŠƒ“ƒO
 
-**PRä½œæˆå¾Œã®æµã‚Œï¼š**
-1. **CodeRabbit** ãŒè‡ªå‹•ã§ã‚³ãƒ¼ãƒ‰ãƒ¬ãƒ“ãƒ¥ãƒ¼
-2. ãƒãƒ¼ãƒ ãƒ¡ãƒ³ãƒãƒ¼ãŒãƒ¬ãƒ“ãƒ¥ãƒ¼ã‚’ç¢ºèªã—ã¦ **Approve**
-3. ãƒãƒ¼ã‚¸ï¼ˆä½œæ¥­ãƒ–ãƒ©ãƒ³ãƒã¯è‡ªå‹•å‰Šé™¤ï¼‰
-4. ãƒ­ãƒ¼ã‚«ãƒ«ã®masterã‚’æ›´æ–°ï¼š`git checkout master && git pull`
+**PRì¬Œã‚Ì—¬‚êF**
+1. **CodeRabbit** ‚ª©“®‚ÅƒR[ƒhƒŒƒrƒ…[
+2. ƒ`[ƒ€ƒƒ“ƒo[‚ªƒŒƒrƒ…[‚ğŠm”F‚µ‚Ä **Approve**
+3. ƒ}[ƒWiì‹Æƒuƒ‰ƒ“ƒ`‚Í©“®íœj
+4. ƒ[ƒJƒ‹‚Ìmaster‚ğXVF`git checkout master && git pull`
 
-### ãƒ‡ã‚¶ã‚¤ãƒŠãƒ¼å‘ã‘ï¼ˆã‚¢ã‚»ãƒƒãƒˆè¿½åŠ ï¼‰
+### ƒfƒUƒCƒi[Œü‚¯iƒAƒZƒbƒg’Ç‰Áj
 
-`assets` ãƒ–ãƒ©ãƒ³ãƒã«ã¯ç›´æ¥pushã§ãã¾ã™ã€‚[GitHub Desktop](https://desktop.github.com/) ã‚’ä½¿ç”¨ã—ã¦ãã ã•ã„ã€‚
+`assets` ƒuƒ‰ƒ“ƒ`‚É‚Í’¼Úpush‚Å‚«‚Ü‚·B[GitHub Desktop](https://desktop.github.com/) ‚ğg—p‚µ‚Ä‚­‚¾‚³‚¢B
 
-1. **ãƒ–ãƒ©ãƒ³ãƒåˆ‡ã‚Šæ›¿ãˆ**: ä¸Šéƒ¨ã®ã€ŒCurrent Branchã€â†’ `assets` ã‚’é¸æŠ
-2. **æœ€æ–°ã‚’å–å¾—**: ã€ŒFetch originã€â†’ã€ŒPull originã€
-3. **ãƒ•ã‚¡ã‚¤ãƒ«è¿½åŠ **: ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ãƒ¼ã§ã‚¢ã‚»ãƒƒãƒˆã‚’è¿½åŠ 
-4. **ã‚³ãƒŸãƒƒãƒˆ**: å·¦ä¸‹ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å…¥åŠ›ã—ã¦ã€ŒCommit to assetsã€
-5. **ãƒ—ãƒƒã‚·ãƒ¥**: ã€ŒPush originã€
+1. **ƒuƒ‰ƒ“ƒ`Ø‚è‘Ö‚¦**: ã•”‚ÌuCurrent Branchv¨ `assets` ‚ğ‘I‘ğ
+2. **ÅV‚ğæ“¾**: uFetch originv¨uPull originv
+3. **ƒtƒ@ƒCƒ‹’Ç‰Á**: ƒGƒNƒXƒvƒ[ƒ‰[‚ÅƒAƒZƒbƒg‚ğ’Ç‰Á
+4. **ƒRƒ~ƒbƒg**: ¶‰º‚ÉƒƒbƒZ[ƒW‚ğ“ü—Í‚µ‚ÄuCommit to assetsv
+5. **ƒvƒbƒVƒ…**: uPush originv
 
-â€» `assets` ãƒ–ãƒ©ãƒ³ãƒã¯å®šæœŸçš„ã«masterã¸ãƒãƒ¼ã‚¸ã•ã‚Œã¾ã™ã€‚
+¦ `assets` ƒuƒ‰ƒ“ƒ`‚Í’èŠú“I‚Émaster‚Öƒ}[ƒW‚³‚ê‚Ü‚·B
 
-### ãƒ‡ã‚¶ã‚¤ãƒŠãƒ¼å‘ã‘ï¼ˆã‚²ãƒ¼ãƒ å®Ÿè¡Œï¼‰
+### ƒfƒUƒCƒi[Œü‚¯iƒQ[ƒ€Àsj
 
-Visual StudioãŒãªãã¦ã‚‚ã‚²ãƒ¼ãƒ ã‚’å®Ÿè¡Œã§ãã¾ã™ã€‚
+Visual Studio‚ª‚È‚­‚Ä‚àƒQ[ƒ€‚ğÀs‚Å‚«‚Ü‚·B
 
-1. [Releases](https://github.com/HEW2026-Nihonium113/HEW2026/releases) ãƒšãƒ¼ã‚¸ã‚’é–‹ã
-2. æœ€æ–°ã®zipã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰
-3. å±•é–‹ã—ã¦ `game.exe` ã‚’å®Ÿè¡Œ
+1. [Releases](https://github.com/NS-ENGINE-Nihonium113/NS-ENGINE/releases) ƒy[ƒW‚ğŠJ‚­
+2. ÅV‚Ìzip‚ğƒ_ƒEƒ“ƒ[ƒh
+3. “WŠJ‚µ‚Ä `game.exe` ‚ğÀs
 
-### AIï¼ˆClaude Code / Gemini CLIï¼‰ã«PRã‚’ä»»ã›ã‚‹
+### AIiClaude Code / Gemini CLIj‚ÉPR‚ğ”C‚¹‚é
 
-ä»¥ä¸‹ã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã‚’ã‚³ãƒ”ãƒšã—ã¦ä½¿ç”¨ã—ã¦ãã ã•ã„ã€‚
+ˆÈ‰º‚Ìƒvƒƒ“ƒvƒg‚ğƒRƒsƒy‚µ‚Äg—p‚µ‚Ä‚­‚¾‚³‚¢B
 
-**æ–°æ©Ÿèƒ½è¿½åŠ ï¼š**
+**V‹@”\’Ç‰ÁF**
 ```
-å¤‰æ›´ã‚’ã‚³ãƒŸãƒƒãƒˆã—ã¦PRã‚’ä½œæˆã—ã¦ãã ã•ã„ã€‚
-ãƒ–ãƒ©ãƒ³ãƒåã¯ feature/ï¼ˆæ©Ÿèƒ½åï¼‰ã€ã‚³ãƒŸãƒƒãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¨PRã‚¿ã‚¤ãƒˆãƒ«ã¯æ—¥æœ¬èªã§ã€‚
-```
-
-**ãƒã‚°ä¿®æ­£ï¼š**
-```
-å¤‰æ›´ã‚’ã‚³ãƒŸãƒƒãƒˆã—ã¦PRã‚’ä½œæˆã—ã¦ãã ã•ã„ã€‚
-ãƒ–ãƒ©ãƒ³ãƒåã¯ fix/ï¼ˆä¿®æ­£å†…å®¹ï¼‰ã€ã‚³ãƒŸãƒƒãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¨PRã‚¿ã‚¤ãƒˆãƒ«ã¯æ—¥æœ¬èªã§ã€‚
+•ÏX‚ğƒRƒ~ƒbƒg‚µ‚ÄPR‚ğì¬‚µ‚Ä‚­‚¾‚³‚¢B
+ƒuƒ‰ƒ“ƒ`–¼‚Í feature/i‹@”\–¼jAƒRƒ~ƒbƒgƒƒbƒZ[ƒW‚ÆPRƒ^ƒCƒgƒ‹‚Í“ú–{Œê‚ÅB
 ```
 
-**ãƒªãƒ•ã‚¡ã‚¯ã‚¿ãƒªãƒ³ã‚°ï¼š**
+**ƒoƒOC³F**
 ```
-å¤‰æ›´ã‚’ã‚³ãƒŸãƒƒãƒˆã—ã¦PRã‚’ä½œæˆã—ã¦ãã ã•ã„ã€‚
-ãƒ–ãƒ©ãƒ³ãƒåã¯ refactor/ï¼ˆå¯¾è±¡ï¼‰ã€ã‚³ãƒŸãƒƒãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¨PRã‚¿ã‚¤ãƒˆãƒ«ã¯æ—¥æœ¬èªã§ã€‚
+•ÏX‚ğƒRƒ~ƒbƒg‚µ‚ÄPR‚ğì¬‚µ‚Ä‚­‚¾‚³‚¢B
+ƒuƒ‰ƒ“ƒ`–¼‚Í fix/iC³“à—ejAƒRƒ~ƒbƒgƒƒbƒZ[ƒW‚ÆPRƒ^ƒCƒgƒ‹‚Í“ú–{Œê‚ÅB
 ```
 
-## ãƒãƒ¼ãƒ 
+**ƒŠƒtƒ@ƒNƒ^ƒŠƒ“ƒOF**
+```
+•ÏX‚ğƒRƒ~ƒbƒg‚µ‚ÄPR‚ğì¬‚µ‚Ä‚­‚¾‚³‚¢B
+ƒuƒ‰ƒ“ƒ`–¼‚Í refactor/i‘ÎÛjAƒRƒ~ƒbƒgƒƒbƒZ[ƒW‚ÆPRƒ^ƒCƒgƒ‹‚Í“ú–{Œê‚ÅB
+```
+
+## ƒ`[ƒ€
 
 Nihonium113

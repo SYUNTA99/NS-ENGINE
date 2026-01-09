@@ -4,7 +4,7 @@
 :: Releaseビルドのみを実行するスクリプト
 ::
 :: 前提条件:
-::   - build/HEW2026.sln が存在すること (@make_project.cmd で生成)
+::   - build/NS-ENGINE.sln が存在すること (@make_project.cmd で生成)
 ::
 :: 処理内容:
 ::   1. UTF-8モード設定 & 作業ディレクトリ移動 (:init)
@@ -21,7 +21,7 @@ call tools\_common.cmd :check_project || exit /b 1
 call tools\_common.cmd :setup_msbuild || exit /b 1
 
 echo Release ビルド中...
-msbuild build\HEW2026.sln -p:Configuration=Release -p:Platform=x64 -m -v:minimal
+msbuild build\NS-ENGINE.sln -p:Configuration=Release -p:Platform=x64 -m -v:minimal
 if errorlevel 1 (
     echo [ERROR] ビルド失敗
     exit /b 1

@@ -30,7 +30,7 @@ goto %~1
 :: 存在しなければエラー終了
 ::----------------------------------------------------------------------------
 :check_project
-    if not exist "build\HEW2026.sln" (
+    if not exist "build\NS-ENGINE.sln" (
         echo プロジェクトが見つかりません。先に @make_project.cmd を実行してください。
         exit /b 1
     )
@@ -98,5 +98,5 @@ goto %~1
         echo [ERROR] プロジェクト生成に失敗しました
         exit /b 1
     )
-    echo [OK] build\HEW2026.sln を生成しました
+    echo [OK] build\NS-ENGINE.sln を生成しました
     exit /b 0

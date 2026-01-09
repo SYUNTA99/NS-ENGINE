@@ -18,7 +18,7 @@ echo 現在のディレクトリ: %CD%
 echo.
 
 :: ソリューションが無ければ生成
-if not exist "build\HEW2026.sln" (
+if not exist "build\NS-ENGINE.sln" (
     echo プロジェクト生成中...
     call tools\_common.cmd :generate_project
     if errorlevel 1 (
@@ -26,7 +26,7 @@ if not exist "build\HEW2026.sln" (
         exit /b 1
     )
 ) else (
-    echo [OK] build\HEW2026.sln 確認済み
+    echo [OK] build\NS-ENGINE.sln 確認済み
 )
 
 :: game.exeが存在すればビルドをスキップ
@@ -40,7 +40,7 @@ if errorlevel 1 (
     exit /b 1
 )
 echo 使用: %MSBUILD_PATH%
-"%MSBUILD_PATH%" build\HEW2026.sln -p:Configuration=Debug -p:Platform=x64 -m -v:minimal
+"%MSBUILD_PATH%" build\NS-ENGINE.sln -p:Configuration=Debug -p:Platform=x64 -m -v:minimal
 if errorlevel 1 (
     echo [ERROR] ビルド失敗
     pause

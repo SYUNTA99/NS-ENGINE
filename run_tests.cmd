@@ -34,7 +34,7 @@ if errorlevel 1 (
 :: ビルド
 echo.
 echo [2/3] テストビルド中...
-"%MSBUILD%" build\HEW2026.sln /t:tests /p:Configuration=%CONFIG% /p:Platform=x64 /m /v:minimal
+"%MSBUILD%" build\NS-ENGINE.sln /t:tests /p:Configuration=%CONFIG% /p:Platform=x64 /m /v:minimal
 if errorlevel 1 (
     echo [ERROR] ビルド失敗
     exit /b 1

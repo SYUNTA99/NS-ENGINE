@@ -23,7 +23,7 @@ Window::Window(const WindowDesc& desc)
     }
 
     // ウィンドウクラス名（一意性のためにアドレスを使用）
-    className_ = L"HEW2026" + std::to_wstring(reinterpret_cast<uintptr_t>(this));
+    className_ = L"NS-ENGINE" + std::to_wstring(reinterpret_cast<uintptr_t>(this));
 
     if (!RegisterWindowClass()) {
         LOG_ERROR("Failed to register window class");
