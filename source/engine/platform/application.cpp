@@ -79,6 +79,8 @@ bool Application::Initialize(const ApplicationDesc& desc)
             desc.renderHeight,
             desc.vsync)) {
         LOG_ERROR("[Application] Rendererの初期化に失敗しました");
+        Renderer::Destroy();
+        TextureManager::Destroy();
         GraphicsContext::Get().Shutdown();
         GraphicsDevice::Get().Shutdown();
         window_.reset();

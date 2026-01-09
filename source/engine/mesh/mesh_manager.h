@@ -7,6 +7,7 @@
 #include "mesh.h"
 #include "mesh_handle.h"
 #include "mesh_loader.h"
+#include "engine/material/material_handle.h"
 #include "common/utility/non_copyable.h"
 #include <memory>
 #include <string>
@@ -132,6 +133,26 @@ public:
         const std::string& path,
         const MeshLoadOptions& options = {});
 
+    //! @brief モデル読み込み結果（メッシュ＋マテリアル）
+    struct ModelLoadResult
+    {
+        MeshHandle mesh;                              //!< メッシュハンドル
+        std::vector<MaterialHandle> materials;        //!< マテリアルハンドル（サブメッシュ順）
+        bool success = false;                         //!< 成功フラグ
+    };
+
+    //! @brief モデルをマテリアル・テクスチャ付きでロード
+    //! @param path ファイルパス（model:/形式）
+    //! @param options ロードオプション
+    //! @return モデル読み込み結果
+    //!
+    //! @details モデルファイルに埋め込まれたマテリアル・テクスチャ情報を使用して
+    //!          自動的にMaterialHandleを作成する。テクスチャはモデルと同じ
+    //!          ディレクトリから読み込む。
+    [[nodiscard]] ModelLoadResult LoadWithMaterials(
+        const std::string& path,
+        const MeshLoadOptions& options = {});
+
     //! @brief メッシュをグローバルスコープでロード（永続）
     //! @param path ファイルパス
     //! @param options ロードオプション
@@ -203,6 +224,18 @@ public:
 
     //! キャッシュ統計を取得
     [[nodiscard]] MeshCacheStats GetCacheStats() const;
+
+    //!@}
+    //----------------------------------------------------------
+    //! @name 外部メッシュ登録
+    //----------------------------------------------------------
+    //!@{
+
+    //! @brief 外部で作成したメッシュを登録
+    //! @param mesh メッシュ（shared_ptr）
+    //! @param name キャッシュ用の一意な名前
+    //! @return メッシュハンドル
+    [[nodiscard]] MeshHandle Register(MeshPtr mesh, const std::string& name);
 
     //!@}
 

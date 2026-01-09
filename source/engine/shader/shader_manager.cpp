@@ -143,6 +143,16 @@ ShaderManager::~ShaderManager() = default;
 
 void ShaderManager::Initialize(
     IReadableFileSystem* fileSystem,
+    IShaderCache* bytecodeCache,
+    IShaderResourceCache* resourceCache)
+{
+    // 内部でD3DShaderCompilerを生成
+    ownedCompiler_ = std::make_unique<D3DShaderCompiler>();
+    InitializeWithCompiler(fileSystem, ownedCompiler_.get(), bytecodeCache, resourceCache);
+}
+
+void ShaderManager::InitializeWithCompiler(
+    IReadableFileSystem* fileSystem,
     IShaderCompiler* compiler,
     IShaderCache* bytecodeCache,
     IShaderResourceCache* resourceCache)
@@ -183,6 +193,7 @@ void ShaderManager::Shutdown()
         resourceCache_->Clear();
     }
     ownedResourceCache_.reset();
+    ownedCompiler_.reset();
     initialized_ = false;
     fileSystem_ = nullptr;
     compiler_ = nullptr;

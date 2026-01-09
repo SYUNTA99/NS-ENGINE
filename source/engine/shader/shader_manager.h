@@ -23,9 +23,8 @@ class GlobalShader;
 //! シェーダーマネージャー（シングルトン）
 //!
 //! @code
-//!   // 初期化
-//!   D3DShaderCompiler compiler;
-//!   ShaderManager::Get().Initialize(fs, &compiler);
+//!   // 初期化（内部でコンパイラを生成）
+//!   ShaderManager::Get().Initialize(shaderFs);
 //!
 //!   // 個別シェーダーをロード
 //!   auto vs = ShaderManager::Get().LoadVertexShader("shaders:/vs.hlsl");
@@ -72,7 +71,21 @@ public:
     //----------------------------------------------------------
     //!@{
 
+    //! @brief 初期化（内部でコンパイラを生成）
+    //! @param fileSystem シェーダーファイル読み込み用ファイルシステム
+    //! @param bytecodeCache バイトコードキャッシュ（省略可）
+    //! @param resourceCache リソースキャッシュ（省略可）
     void Initialize(
+        IReadableFileSystem* fileSystem,
+        IShaderCache* bytecodeCache = nullptr,
+        IShaderResourceCache* resourceCache = nullptr);
+
+    //! @brief 初期化（外部コンパイラを使用）
+    //! @param fileSystem シェーダーファイル読み込み用ファイルシステム
+    //! @param compiler 外部で管理されるコンパイラ
+    //! @param bytecodeCache バイトコードキャッシュ（省略可）
+    //! @param resourceCache リソースキャッシュ（省略可）
+    void InitializeWithCompiler(
         IReadableFileSystem* fileSystem,
         IShaderCompiler* compiler,
         IShaderCache* bytecodeCache = nullptr,
@@ -259,6 +272,9 @@ private:
     IReadableFileSystem* fileSystem_ = nullptr;
     IShaderCompiler* compiler_ = nullptr;
     IShaderCache* bytecodeCache_ = nullptr;
+
+    // シェーダーコンパイラ（内部所有の場合）
+    std::unique_ptr<IShaderCompiler> ownedCompiler_;
 
     // シェーダーリソースキャッシュ
     std::unique_ptr<IShaderResourceCache> ownedResourceCache_;  //!< 内部所有（外部指定なしの場合）

@@ -155,4 +155,7 @@ private:
     float nearPlane_ = 0.1f;          //!< ニアクリップ
     float farPlane_ = 1000.0f;        //!< ファークリップ
     float aspectRatio_ = 16.0f / 9.0f;  //!< アスペクト比
+
+    mutable Vector3 lookAtTarget_ = Vector3::Zero;  //!< LookAt用ターゲット
+    mutable bool useLookAtTarget_ = false;          //!< LookAtターゲットを使用するか
 };

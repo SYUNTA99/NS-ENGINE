@@ -305,6 +305,51 @@ void MeshBatch::Draw(MeshHandle mesh, MaterialHandle material, const Matrix& wor
     }
 }
 
+void MeshBatch::Draw(MeshHandle mesh, const std::vector<MaterialHandle>& materials, const Matrix& world)
+{
+    if (!isBegun_) {
+        LOG_WARN("[MeshBatch] Begin()が呼び出されていません");
+        return;
+    }
+
+    if (!mesh.IsValid()) {
+        return;
+    }
+
+    Mesh* meshPtr = MeshManager::Get().Get(mesh);
+    if (!meshPtr) {
+        return;
+    }
+
+    const auto& subMeshes = meshPtr->GetSubMeshes();
+    for (uint32_t i = 0; i < subMeshes.size(); ++i) {
+        // サブメッシュごとにマテリアルを選択
+        MaterialHandle material;
+        if (i < materials.size()) {
+            // 配列内に対応するスロットがある場合
+            if (!materials[i].IsValid()) {
+                // 明示的に無効化されている場合はスキップ（非表示）
+                continue;
+            }
+            material = materials[i];
+        } else if (!materials.empty() && materials[0].IsValid()) {
+            // 範囲外の場合は最初のマテリアルにフォールバック
+            material = materials[0];
+        }
+
+        DrawCommand cmd;
+        cmd.mesh = mesh;
+        cmd.material = material;
+        cmd.subMeshIndex = i;
+        cmd.worldMatrix = world;
+
+        Vector3 meshCenter = Vector3(world._41, world._42, world._43);
+        cmd.distanceToCamera = (meshCenter - cameraPosition_).LengthSquared();
+
+        drawQueue_.push_back(cmd);
+    }
+}
+
 void MeshBatch::Draw(const MeshRenderer& renderer, Transform& transform)
 {
     if (!renderer.IsVisible()) {
@@ -435,6 +480,10 @@ void MeshBatch::FlushBatch()
     ctx.SetInputLayout(inputLayout_.Get());
     ctx.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    // ラスタライザステート（両面描画）
+    auto& rsm = RenderStateManager::Get();
+    ctx.SetRasterizerState(rsm.GetNoCull());
+
     // シェーダー設定
     ctx.SetVertexShader(vertexShader_.get());
     ctx.SetPixelShader(pixelShader_.get());
@@ -474,7 +523,6 @@ void MeshBatch::FlushBatch()
     ctx.SetPSConstantBuffer(4, shadowBuffer_.get());
 
     // サンプラー設定
-    auto& rsm = RenderStateManager::Get();
     ctx.SetPSSampler(0, rsm.GetLinearWrap());
 
     // 各メッシュを描画

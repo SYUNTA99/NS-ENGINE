@@ -22,6 +22,68 @@ using Ray        = DirectX::SimpleMath::Ray;
 using Viewport   = DirectX::SimpleMath::Viewport;
 
 //===========================================================================
+//! 左手座標系関数（DirectX標準）
+//===========================================================================
+namespace LH {
+
+//! 左手系のビュー行列を作成
+[[nodiscard]] inline Matrix CreateLookAt(const Vector3& position, const Vector3& target, const Vector3& up) noexcept {
+    return DirectX::XMMatrixLookAtLH(position, target, up);
+}
+
+//! 左手系の透視投影行列を作成
+[[nodiscard]] inline Matrix CreatePerspectiveFov(float fov, float aspectRatio, float nearPlane, float farPlane) noexcept {
+    return DirectX::XMMatrixPerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
+}
+
+//! 左手系の正射影行列を作成
+[[nodiscard]] inline Matrix CreateOrthographic(float width, float height, float nearPlane, float farPlane) noexcept {
+    return DirectX::XMMatrixOrthographicLH(width, height, nearPlane, farPlane);
+}
+
+//! 左手系の正射影行列を作成（オフセンター）
+[[nodiscard]] inline Matrix CreateOrthographicOffCenter(float left, float right, float bottom, float top, float nearPlane, float farPlane) noexcept {
+    return DirectX::XMMatrixOrthographicOffCenterLH(left, right, bottom, top, nearPlane, farPlane);
+}
+
+//! 左手系の前方ベクトル（+Z方向）
+[[nodiscard]] constexpr Vector3 Forward() noexcept {
+    return Vector3(0.0f, 0.0f, 1.0f);
+}
+
+//! 左手系の後方ベクトル（-Z方向）
+[[nodiscard]] constexpr Vector3 Backward() noexcept {
+    return Vector3(0.0f, 0.0f, -1.0f);
+}
+
+} // namespace LH
+
+//===========================================================================
+//! 右手座標系関数（非推奨 - 左手系を使用してください）
+//===========================================================================
+namespace RH {
+
+//! @deprecated LH::CreateLookAt を使用してください
+[[deprecated("LH::CreateLookAt を使用してください")]]
+[[nodiscard]] inline Matrix CreateLookAt(const Vector3& position, const Vector3& target, const Vector3& up) noexcept {
+    return DirectX::XMMatrixLookAtRH(position, target, up);
+}
+
+//! @deprecated LH::CreatePerspectiveFov を使用してください
+[[deprecated("LH::CreatePerspectiveFov を使用してください")]]
+[[nodiscard]] inline Matrix CreatePerspectiveFov(float fov, float aspectRatio, float nearPlane, float farPlane) noexcept {
+    return DirectX::XMMatrixPerspectiveFovRH(fov, aspectRatio, nearPlane, farPlane);
+}
+
+//! @deprecated LH::Forward を使用してください
+[[deprecated("LH::Forward を使用してください")]]
+[[nodiscard]] constexpr Vector3 Forward() noexcept {
+    return Vector3(0.0f, 0.0f, -1.0f);
+}
+
+} // namespace RH
+
+//===========================================================================
 //! 追加の便利関数
 //===========================================================================
 
@@ -96,29 +158,20 @@ struct LineSegment {
     //! @param[out] intersection 交点（交差する場合のみ有効）
     //! @return 交差する場合true
     [[nodiscard]] bool Intersects(const LineSegment& other, Vector2& intersection) const noexcept {
-        // 線分AB と 線分CD の交差判定
-        // A = this->start, B = this->end
-        // C = other.start, D = other.end
-
         const Vector2 ab = end - start;
         const Vector2 cd = other.end - other.start;
         const Vector2 ac = other.start - start;
 
-        // 外積: cross(v1, v2) = v1.x * v2.y - v1.y * v2.x
         const float cross_ab_cd = ab.x * cd.y - ab.y * cd.x;
 
-        // 平行判定（外積が0に近い場合）
         constexpr float kEpsilon = 1e-6f;
         if (std::abs(cross_ab_cd) < kEpsilon) {
-            return false;  // 平行（重なりは非交差として扱う）
+            return false;
         }
 
-        // パラメータ t, u を計算
-        // P = A + t * AB = C + u * CD
         const float t = (ac.x * cd.y - ac.y * cd.x) / cross_ab_cd;
         const float u = (ac.x * ab.y - ac.y * ab.x) / cross_ab_cd;
 
-        // 両方のパラメータが [0, 1] 範囲内なら交差
         if (t >= 0.0f && t <= 1.0f && u >= 0.0f && u <= 1.0f) {
             intersection = start + ab * t;
             return true;
@@ -136,14 +189,11 @@ struct LineSegment {
 
         const float lengthSq = ab.LengthSquared();
         if (lengthSq < 1e-8f) {
-            // 線分が点に縮退している場合
             return ap.Length();
         }
 
-        // 射影パラメータをクランプ
         float t = Clamp(ap.Dot(ab) / lengthSq, 0.0f, 1.0f);
 
-        // 最近点
         const Vector2 closest = start + ab * t;
         return (point - closest).Length();
     }

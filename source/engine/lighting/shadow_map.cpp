@@ -59,11 +59,11 @@ void ShadowMap::SetDirectionalLight(const Vector3& lightDir, const Vector3& scen
     }
 
     // ビュー行列を作成
-    viewMatrix_ = Matrix::CreateLookAt(lightPos, sceneCenter, up);
+    viewMatrix_ = LH::CreateLookAt(lightPos, sceneCenter, up);
 
     // 正射影行列を作成（ディレクショナルライト用）
     float halfSize = settings_.orthoSize;
-    projectionMatrix_ = Matrix::CreateOrthographic(
+    projectionMatrix_ = LH::CreateOrthographic(
         halfSize * 2.0f,
         halfSize * 2.0f,
         settings_.nearPlane,

@@ -4,7 +4,10 @@
 //----------------------------------------------------------------------------
 #include "material_manager.h"
 #include "engine/core/singleton_registry.h"
+#include "engine/fs/file_system_manager.h"
+#include "engine/texture/texture_manager.h"
 #include "common/logging/logging.h"
+#include <json.hpp>
 #include <cassert>
 
 //============================================================================
@@ -153,6 +156,134 @@ MaterialHandle MaterialManager::CreateDefault()
     desc.name = "Default";
 
     return CreateInScope(desc, kGlobalScope);
+}
+
+MaterialHandle MaterialManager::Load(const std::string& path)
+{
+    return LoadInScope(path, currentScope_);
+}
+
+MaterialHandle MaterialManager::LoadGlobal(const std::string& path)
+{
+    return LoadInScope(path, kGlobalScope);
+}
+
+MaterialHandle MaterialManager::LoadInScope(const std::string& path, ScopeId scope)
+{
+    // ファイル読み込み
+    auto fileResult = FileSystemManager::Get().ReadFile(path);
+    if (!fileResult.success) {
+        LOG_ERROR("[MaterialManager] Failed to read file: " + path);
+        return MaterialHandle::Invalid();
+    }
+
+    // JSONパース
+    nlohmann::json json;
+    try {
+        json = nlohmann::json::parse(fileResult.bytes.begin(), fileResult.bytes.end());
+    }
+    catch (const nlohmann::json::exception& e) {
+        LOG_ERROR("[MaterialManager] JSON parse error: " + std::string(e.what()));
+        return MaterialHandle::Invalid();
+    }
+
+    // MaterialDescを構築
+    MaterialDesc desc;
+
+    // 名前
+    if (json.contains("name")) {
+        desc.name = json["name"].get<std::string>();
+    }
+
+    // アルベドカラー
+    if (json.contains("albedoColor") && json["albedoColor"].is_array()) {
+        auto& arr = json["albedoColor"];
+        if (arr.size() >= 4) {
+            desc.params.albedoColor = Color(
+                arr[0].get<float>(),
+                arr[1].get<float>(),
+                arr[2].get<float>(),
+                arr[3].get<float>()
+            );
+        }
+    }
+
+    // メタリック
+    if (json.contains("metallic")) {
+        desc.params.metallic = json["metallic"].get<float>();
+    }
+
+    // ラフネス
+    if (json.contains("roughness")) {
+        desc.params.roughness = json["roughness"].get<float>();
+    }
+
+    // AO
+    if (json.contains("ao")) {
+        desc.params.ao = json["ao"].get<float>();
+    }
+
+    // エミッシブカラー
+    if (json.contains("emissiveColor") && json["emissiveColor"].is_array()) {
+        auto& arr = json["emissiveColor"];
+        if (arr.size() >= 4) {
+            desc.params.emissiveColor = Color(
+                arr[0].get<float>(),
+                arr[1].get<float>(),
+                arr[2].get<float>(),
+                arr[3].get<float>()
+            );
+        }
+    }
+
+    // エミッシブ強度
+    if (json.contains("emissiveStrength")) {
+        desc.params.emissiveStrength = json["emissiveStrength"].get<float>();
+    }
+
+    // テクスチャ読み込み
+    auto& texMgr = TextureManager::Get();
+
+    // アルベドテクスチャ
+    if (json.contains("albedo")) {
+        std::string texPath = json["albedo"].get<std::string>();
+        desc.textures[static_cast<size_t>(MaterialTextureSlot::Albedo)] = texMgr.Load(texPath);
+        if (desc.textures[static_cast<size_t>(MaterialTextureSlot::Albedo)].IsValid()) {
+            desc.params.useAlbedoMap = 1;
+            LOG_INFO("[MaterialManager] Loaded albedo: " + texPath);
+        }
+    }
+
+    // ノーマルマップ
+    if (json.contains("normal")) {
+        std::string texPath = json["normal"].get<std::string>();
+        desc.textures[static_cast<size_t>(MaterialTextureSlot::Normal)] = texMgr.Load(texPath, false); // sRGB=false
+        if (desc.textures[static_cast<size_t>(MaterialTextureSlot::Normal)].IsValid()) {
+            desc.params.useNormalMap = 1;
+            LOG_INFO("[MaterialManager] Loaded normal: " + texPath);
+        }
+    }
+
+    // メタリックマップ
+    if (json.contains("metallicMap")) {
+        std::string texPath = json["metallicMap"].get<std::string>();
+        desc.textures[static_cast<size_t>(MaterialTextureSlot::Metallic)] = texMgr.Load(texPath, false);
+        if (desc.textures[static_cast<size_t>(MaterialTextureSlot::Metallic)].IsValid()) {
+            desc.params.useMetallicMap = 1;
+        }
+    }
+
+    // ラフネスマップ
+    if (json.contains("roughnessMap")) {
+        std::string texPath = json["roughnessMap"].get<std::string>();
+        desc.textures[static_cast<size_t>(MaterialTextureSlot::Roughness)] = texMgr.Load(texPath, false);
+        if (desc.textures[static_cast<size_t>(MaterialTextureSlot::Roughness)].IsValid()) {
+            desc.params.useRoughnessMap = 1;
+        }
+    }
+
+    LOG_INFO("[MaterialManager] Loaded material: " + desc.name + " from " + path);
+    return CreateInScope(desc, scope);
 }
 
 //============================================================================

@@ -116,11 +116,17 @@ public:
     //! @brief バッチ開始
     void Begin();
 
-    //! @brief メッシュを描画キューに追加
+    //! @brief メッシュを描画キューに追加（単一マテリアル）
     //! @param mesh メッシュハンドル
     //! @param material マテリアルハンドル
     //! @param world ワールド変換行列
     void Draw(MeshHandle mesh, MaterialHandle material, const Matrix& world);
+
+    //! @brief メッシュを描画キューに追加（サブメッシュごとのマテリアル）
+    //! @param mesh メッシュハンドル
+    //! @param materials サブメッシュごとのマテリアル配列
+    //! @param world ワールド変換行列
+    void Draw(MeshHandle mesh, const std::vector<MaterialHandle>& materials, const Matrix& world);
 
     //! @brief MeshRendererから描画（Transform使用）
     //! @param renderer MeshRendererコンポーネント

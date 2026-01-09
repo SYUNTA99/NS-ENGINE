@@ -115,22 +115,11 @@ Vector3 Camera3D::GetUp() const
 }
 
 //----------------------------------------------------------------------------
-void Camera3D::LookAt(const Vector3& target, const Vector3& up)
+void Camera3D::LookAt(const Vector3& target, [[maybe_unused]] const Vector3& up)
 {
-    if (!transform_) return;
-
-    Vector3 position = GetPosition();
-    Vector3 forward = target - position;
-
-    // ゼロベクトルガード: target == position の場合は何もしない
-    float lengthSq = forward.x * forward.x + forward.y * forward.y + forward.z * forward.z;
-    if (lengthSq < kEpsilonSq) return;
-
-    forward.Normalize();
-
-    // forward方向からQuaternionを計算
-    Quaternion rotation = Quaternion::LookRotation(forward, up);
-    transform_->SetRotation3D(rotation);
+    // ターゲット位置を保存（BuildViewMatrixで使用）
+    lookAtTarget_ = target;
+    useLookAtTarget_ = true;
 }
 
 //----------------------------------------------------------------------------
@@ -202,18 +191,17 @@ void Camera3D::ScreenPointToRay(const Vector2& screenPos,
 Matrix Camera3D::BuildViewMatrix() const
 {
     Vector3 position = GetPosition();
-    Quaternion rotation = GetRotation();
+    Vector3 up = Vector3::Up;
 
-    // 回転の逆変換
-    Quaternion invRotation;
-    rotation.Inverse(invRotation);
-    Matrix rotMatrix = Matrix::CreateFromQuaternion(invRotation);
+    if (useLookAtTarget_) {
+        // LookAtターゲットを直接使用（左手座標系）
+        return LH::CreateLookAt(position, lookAtTarget_, up);
+    }
 
-    // 位置の逆変換
-    Matrix transMatrix = Matrix::CreateTranslation(-position.x, -position.y, -position.z);
-
-    // ビュー行列 = 位置逆変換 * 回転逆変換
-    return transMatrix * rotMatrix;
+    // フォールバック: 回転から計算
+    Vector3 forward = GetForward();
+    Vector3 target = position + forward;
+    return LH::CreateLookAt(position, target, up);
 }
 
 //----------------------------------------------------------------------------
@@ -223,7 +211,8 @@ Matrix Camera3D::BuildProjectionMatrix() const
     float fovRad = ToRadians(fovClamped);
     float nearClamped = (nearPlane_ < kMinNear) ? kMinNear : nearPlane_;
 
-    return Matrix::CreatePerspectiveFieldOfView(
+    // 左手座標系用のプロジェクション行列
+    return LH::CreatePerspectiveFov(
         fovRad,
         aspectRatio_,
         nearClamped,

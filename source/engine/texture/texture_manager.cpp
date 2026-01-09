@@ -6,6 +6,7 @@
 #include "texture_cache.h"
 #include "texture_loader.h"
 #include "engine/fs/file_system.h"
+#include "engine/fs/file_system_manager.h"
 #include "engine/core/singleton_registry.h"
 #include "dx11/graphics_device.h"
 #include "common/logging/logging.h"
@@ -67,6 +68,7 @@ namespace
             srv = View<SRV>::Create(texture.Get(), &srvDesc);
             if (!srv.IsValid()) {
                 LOG_ERROR("[TextureManager] SRV作成失敗");
+                return nullptr;
             }
         }
 
@@ -75,6 +77,7 @@ namespace
             rtv = View<RTV>::Create(texture.Get());
             if (!rtv.IsValid()) {
                 LOG_ERROR("[TextureManager] RTV作成失敗");
+                return nullptr;
             }
         }
 
@@ -83,6 +86,7 @@ namespace
             dsv = View<DSV>::Create(texture.Get());
             if (!dsv.IsValid()) {
                 LOG_ERROR("[TextureManager] DSV作成失敗");
+                return nullptr;
             }
         }
 
@@ -91,6 +95,7 @@ namespace
             uav = View<UAV>::Create(texture.Get());
             if (!uav.IsValid()) {
                 LOG_ERROR("[TextureManager] UAV作成失敗");
+                return nullptr;
             }
         }
 
@@ -360,8 +365,13 @@ TextureHandle TextureManager::LoadInScope(const std::string& path, bool sRGB, Sc
     }
     stats_.missCount++;
 
-    // ファイル読み込み
-    auto fileResult = fileSystem_->read(path);
+    // ファイル読み込み（マウントポイント付きパスはFileSystemManager経由）
+    FileReadResult fileResult;
+    if (path.find(":/") != std::string::npos) {
+        fileResult = FileSystemManager::Get().ReadFile(path);
+    } else {
+        fileResult = fileSystem_->read(path);
+    }
     if (!fileResult.success || fileResult.bytes.empty()) {
         LOG_ERROR("[TextureManager] ファイルの読み込みに失敗: " + path);
         return TextureHandle::Invalid();

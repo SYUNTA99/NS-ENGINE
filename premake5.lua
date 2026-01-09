@@ -188,6 +188,11 @@ project "engine"
     warnings "Extra"
     flags { "FatalWarnings" }
 
+    -- 右手座標系関数の使用チェック（ビルド前）
+    prebuildcommands {
+        'call "%{wks.location}/../tools/check_rh_functions.cmd"'
+    }
+
     buildoptions { "/utf-8", "/permissive-", "/FS" }
 
     -- リンカー警告を無視 (stb_imageシンボル重複: tinygltf/Assimpが両方使用)
@@ -271,9 +276,38 @@ project "game"
     linkoptions { "/ignore:4099" }
 
 --============================================================================
--- テスト実行ファイル (現在無効)
+-- Google Test ライブラリ
 --============================================================================
---[[
+project "googletest"
+    kind "StaticLib"
+    location "build/googletest"
+
+    targetdir (bindir .. "/%{prj.name}")
+    objdir (objdir_base .. "/%{prj.name}")
+
+    files {
+        "external/googletest/googletest/src/gtest-all.cc",
+        "external/googletest/googlemock/src/gmock-all.cc"
+    }
+
+    includedirs {
+        "external/googletest/googletest/include",
+        "external/googletest/googletest",
+        "external/googletest/googlemock/include",
+        "external/googletest/googlemock"
+    }
+
+    defines {
+        "_WIN32_WINNT=0x0A00"
+    }
+
+    -- Google Testの警告を無視
+    warnings "Off"
+    buildoptions { "/utf-8", "/FS" }
+
+--============================================================================
+-- テスト実行ファイル
+--============================================================================
 project "tests"
     kind "ConsoleApp"
     location "build/tests"
@@ -282,20 +316,35 @@ project "tests"
     objdir (objdir_base .. "/%{prj.name}")
 
     files {
-        "tests/**.h",
-        "tests/**.cpp"
-    }
-
-    removefiles {
-        "tests/generate_test_textures.cpp"
+        "source/tests/**.h",
+        "source/tests/**.cpp"
     }
 
     includedirs {
         "source",
-        "tests"
+        "external/googletest/googletest/include",
+        "external/googletest/googlemock/include",
+        "external/DirectXTex/DirectXTex",
+        "external/DirectXTK/Inc",
+        tinygltf_include,
+        assimp_include
     }
 
+    -- ビルド済み外部ライブラリのパス
+    filter "configurations:Debug"
+        libdirs {
+            "external/lib/Debug",
+            assimp_lib_debug
+        }
+    filter "configurations:Release"
+        libdirs {
+            "external/lib/Release",
+            assimp_lib_release
+        }
+    filter {}
+
     links {
+        "googletest",
         "engine",
         "dx11",
         "DirectXTex",
@@ -307,6 +356,13 @@ project "tests"
         "xinput"
     }
 
+    -- Assimp 6.0.2 動的リンク
+    filter "configurations:Debug"
+        links { "assimp-vc143-mtd" }
+    filter "configurations:Release"
+        links { "assimp-vc143-mt" }
+    filter {}
+
     defines {
         "_WIN32_WINNT=0x0A00"
     }
@@ -315,4 +371,17 @@ project "tests"
 
     warnings "Extra"
     buildoptions { "/utf-8", "/permissive-", "/FS" }
-]]--
+
+    -- Assimp DLLをテスト出力ディレクトリにコピー
+    filter "configurations:Debug"
+        postbuildcommands {
+            '{COPY} "%{wks.location}/../' .. assimp_bin_debug .. '/assimp-vc143-mtd.dll" "%{cfg.targetdir}"'
+        }
+    filter "configurations:Release"
+        postbuildcommands {
+            '{COPY} "%{wks.location}/../' .. assimp_bin_release .. '/assimp-vc143-mt.dll" "%{cfg.targetdir}"'
+        }
+    filter {}
+
+    -- リンカー警告を無視
+    linkoptions { "/ignore:4099" }

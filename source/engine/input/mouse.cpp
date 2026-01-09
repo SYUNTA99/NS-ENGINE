@@ -98,9 +98,6 @@ void Mouse::Update(HWND hwnd) noexcept
         btn.down = x2Pressed && !wasPressed;
         btn.up = !x2Pressed && wasPressed;
     }
-
-    // ホイールデルタをリセット（フレーム毎にリセット）
-    wheelDelta_ = 0.0f;
 }
 
 void Mouse::SetPosition(int x, int y) noexcept

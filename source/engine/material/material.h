@@ -54,6 +54,7 @@ struct MaterialDesc
     MaterialParams params;
     TextureHandle textures[static_cast<size_t>(MaterialTextureSlot::Count)] = {};
     std::string name;
+    std::string diffuseTexturePath;  //!< モデルから読み取ったテクスチャパス
 };
 
 //============================================================================

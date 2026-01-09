@@ -1,0 +1,8 @@
+{
+    "name": "pipib_hair",
+    "albedo": "texture:/tx/hair.bmp",
+    "albedoColor": [1.0, 1.0, 1.0, 1.0],
+    "metallic": 0.0,
+    "roughness": 0.5,
+    "ao": 1.0
+}

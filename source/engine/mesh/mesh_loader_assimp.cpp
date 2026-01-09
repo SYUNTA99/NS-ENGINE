@@ -9,12 +9,8 @@
 
 #include "mesh_loader_assimp.h"
 
-// Assimpがインストールされているかチェック
-#if __has_include(<assimp/Importer.hpp>)
+// Assimpは external/assimp/include/ に配置されている
 #define HAS_ASSIMP 1
-#else
-#define HAS_ASSIMP 0
-#endif
 
 #if HAS_ASSIMP
 
@@ -33,6 +29,7 @@
 #include "common/logging/logging.h"
 #include <algorithm>
 #include <unordered_set>
+#include <cmath>
 
 namespace
 {
@@ -47,7 +44,8 @@ const std::unordered_set<std::string> kSupportedExtensions = {
     ".ply",
     ".stl",
     ".x",
-    ".x3d"
+    ".x3d",
+    ".pmx"  // MikuMikuDance format
 };
 
 //! @brief AssimpのaiVector3DをVector3に変換
@@ -65,10 +63,10 @@ inline Color ToColor(const aiColor4D& c)
 //! @brief Assimpポストプロセスフラグを構築
 unsigned int GetPostProcessFlags(const MeshLoadOptions& options)
 {
-    unsigned int flags = aiProcess_Triangulate          // 三角形化
-                       | aiProcess_JoinIdenticalVertices // 重複頂点を結合
-                       | aiProcess_SortByPType          // プリミティブタイプでソート
-                       | aiProcess_ValidateDataStructure;
+    // DX22_01_planeと同じ設定
+    unsigned int flags =
+        aiProcess_ConvertToLeftHanded |  // 左手座標系に変換
+        aiProcess_Triangulate;           // 三角形化
 
     if (options.calculateNormals) {
         flags |= aiProcess_GenSmoothNormals;
@@ -199,8 +197,19 @@ bool BuildMeshFromAiMesh(
     return true;
 }
 
+//! @brief テクスチャパスからファイル名だけを抽出
+std::string ExtractTextureName(const std::string& path)
+{
+    // 絶対パスの場合、ファイル名だけを取り出す
+    size_t pos = path.find_last_of("/\\");
+    if (pos != std::string::npos) {
+        return path.substr(pos + 1);
+    }
+    return path;
+}
+
 //! @brief aiMaterialからMaterialDescを構築
-MaterialDesc ConvertMaterial(const aiMaterial* aiMat, [[maybe_unused]] const std::string& basePath)
+MaterialDesc ConvertMaterial(const aiMaterial* aiMat, std::vector<std::string>& texturePaths)
 {
     MaterialDesc desc;
 
@@ -245,8 +254,23 @@ MaterialDesc ConvertMaterial(const aiMaterial* aiMat, [[maybe_unused]] const std
         }
     }
 
-    // テクスチャパスは後でTextureManagerで解決
-    // ここではマテリアル記述子のみ返す
+    // ディフューズテクスチャパスを取得
+    if (aiMat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+        aiString texPath;
+        if (aiMat->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texPath) == AI_SUCCESS) {
+            desc.diffuseTexturePath = texPath.C_Str();
+            texturePaths.push_back(desc.diffuseTexturePath);
+        }
+    } else {
+        // BASE_COLORも試す（PBR用）
+        if (aiMat->GetTextureCount(aiTextureType_BASE_COLOR) > 0) {
+            aiString texPath;
+            if (aiMat->Get(AI_MATKEY_TEXTURE(aiTextureType_BASE_COLOR, 0), texPath) == AI_SUCCESS) {
+                desc.diffuseTexturePath = texPath.C_Str();
+                texturePaths.push_back(desc.diffuseTexturePath);
+            }
+        }
+    }
 
     return desc;
 }
@@ -330,10 +354,10 @@ MeshLoadResult MeshLoaderAssimp::LoadFromMemory(
         return result;
     }
 
-    // マテリアル変換
+    // マテリアル変換（テクスチャパスも抽出）
     if (options.loadMaterials) {
         for (uint32_t i = 0; i < scene->mNumMaterials; ++i) {
-            result.materialDescs.push_back(ConvertMaterial(scene->mMaterials[i], ""));
+            result.materialDescs.push_back(ConvertMaterial(scene->mMaterials[i], result.texturePathsToLoad));
         }
     }
 

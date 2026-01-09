@@ -75,15 +75,17 @@ public:
     //! @brief シーンを非同期で読み込み予約
     //! @tparam T シーンクラス（Sceneの派生クラス）
     //! @note バックグラウンドでOnLoadAsync()を実行
+    //! @warning メインスレッドからのみ呼び出すこと
     template<typename T>
     void LoadAsync()
     {
-        // 既にロード中なら無視
-        if (IsLoading()) return;
+        // 既にロード中または予約済みなら無視（競合状態防止）
+        if (asyncPending_ || IsLoading()) return;
 
+        // 先にフラグを立てて再入を防止
         asyncPending_ = true;
-        loadingScene_ = std::make_unique<T>();
         loadProgress_.store(0.0f);
+        loadingScene_ = std::make_unique<T>();
 
         // ロード中のシーンをキャプチャ用にローカル変数で保持
         Scene* scenePtr = loadingScene_.get();

@@ -2,7 +2,7 @@
 
 #include "key.h"
 #include <array>
-#include <math/math_types.h>
+#include "engine/math/math_types.h"
 
 // 前方宣言
 struct HWND__;
@@ -53,9 +53,13 @@ public:
     /// @return　(マウスのX座標、マウスのY座標)
     Vector2 GetPosition() const noexcept { return Vector2(static_cast<float>(x_), static_cast<float>(y_)); }
 
-    /// @brief ホイールスクロール量を取得
+    /// @brief ホイールスクロール量を取得（取得後リセット）
     /// @return このフレームのホイールスクロール量（正=上、負=下）
-    float GetWheelDelta() const noexcept { return wheelDelta_; }
+    float GetWheelDelta() noexcept {
+        float delta = wheelDelta_;
+        wheelDelta_ = 0.0f;
+        return delta;
+    }
 
     /// @brief ボタンが現在押されているか
     /// @param button ボタン

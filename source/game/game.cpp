@@ -9,12 +9,12 @@
 #include "engine/fs/path_utility.h"
 #include "engine/texture/texture_manager.h"
 #include "engine/shader/shader_manager.h"
-#include "dx11/compile/shader_compiler.h"
 #include "engine/input/input_manager.h"
 #include "common/logging/logging.h"
 #include "engine/scene/scene_manager.h"
 #include "engine/c_systems/collision_manager.h"
 #include "dx11/graphics_context.h"
+#include "dx11/graphics_device.h"
 #include "engine/platform/renderer.h"
 #include "engine/graphics2d/render_state_manager.h"
 #include "engine/c_systems/sprite_batch.h"
@@ -26,9 +26,9 @@
 #include "engine/mesh/mesh_manager.h"
 #include "engine/material/material_manager.h"
 #include "engine/lighting/lighting_manager.h"
-
-// シェーダーコンパイラ（グローバルインスタンス）
-static std::unique_ptr<D3DShaderCompiler> g_shaderCompiler;
+#include "engine/mesh/mesh_loader.h"
+#include "engine/mesh/mesh_loader_assimp.h"
+#include "model_scene.h"
 
 //----------------------------------------------------------------------------
 Game::Game() = default;
@@ -75,21 +75,20 @@ bool Game::Initialize()
     LOG_INFO("[Game] Assets root: " + PathUtility::toNarrowString(assetsRoot));
 
     auto& fsManager = FileSystemManager::Get();
-    fsManager.Mount("shaders", std::make_unique<HostFileSystem>(assetsRoot + L"shader/"));
-    fsManager.Mount("textures", std::make_unique<HostFileSystem>(assetsRoot + L"texture/"));
-    fsManager.Mount("models", std::make_unique<HostFileSystem>(assetsRoot + L"models/"));
-    fsManager.Mount("materials", std::make_unique<HostFileSystem>(assetsRoot + L"materials/"));
+    fsManager.Mount("shader", std::make_unique<HostFileSystem>(assetsRoot + L"shader/"));
+    fsManager.Mount("texture", std::make_unique<HostFileSystem>(assetsRoot + L"texture/"));
+    fsManager.Mount("model", std::make_unique<HostFileSystem>(assetsRoot + L"model/"));
+    fsManager.Mount("material", std::make_unique<HostFileSystem>(assetsRoot + L"material/"));
 
     // 3. TextureManager初期化（Application層でCreate済み）
-    auto* textureFs = fsManager.GetFileSystem("textures");
+    auto* textureFs = fsManager.GetFileSystem("texture");
     TextureManager::Get().Initialize(textureFs);
     Services::Provide(&TextureManager::Get());
 
     // 4. ShaderManager初期化
-    auto* shaderFs = fsManager.GetFileSystem("shaders");
+    auto* shaderFs = fsManager.GetFileSystem("shader");
     if (shaderFs) {
-        g_shaderCompiler = std::make_unique<D3DShaderCompiler>();
-        ShaderManager::Get().Initialize(shaderFs, g_shaderCompiler.get());
+        ShaderManager::Get().Initialize(shaderFs);
     }
 
     // 5. RenderStateManager初期化
@@ -111,8 +110,11 @@ bool Game::Initialize()
     }
 
     // 8. MeshManager初期化
-    auto* modelsFs = fsManager.GetFileSystem("models");
-    MeshManager::Get().Initialize(modelsFs);
+    auto* modelFs = fsManager.GetFileSystem("model");
+    MeshManager::Get().Initialize(modelFs);
+
+    // メッシュローダー登録
+    MeshLoaderRegistry::Get().Register(std::make_unique<MeshLoaderAssimp>());
 
     // 9. MaterialManager初期化
     MaterialManager::Get().Initialize();
@@ -122,7 +124,8 @@ bool Game::Initialize()
 
     LOG_INFO("[Game] サブシステム初期化完了");
 
-    // 初期シーンなし（必要に応じてシーンを追加）
+    // 初期シーン: 3Dモデル表示
+    SceneManager::Get().Load<ModelScene>();
 
     return true;
 }
@@ -164,7 +167,6 @@ void Game::Shutdown() noexcept
     TextureManager::Get().Shutdown();
     FileSystemManager::Get().UnmountAll();
     CollisionManager::Get().Shutdown();
-    g_shaderCompiler.reset();
 
     // ServiceLocatorをクリア
     Services::Clear();

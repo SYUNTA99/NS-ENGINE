@@ -5,6 +5,8 @@
 #include "mesh_manager.h"
 #include "mesh_loader.h"
 #include "engine/core/singleton_registry.h"
+#include "engine/material/material_manager.h"
+#include "engine/texture/texture_manager.h"
 #include "common/logging/logging.h"
 #include "common/utility/hash.h"
 #include <cassert>
@@ -152,6 +154,103 @@ MeshHandle MeshManager::Load(const std::string& path, const MeshLoadOptions& opt
 MeshHandle MeshManager::LoadGlobal(const std::string& path, const MeshLoadOptions& options)
 {
     return LoadInScope(path, options, kGlobalScope);
+}
+
+MeshManager::ModelLoadResult MeshManager::LoadWithMaterials(
+    const std::string& path,
+    const MeshLoadOptions& options)
+{
+    ModelLoadResult result;
+
+    // ローダーでロード（マテリアル情報も含む）
+    MeshLoadOptions opts = options;
+    opts.loadMaterials = true;  // マテリアル読み込みを強制
+
+    MeshLoadResult loadResult = MeshLoaderRegistry::Get().Load(path, opts);
+    if (!loadResult.IsValid()) {
+        LOG_ERROR("[MeshManager] LoadWithMaterials failed: " + path);
+        return result;
+    }
+
+    // メッシュをハンドルに割り当て
+    result.mesh = AllocateSlot(loadResult.meshes[0]);
+    if (!result.mesh.IsValid()) {
+        LOG_ERROR("[MeshManager] Failed to allocate mesh slot");
+        return result;
+    }
+
+    // スコープに追加
+    IncrementRefCount(result.mesh);
+    AddToScope(result.mesh, currentScope_);
+
+    // モデルのディレクトリパスを取得（テクスチャ読み込み用）
+    std::string modelDir;
+    size_t colonPos = path.find(":/");
+    if (colonPos != std::string::npos) {
+        // マウントパス形式 (例: "model:/characters/pipib/ppb.pmx")
+        size_t lastSlash = path.find_last_of('/');
+        if (lastSlash != std::string::npos && lastSlash > colonPos) {
+            modelDir = path.substr(0, lastSlash + 1);
+        } else {
+            modelDir = path.substr(0, colonPos + 2);
+        }
+    } else {
+        // 通常のパス
+        size_t lastSlash = path.find_last_of("/\\");
+        if (lastSlash != std::string::npos) {
+            modelDir = path.substr(0, lastSlash + 1);
+        }
+    }
+
+    // マテリアルを作成
+    auto& matMgr = MaterialManager::Get();
+    auto& texMgr = TextureManager::Get();
+
+    // サブメッシュのmaterialIndexに対応するマテリアルを作成
+    Mesh* mesh = Get(result.mesh);
+    if (!mesh) {
+        return result;
+    }
+
+    const auto& subMeshes = mesh->GetSubMeshes();
+    result.materials.resize(subMeshes.size());
+
+    for (size_t i = 0; i < subMeshes.size(); ++i) {
+        uint32_t matIndex = subMeshes[i].materialIndex;
+
+        if (matIndex < loadResult.materialDescs.size()) {
+            MaterialDesc& matDesc = loadResult.materialDescs[matIndex];
+
+            // モデルから取得したテクスチャパスを使用
+            if (!matDesc.diffuseTexturePath.empty()) {
+                // バックスラッシュをスラッシュに変換
+                std::string texPathFromModel = matDesc.diffuseTexturePath;
+                for (char& c : texPathFromModel) {
+                    if (c == '\\') c = '/';
+                }
+
+                // texture:/ マウントから読み込む
+                std::string texPath = "texture:/" + texPathFromModel;
+                TextureHandle texHandle = texMgr.Load(texPath);
+                if (texHandle.IsValid()) {
+                    matDesc.textures[static_cast<size_t>(MaterialTextureSlot::Albedo)] = texHandle;
+                } else {
+                    LOG_WARN("[MeshManager] Failed to load texture: " + texPath);
+                }
+            }
+
+            result.materials[i] = matMgr.Create(matDesc);
+        } else {
+            // デフォルトマテリアル
+            result.materials[i] = matMgr.CreateDefault();
+            LOG_WARN("[MeshManager] SubMesh[" + std::to_string(i) +
+                     "] materialIndex " + std::to_string(matIndex) + " out of range, using default");
+        }
+    }
+
+    result.success = true;
+
+    return result;
 }
 
 Mesh* MeshManager::Get(MeshHandle handle) const noexcept
@@ -701,5 +800,10 @@ MeshHandle MeshManager::RegisterPrimitive(MeshPtr mesh, const std::string& name)
 
     LOG_INFO("[MeshManager] Registered primitive: " + name);
     return handle;
+}
+
+MeshHandle MeshManager::Register(MeshPtr mesh, const std::string& name)
+{
+    return RegisterPrimitive(std::move(mesh), name);
 }
 

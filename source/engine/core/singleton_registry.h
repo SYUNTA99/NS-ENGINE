@@ -66,7 +66,6 @@ inline constexpr SingletonId operator|(SingletonId a, SingletonId b) noexcept {
     return static_cast<SingletonId>(
         static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
-
 inline constexpr SingletonId operator&(SingletonId a, SingletonId b) noexcept {
     return static_cast<SingletonId>(
         static_cast<uint32_t>(a) & static_cast<uint32_t>(b));

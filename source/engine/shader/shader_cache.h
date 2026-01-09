@@ -9,6 +9,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
+#include <atomic>
 
 //----------------------------------------------------------------------------
 //! シェーダーキャッシュインターフェース
@@ -65,8 +66,9 @@ private:
     mutable std::shared_mutex mutex_;
     std::unordered_map<uint64_t, ComPtr<ID3DBlob>> cache_;
 
-    mutable size_t hitCount_ = 0;
-    mutable size_t missCount_ = 0;
+    // shared_lock内で更新されるためatomicが必要
+    mutable std::atomic<size_t> hitCount_ = 0;
+    mutable std::atomic<size_t> missCount_ = 0;
 };
 
 //----------------------------------------------------------------------------

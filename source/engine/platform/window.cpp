@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "window.h"
 #include "common/logging/logging.h"
+#include "engine/input/input_manager.h"
 
 //----------------------------------------------------------------------------
 // コンストラクタ・デストラクタ
@@ -286,6 +287,14 @@ LRESULT Window::HandleMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         auto* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
         minMaxInfo->ptMinTrackSize.x = static_cast<LONG>(minWidth_);
         minMaxInfo->ptMinTrackSize.y = static_cast<LONG>(minHeight_);
+        return 0;
+    }
+
+    case WM_MOUSEWHEEL:
+    {
+        // WHEEL_DELTAは120が1ノッチ
+        float delta = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
+        InputManager::Get().GetMouse().OnWheel(delta);
         return 0;
     }
 

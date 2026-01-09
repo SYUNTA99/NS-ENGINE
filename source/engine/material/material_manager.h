@@ -134,6 +134,27 @@ public:
     //! @return マテリアルハンドル
     [[nodiscard]] MaterialHandle CreateDefault();
 
+    //! @brief JSONファイルからマテリアルを読み込み
+    //! @param path マテリアルJSONファイルパス（material:/形式）
+    //! @return マテリアルハンドル（失敗時Invalid）
+    //! @note JSONフォーマット:
+    //! @code
+    //! {
+    //!   "name": "character_skin",
+    //!   "albedo": "texture:/characters/body.png",
+    //!   "normal": "texture:/characters/body_n.png",
+    //!   "albedoColor": [1.0, 1.0, 1.0, 1.0],
+    //!   "metallic": 0.0,
+    //!   "roughness": 0.5
+    //! }
+    //! @endcode
+    [[nodiscard]] MaterialHandle Load(const std::string& path);
+
+    //! @brief JSONファイルからマテリアルをグローバルスコープで読み込み
+    //! @param path マテリアルJSONファイルパス
+    //! @return マテリアルハンドル（失敗時Invalid）
+    [[nodiscard]] MaterialHandle LoadGlobal(const std::string& path);
+
     //!@}
     //----------------------------------------------------------
     //! @name マテリアルアクセス
@@ -239,6 +260,9 @@ private:
 
     //! @brief 指定スコープでマテリアルを作成
     [[nodiscard]] MaterialHandle CreateInScope(const MaterialDesc& desc, ScopeId scope);
+
+    //! @brief JSONファイルからマテリアルを読み込み（内部）
+    [[nodiscard]] MaterialHandle LoadInScope(const std::string& path, ScopeId scope);
 
     //!@}
     //------------------------------------------------------------------------

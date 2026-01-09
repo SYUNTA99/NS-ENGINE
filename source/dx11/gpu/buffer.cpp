@@ -79,11 +79,17 @@ std::shared_ptr<Buffer> Buffer::Create(
     // SRV作成
     View<SRV> srv;
     if (desc.bindFlags & D3D11_BIND_SHADER_RESOURCE) {
+        // 構造化バッファの場合、strideは必須
+        if (desc.stride == 0) {
+            LOG_ERROR("[Buffer] SRV作成にはstride > 0が必要です");
+            return nullptr;
+        }
+
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Format = DXGI_FORMAT_UNKNOWN;
         srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
         srvDesc.Buffer.FirstElement = 0;
-        srvDesc.Buffer.NumElements = desc.stride > 0 ? desc.size / desc.stride : desc.size;
+        srvDesc.Buffer.NumElements = desc.size / desc.stride;
 
         srv = View<SRV>::Create(buffer.Get(), &srvDesc);
     }
@@ -91,11 +97,17 @@ std::shared_ptr<Buffer> Buffer::Create(
     // UAV作成
     View<UAV> uav;
     if (desc.bindFlags & D3D11_BIND_UNORDERED_ACCESS) {
+        // 構造化バッファの場合、strideは必須
+        if (desc.stride == 0) {
+            LOG_ERROR("[Buffer] UAV作成にはstride > 0が必要です");
+            return nullptr;
+        }
+
         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
         uavDesc.Format = DXGI_FORMAT_UNKNOWN;
         uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
         uavDesc.Buffer.FirstElement = 0;
-        uavDesc.Buffer.NumElements = desc.stride > 0 ? desc.size / desc.stride : desc.size;
+        uavDesc.Buffer.NumElements = desc.size / desc.stride;
 
         uav = View<UAV>::Create(buffer.Get(), &uavDesc);
     }

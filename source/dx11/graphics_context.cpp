@@ -366,13 +366,19 @@ void GraphicsContext::UpdateBuffer(Buffer* buffer, const void* data)
 void GraphicsContext::UpdateBuffer(Buffer* buffer, const void* data, uint32_t sizeInBytes)
 {
     auto* ctx = context_.Get();
-    if (!ctx || !buffer || !data) return;
+    if (!ctx || !buffer || !data || sizeInBytes == 0) return;
 
     if (buffer->IsDynamic()) {
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (SUCCEEDED(ctx->Map(buffer->Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+            // Unmapを確実に呼ぶためのスコープガード
+            struct ScopedUnmap {
+                ID3D11DeviceContext* ctx;
+                ID3D11Resource* res;
+                ~ScopedUnmap() { ctx->Unmap(res, 0); }
+            } guard{ ctx, buffer->Get() };
+
             memcpy(mapped.pData, data, sizeInBytes);
-            ctx->Unmap(buffer->Get(), 0);
         }
     } else {
         ctx->UpdateSubresource(buffer->Get(), 0, nullptr, data, 0, 0);
@@ -401,15 +407,21 @@ void GraphicsContext::UnmapBuffer(Buffer* buffer)
 void GraphicsContext::UpdateBuffer(Buffer* buffer, const void* data, uint32_t sizeInBytes, uint32_t offsetInBytes)
 {
     auto* ctx = context_.Get();
-    if (!ctx || !buffer || !data) return;
+    if (!ctx || !buffer || !data || sizeInBytes == 0) return;
 
     if (buffer->IsDynamic()) {
         // オフセットがある場合はNO_OVERWRITE、なければDISCARD
         D3D11_MAP mapType = (offsetInBytes > 0) ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD;
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (SUCCEEDED(ctx->Map(buffer->Get(), 0, mapType, 0, &mapped))) {
+            // Unmapを確実に呼ぶためのスコープガード
+            struct ScopedUnmap {
+                ID3D11DeviceContext* ctx;
+                ID3D11Resource* res;
+                ~ScopedUnmap() { ctx->Unmap(res, 0); }
+            } guard{ ctx, buffer->Get() };
+
             memcpy(static_cast<uint8_t*>(mapped.pData) + offsetInBytes, data, sizeInBytes);
-            ctx->Unmap(buffer->Get(), 0);
         }
     } else {
         D3D11_BOX box = {};

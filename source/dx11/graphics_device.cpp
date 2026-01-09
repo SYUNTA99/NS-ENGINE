@@ -60,11 +60,21 @@ void GraphicsDevice::Shutdown() noexcept
     // ここでは冗長な呼び出しは行わない
 
     SINGLETON_UNREGISTER(GraphicsDevice);
+
+#ifdef _DEBUG
+    // デバイス解放前にライブオブジェクトをレポート
+    if (device_) {
+        ComPtr<ID3D11Debug> debug;
+        if (SUCCEEDED(device_.As(&debug))) {
+            LOG_INFO("[GraphicsDevice] ライブオブジェクトレポート:");
+            debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+        }
+    }
+#endif
+
     device_.Reset();
 
 #ifdef _DEBUG
-    // Note: デバイス解放後はライブオブジェクトレポートは不可
-    // リソースリークの検出はDXGI Debug Layer経由で行う
     LOG_INFO("[GraphicsDevice] デバイス解放完了");
 #endif
 }
