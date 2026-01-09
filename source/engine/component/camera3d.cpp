@@ -97,7 +97,7 @@ Matrix Camera3D::GetViewProjectionMatrix() const
 Vector3 Camera3D::GetForward() const
 {
     Quaternion rot = GetRotation();
-    return Vector3::Transform(Vector3::Forward, rot);
+    return Vector3::Transform(LH::Forward(), rot);
 }
 
 //----------------------------------------------------------------------------

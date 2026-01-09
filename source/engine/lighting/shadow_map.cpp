@@ -55,7 +55,7 @@ void ShadowMap::SetDirectionalLight(const Vector3& lightDir, const Vector3& scen
     // アップベクトル計算（ライト方向がY軸に近い場合はZ軸を使用）
     Vector3 up = Vector3::Up;
     if (std::abs(dir.Dot(Vector3::Up)) > 0.99f) {
-        up = Vector3::Forward;
+        up = LH::Forward();
     }
 
     // ビュー行列を作成
