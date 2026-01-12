@@ -56,4 +56,4 @@ echo [OK] game.exe 確認済み
 
 echo.
 echo Visual Studio を起動中...
-start "" "build\HEW2026.sln"
+start "" "build\NS-ENGINE.sln"

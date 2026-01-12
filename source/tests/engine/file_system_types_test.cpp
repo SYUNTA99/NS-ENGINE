@@ -329,7 +329,7 @@ TEST(AsyncReadHandleTest, StateChangesToCompletedOnSuccess)
     result.success = true;
     promise.set_value(result);
 
-    handle.get();  // Trigger state transition
+    (void)handle.get();  // Trigger state transition
     EXPECT_EQ(handle.getState(), AsyncReadState::Completed);
 }
 
@@ -344,7 +344,7 @@ TEST(AsyncReadHandleTest, StateChangesToFailedOnFailure)
     result.error = FileError::make(FileError::Code::NotFound, 0, "Not found");
     promise.set_value(result);
 
-    handle.get();  // Trigger state transition
+    (void)handle.get();  // Trigger state transition
     EXPECT_EQ(handle.getState(), AsyncReadState::Failed);
 }
 

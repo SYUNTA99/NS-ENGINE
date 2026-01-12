@@ -74,5 +74,6 @@ Vector2 UIButtonComponent::GetPosition() const
         return Vector2::Zero;
     }
 
-    return transform->GetPosition();
+    const Vector3& pos = transform->GetPosition();
+    return Vector2(pos.x, pos.y);
 }

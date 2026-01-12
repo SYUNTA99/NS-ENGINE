@@ -186,7 +186,7 @@ TEST_F(GameObjectTest, RemoveComponentReturnsTrue)
 TEST_F(GameObjectTest, RemoveComponentCallsOnDetach)
 {
     auto* comp = gameObject_.AddComponent<TestComponent>();
-    TestComponent* ptr = comp;  // コピーしておく
+    (void)comp;  // 使用しないが、AddComponentが正常動作することを確認
 
     gameObject_.RemoveComponent<TestComponent>();
     // 注: compはもう無効だが、wasDetachedはコールバック時に設定される

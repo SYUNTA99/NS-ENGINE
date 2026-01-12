@@ -5,7 +5,7 @@
 
 -- ワークスペース設定
 workspace "NS-ENGINE"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Burst" }
     platforms { "x64" }
     location "build"
 
@@ -28,6 +28,26 @@ workspace "NS-ENGINE"
         symbols "Off"
         optimize "Full"
         runtime "Release"
+        flags { "LinkTimeOptimization" }
+
+    -- Burst: 最大最適化（コンパイル遅い、実行速い）
+    filter "configurations:Burst"
+        defines { "NDEBUG" }
+        symbols "Off"
+        optimize "Speed"
+        runtime "Release"
+        flags {
+            "LinkTimeOptimization",
+            "MultiProcessorCompile"
+        }
+        buildoptions {
+            "/favor:AMD64",   -- 64bit最適化
+            "/fp:fast",       -- 高速浮動小数点
+            "/Oi",            -- 組み込み関数
+            "/Ot",            -- 速度優先
+            "/Ob3",           -- 積極的インライン
+            "/GF"             -- 文字列プーリング
+        }
 
     filter "platforms:x64"
         architecture "x64"
@@ -161,7 +181,7 @@ project "engine"
             "external/lib/Debug",
             assimp_lib_debug
         }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         libdirs {
             "external/lib/Release",
             assimp_lib_release
@@ -177,7 +197,7 @@ project "engine"
     -- Assimp 6.0.2 動的リンク（Debug/Releaseで異なるlib）
     filter "configurations:Debug"
         links { "assimp-vc143-mtd" }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         links { "assimp-vc143-mt" }
     filter {}
 
@@ -225,7 +245,7 @@ project "game"
             "external/lib/Debug",
             assimp_lib_debug
         }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         libdirs {
             "external/lib/Release",
             assimp_lib_release
@@ -247,7 +267,7 @@ project "game"
     -- Assimp 6.0.2 動的リンク（Debug/Releaseで異なるlib）
     filter "configurations:Debug"
         links { "assimp-vc143-mtd" }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         links { "assimp-vc143-mt" }
     filter {}
 
@@ -266,7 +286,7 @@ project "game"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_debug .. '/assimp-vc143-mtd.dll" "%{cfg.targetdir}"'
         }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_release .. '/assimp-vc143-mt.dll" "%{cfg.targetdir}"'
         }
@@ -274,6 +294,11 @@ project "game"
 
     -- リンカー警告を無視 (外部ライブラリPDB不足)
     linkoptions { "/ignore:4099" }
+
+--============================================================================
+-- テスト関連（ソリューションフォルダで非表示）
+--============================================================================
+group "_Tests"
 
 --============================================================================
 -- Google Test ライブラリ
@@ -336,7 +361,7 @@ project "tests"
             "external/lib/Debug",
             assimp_lib_debug
         }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         libdirs {
             "external/lib/Release",
             assimp_lib_release
@@ -359,7 +384,7 @@ project "tests"
     -- Assimp 6.0.2 動的リンク
     filter "configurations:Debug"
         links { "assimp-vc143-mtd" }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         links { "assimp-vc143-mt" }
     filter {}
 
@@ -377,7 +402,7 @@ project "tests"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_debug .. '/assimp-vc143-mtd.dll" "%{cfg.targetdir}"'
         }
-    filter "configurations:Release"
+    filter "configurations:Release or Burst"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_release .. '/assimp-vc143-mt.dll" "%{cfg.targetdir}"'
         }

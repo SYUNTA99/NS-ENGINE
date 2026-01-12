@@ -29,6 +29,12 @@ class Camera2D;
 class BlendState;
 class SamplerState;
 
+// ECS前方宣言
+namespace ECS {
+    struct SpriteData;
+    struct TransformData;
+}
+
 //============================================================================
 //! @brief スプライトバッチ描画システム
 //!
@@ -156,6 +162,14 @@ public:
     //! @param animator アニメーター（UV座標を提供）
     //------------------------------------------------------------------------
     void Draw(const SpriteRenderer& renderer, const Transform& transform, const class Animator& animator);
+
+    //------------------------------------------------------------------------
+    //! @brief ECS SpriteData + TransformDataから描画
+    //! @param sprite スプライトデータ
+    //! @param transform トランスフォームデータ
+    //! @param texture テクスチャポインタ（TextureManager::Get()で取得）
+    //------------------------------------------------------------------------
+    void Draw(const ECS::SpriteData& sprite, const ECS::TransformData& transform, Texture* texture);
 
     //------------------------------------------------------------------------
     //! @brief バッチ描画終了（実際の描画を実行）

@@ -51,7 +51,7 @@ void Collider3D::OnAttach()
 
     // 初期位置を設定
     if (Transform* transform = GetOwner()->GetComponent<Transform>()) {
-        Vector3 pos = transform->GetPosition3D();
+        Vector3 pos = transform->GetPosition();
         manager.SetPosition(handle_, pos);
     }
 }
@@ -74,7 +74,7 @@ void Collider3D::Update(float deltaTime)
     if (!syncWithTransform_) return;
 
     if (Transform* transform = GetOwner()->GetComponent<Transform>()) {
-        Vector3 pos = transform->GetPosition3D();
+        Vector3 pos = transform->GetPosition();
         CollisionManager3D::Get().SetPosition(handle_, pos);
     }
 }

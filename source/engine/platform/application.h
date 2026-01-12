@@ -24,6 +24,8 @@ struct ApplicationDesc
     bool enableDebugLayer = true;         //!< D3Dデバッグレイヤー有効化
     VSyncMode vsync = VSyncMode::On;      //!< 垂直同期モード
     float maxDeltaTime = 0.25f;           //!< deltaTime上限（秒）デバッグ時異常値防止
+    float fixedDeltaTime = 1.0f / 60.0f;  //!< 固定タイムステップ（秒）デフォルト60Hz
+    bool useFixedTimestep = true;         //!< 固定タイムステップを使用するか
 };
 
 //----------------------------------------------------------------------------
@@ -88,8 +90,14 @@ public:
     //----------------------------------------------------------
     //!@{
 
-    //! @brief 前フレームからの経過時間（秒）
+    //! @brief 前フレームからの経過時間（秒）- 可変
     [[nodiscard]] float GetDeltaTime() const noexcept;
+
+    //! @brief 固定タイムステップのデルタタイム（秒）
+    [[nodiscard]] float GetFixedDeltaTime() const noexcept { return desc_.fixedDeltaTime; }
+
+    //! @brief 描画補間係数（0.0〜1.0）
+    [[nodiscard]] float GetAlpha() const noexcept { return alpha_; }
 
     //! @brief アプリケーション開始からの経過時間（秒）
     [[nodiscard]] float GetTotalTime() const noexcept;
@@ -137,6 +145,8 @@ private:
     bool initialized_ = false;
     bool running_ = false;
     bool shouldQuit_ = false;
+    float accumulator_ = 0.0f;     //!< 固定タイムステップ用アキュムレータ
+    float alpha_ = 0.0f;           //!< 描画補間係数
 };
 
 // テンプレート実装

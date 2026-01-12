@@ -11,6 +11,11 @@ namespace {
     constexpr float kMinZoom = 0.001f;
     //! @brief ビューポート中央計算用係数
     constexpr float kHalf = 0.5f;
+
+    //! @brief QuaternionからZ軸回転角度を抽出
+    float ExtractZRotation(const Quaternion& q) noexcept {
+        return 2.0f * std::atan2(q.z, q.w);
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -29,49 +34,60 @@ void Camera2D::OnAttach()
 //----------------------------------------------------------------------------
 Vector2 Camera2D::GetPosition() const noexcept
 {
-    return transform_ ? transform_->GetPosition() : Vector2::Zero;
+    if (!transform_) return Vector2::Zero;
+    const Vector3& pos = transform_->GetPosition();
+    return Vector2(pos.x, pos.y);
 }
 
 //----------------------------------------------------------------------------
 void Camera2D::SetPosition(const Vector2& position) noexcept
 {
-    if (transform_) transform_->SetPosition(position);
+    if (transform_) {
+        const Vector3& current = transform_->GetPosition();
+        transform_->SetPosition(position.x, position.y, current.z);
+    }
 }
 
 //----------------------------------------------------------------------------
 void Camera2D::SetPosition(float x, float y) noexcept
 {
-    if (transform_) transform_->SetPosition(x, y);
+    if (transform_) {
+        const Vector3& current = transform_->GetPosition();
+        transform_->SetPosition(x, y, current.z);
+    }
 }
 
 //----------------------------------------------------------------------------
 void Camera2D::Translate(const Vector2& delta) noexcept
 {
-    if (transform_) transform_->Translate(delta);
+    if (transform_) transform_->Translate(Vector3(delta.x, delta.y, 0.0f));
 }
 
 //----------------------------------------------------------------------------
 float Camera2D::GetRotation() const noexcept
 {
-    return transform_ ? transform_->GetRotation() : 0.0f;
+    if (!transform_) return 0.0f;
+    return ExtractZRotation(transform_->GetRotation());
 }
 
 //----------------------------------------------------------------------------
 float Camera2D::GetRotationDegrees() const noexcept
 {
-    return transform_ ? transform_->GetRotationDegrees() : 0.0f;
+    return ToDegrees(GetRotation());
 }
 
 //----------------------------------------------------------------------------
 void Camera2D::SetRotation(float radians) noexcept
 {
-    if (transform_) transform_->SetRotation(radians);
+    if (transform_) {
+        transform_->SetRotation(Quaternion::CreateFromAxisAngle(Vector3::UnitZ, radians));
+    }
 }
 
 //----------------------------------------------------------------------------
 void Camera2D::SetRotationDegrees(float degrees) noexcept
 {
-    if (transform_) transform_->SetRotationDegrees(degrees);
+    SetRotation(ToRadians(degrees));
 }
 
 //----------------------------------------------------------------------------

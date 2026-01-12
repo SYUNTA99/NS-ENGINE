@@ -26,7 +26,7 @@ public:
     void OnLoadAsync() override { onLoadAsyncCalled = true; }
     void OnLoadComplete() override { onLoadCompleteCalled = true; }
     void Update() override { updateCalled = true; }
-    void Render() override { renderCalled = true; }
+    void Render([[maybe_unused]] float alpha) override { renderCalled = true; }
     const char* GetName() const override { return "TestScene"; }
 };
 
@@ -158,7 +158,7 @@ TEST(SceneTest, RenderCanBeCalled)
 {
     TestScene scene;
     EXPECT_FALSE(scene.renderCalled);
-    scene.Render();
+    scene.Render(1.0f);
     EXPECT_TRUE(scene.renderCalled);
 }
 

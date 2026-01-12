@@ -1,0 +1,22 @@
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
