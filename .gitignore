@@ -1,44 +1,48 @@
 # ビルド成果物
-#build/
-#bin/
-#obj/
+build/
+bin/
+obj/
 
 # Assimp DLLは必要なので例外
-#!external/assimp/bin/
-#!external/assimp/bin/**
+!external/assimp/bin/
+!external/assimp/bin/**
 
 # Visual Studio
-#*.user
-#*.suo
-#*.sdf
-#*.opensdf
-#*.VC.db
-#*.VC.opendb
-#.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+.vs/
 
 # その他
-#*.log
-#*.bak
-#*~
+*.log
+*.bak
+*~
 
 # デバッグ出力
-#/debug/
-#*debug*.txt
+/debug/
+*debug*.txt
 
 # ドキュメント（ローカルのみ）
-#docs/
+docs/
 
 # Claude Code設定
-#CLAUDE.md
-#.claudeignore
+CLAUDE.md
+.claudeignore
 
 #gemini cli設定
-#GEMINI.md
+GEMINI.md
 
-# Serena MCP (ローカル環境)
-#.serena/
+# Serena MCP (キャッシュ・ログのみ除外)
+.serena/cache/
+.serena/logs/
+.serena/language_servers/
+.serena/memories/
 
 # Windows残骸
-#nul
+nul
 
 #assets/tests
+tmpclaude*

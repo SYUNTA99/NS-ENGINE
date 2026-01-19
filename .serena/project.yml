@@ -1,0 +1,57 @@
+# NS-ENGINE DirectX11 Game Engine Project
+# Serena Language Server Configuration
+
+# C++/DirectX project
+languages: ["cpp"]
+
+# Windows UTF-8 with BOM
+encoding: "utf-8-sig"
+
+# Respect .gitignore
+ignore_all_files_in_gitignore: true
+
+# Additional paths to ignore
+ignored_paths:
+  - "build/**"
+  - "external/**"
+  - ".vs/**"
+  - "*.exe"
+  - "*.dll"
+  - "*.lib"
+  - "*.obj"
+  - "*.pdb"
+
+# Not read-only
+read_only: false
+
+# Exclude non-symbol tools (Claude Code has its own file/search tools)
+# Keep only: get_symbols_overview, find_symbol, find_referencing_symbols,
+#            replace_symbol_body, insert_after_symbol, insert_before_symbol, rename_symbol
+excluded_tools:
+  - read_file
+  - list_dir
+  - find_file
+  - search_for_pattern
+  - check_onboarding_performed
+  - onboarding
+  - think_about_collected_information
+  - think_about_task_adherence
+  - think_about_whether_you_are_done
+  - prepare_for_new_conversation
+  - initial_instructions
+  - write_memory
+  - read_memory
+  - list_memories
+  - delete_memory
+  - edit_memory
+  - get_current_config
+  - insert_after_symbol
+  - insert_before_symbol
+
+# Project name
+project_name: "NS-ENGINE"
+
+# Initial prompt
+initial_prompt: |
+  DirectX11-based game engine project for HEW contest.
+  C++20, Visual Studio 2022, Windows 10+.
