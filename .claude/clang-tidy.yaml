@@ -1,0 +1,128 @@
+# NS-ENGINE clang-tidy 設定
+# C++20 / MSVC / DirectX11 ゲームエンジン向け
+
+# 外部ヘッダー（Windows SDK、DirectX、external/）を除外
+HeaderFilterRegex: '^.*/source/(engine|dx11|game|common|tests)/.*'
+
+Checks: >
+  -*,
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  cppcoreguidelines-*,
+  misc-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -misc-non-private-member-variables-in-classes,
+  -misc-include-cleaner,
+
+WarningsAsErrors: ''
+
+CheckOptions:
+  # 命名規則: PascalCase (クラス/関数)、m_camelCase (メンバ)、kPascalCase (定数)
+
+  # クラス・構造体
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+
+  # 関数
+  - key: readability-identifier-naming.FunctionCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: CamelCase
+
+  # 変数
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalVariableCase
+    value: camelBack
+
+  # メンバ変数: m_camelCase
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.PublicMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberPrefix
+    value: ''
+
+  # 静的メンバ: s_camelCase
+  - key: readability-identifier-naming.ClassMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ClassMemberPrefix
+    value: 's_'
+
+  # グローバル変数: g_camelCase
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalVariablePrefix
+    value: 'g_'
+
+  # 定数・constexpr: kPascalCase
+  - key: readability-identifier-naming.ConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantPrefix
+    value: 'k'
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: 'k'
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: 'k'
+  - key: readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: 'k'
+
+  # 列挙値: PascalCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+
+  # 名前空間: PascalCase
+  - key: readability-identifier-naming.NamespaceCase
+    value: CamelCase
+
+  # テンプレートパラメータ: PascalCase
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+
+  # マクロ: UPPER_CASE
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+
+  # その他のオプション
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 25
+  - key: readability-function-size.LineThreshold
+    value: 100
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'ComPtr;IntrusivePtr'
+  - key: modernize-use-override.IgnoreDestructors
+    value: false
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable

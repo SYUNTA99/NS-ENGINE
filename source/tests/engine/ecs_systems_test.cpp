@@ -1,12 +1,14 @@
 //----------------------------------------------------------------------------
 //! @file   ecs_systems_test.cpp
-//! @brief  ECSシステムのテスト
+//! @brief  ECSシステムのテスト（優先度、SystemGraph等）
+//!
+//! 注: TransformSystem のテストは fine_grained_systems_test.cpp に移行済み
 //----------------------------------------------------------------------------
 #include <gtest/gtest.h>
 #include "engine/ecs/world.h"
 #include "engine/ecs/system.h"
-#include "engine/ecs/components/transform_data.h"
-#include "engine/ecs/systems/transform_system.h"
+#include "engine/ecs/components/transform/transform_components.h"
+#include "engine/ecs/systems/transform/transform_system.h"
 #include <vector>
 
 namespace
@@ -21,205 +23,38 @@ static bool g_renderCalled = false;
 
 class PrioritySystem0 final : public ECS::ISystem {
 public:
-    void Execute(ECS::World&, float) override { g_priorityOrder.push_back(0); }
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(0); }
     int Priority() const override { return 0; }
     const char* Name() const override { return "PrioritySystem0"; }
 };
 
 class PrioritySystem50 final : public ECS::ISystem {
 public:
-    void Execute(ECS::World&, float) override { g_priorityOrder.push_back(50); }
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(50); }
     int Priority() const override { return 50; }
     const char* Name() const override { return "PrioritySystem50"; }
 };
 
 class PrioritySystem100 final : public ECS::ISystem {
 public:
-    void Execute(ECS::World&, float) override { g_priorityOrder.push_back(100); }
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(100); }
     int Priority() const override { return 100; }
     const char* Name() const override { return "PrioritySystem100"; }
 };
 
 class TestUpdateOnlySystem final : public ECS::ISystem {
 public:
-    void Execute(ECS::World&, float) override { g_updateCalled = true; }
+    void OnUpdate(ECS::World&, float) override { g_updateCalled = true; }
     int Priority() const override { return 0; }
     const char* Name() const override { return "TestUpdateOnlySystem"; }
 };
 
 class TestRenderOnlySystem final : public ECS::IRenderSystem {
 public:
-    void Render(ECS::World&, float) override { g_renderCalled = true; }
+    void OnRender(ECS::World&, float) override { g_renderCalled = true; }
     int Priority() const override { return 0; }
     const char* Name() const override { return "TestRenderOnlySystem"; }
 };
-
-//============================================================================
-// TransformSystem テスト
-//============================================================================
-class TransformSystemTest : public ::testing::Test
-{
-protected:
-    ECS::World world_;
-
-    void SetUp() override {
-        // TransformSystemを登録
-        world_.RegisterSystem<ECS::TransformSystem>();
-    }
-};
-
-TEST_F(TransformSystemTest, ComputeLocalMatrixIdentity)
-{
-    ECS::TransformData t;
-    ECS::TransformSystem::ComputeLocalMatrix(t);
-
-    // 単位変換の場合、単位行列に近い
-    // 注: pivot処理があるため完全な単位行列にはならない可能性
-    EXPECT_NEAR(t.localMatrix._11, 1.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._22, 1.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._33, 1.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._44, 1.0f, 0.001f);
-}
-
-TEST_F(TransformSystemTest, ComputeLocalMatrixWithPosition)
-{
-    ECS::TransformData t;
-    t.position = Vector3(10.0f, 20.0f, 30.0f);
-    ECS::TransformSystem::ComputeLocalMatrix(t);
-
-    // 移動成分を確認
-    EXPECT_NEAR(t.localMatrix._41, 10.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._42, 20.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._43, 30.0f, 0.001f);
-}
-
-TEST_F(TransformSystemTest, ComputeLocalMatrixWithScale)
-{
-    ECS::TransformData t;
-    t.scale = Vector3(2.0f, 3.0f, 4.0f);
-    ECS::TransformSystem::ComputeLocalMatrix(t);
-
-    // スケール成分を確認
-    EXPECT_NEAR(t.localMatrix._11, 2.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._22, 3.0f, 0.001f);
-    EXPECT_NEAR(t.localMatrix._33, 4.0f, 0.001f);
-}
-
-TEST_F(TransformSystemTest, FixedUpdateClearsDirtyFlag)
-{
-    ECS::Actor e = world_.CreateActor();
-    auto* t = world_.AddComponent<ECS::TransformData>(e);
-    EXPECT_TRUE(t->dirty);
-
-    world_.FixedUpdate(0.016f);
-
-    EXPECT_FALSE(t->dirty);
-}
-
-TEST_F(TransformSystemTest, FixedUpdateComputesWorldMatrix)
-{
-    ECS::Actor e = world_.CreateActor();
-    auto* t = world_.AddComponent<ECS::TransformData>(e);
-    t->position = Vector3(5.0f, 10.0f, 15.0f);
-
-    world_.FixedUpdate(0.016f);
-
-    // ワールド行列の移動成分を確認
-    EXPECT_NEAR(t->worldMatrix._41, 5.0f, 0.001f);
-    EXPECT_NEAR(t->worldMatrix._42, 10.0f, 0.001f);
-    EXPECT_NEAR(t->worldMatrix._43, 15.0f, 0.001f);
-}
-
-TEST_F(TransformSystemTest, ParentChildRelationship)
-{
-    ECS::Actor parent = world_.CreateActor();
-    ECS::Actor child = world_.CreateActor();
-
-    auto* parentT = world_.AddComponent<ECS::TransformData>(parent);
-    parentT->position = Vector3(100.0f, 0.0f, 0.0f);
-
-    auto* childT = world_.AddComponent<ECS::TransformData>(child);
-    childT->position = Vector3(10.0f, 0.0f, 0.0f);
-    childT->parent = parent;
-
-    // 親を先に更新（優先度順に処理される想定だが、
-    // 現在の実装では親が先にダーティ解除される必要がある）
-    world_.FixedUpdate(0.016f);
-
-    // 子のワールド位置は親の位置 + ローカル位置
-    Vector3 childWorldPos = childT->worldMatrix.Translation();
-    // 注: 現在の実装では親子の処理順序が保証されないため、
-    // このテストは親がすでに更新されている場合のみ成功
-    // 完全な実装には階層ソートが必要
-}
-
-TEST_F(TransformSystemTest, OnlyDirtyTransformsUpdated)
-{
-    ECS::Actor e1 = world_.CreateActor();
-    ECS::Actor e2 = world_.CreateActor();
-
-    // 注: AddComponentはvector再割り当ての可能性があるため、
-    // ポインタは毎回GetComponentで取得する
-    world_.AddComponent<ECS::TransformData>(e1);
-    world_.AddComponent<ECS::TransformData>(e2);
-
-    // 初回更新
-    world_.FixedUpdate(0.016f);
-    EXPECT_FALSE(world_.GetComponent<ECS::TransformData>(e1)->dirty);
-    EXPECT_FALSE(world_.GetComponent<ECS::TransformData>(e2)->dirty);
-
-    // t1のみダーティに
-    auto* t1 = world_.GetComponent<ECS::TransformData>(e1);
-    t1->position = Vector3(1.0f, 0.0f, 0.0f);
-    t1->dirty = true;
-
-    Matrix oldMatrix2 = world_.GetComponent<ECS::TransformData>(e2)->worldMatrix;
-
-    world_.FixedUpdate(0.016f);
-
-    // t1は更新される
-    t1 = world_.GetComponent<ECS::TransformData>(e1);
-    EXPECT_FALSE(t1->dirty);
-    EXPECT_NEAR(t1->worldMatrix._41, 1.0f, 0.001f);
-
-    // t2は変更されない（ダーティでないため）
-    auto* t2 = world_.GetComponent<ECS::TransformData>(e2);
-    EXPECT_EQ(t2->worldMatrix._41, oldMatrix2._41);
-}
-
-TEST_F(TransformSystemTest, UpdateSingleFunction)
-{
-    ECS::TransformData t;
-    t.position = Vector3(50.0f, 60.0f, 70.0f);
-    t.scale = Vector3(2.0f, 2.0f, 2.0f);
-
-    ECS::TransformSystem::UpdateSingle(world_, t);
-
-    EXPECT_FALSE(t.dirty);
-    EXPECT_NEAR(t.worldMatrix._41, 50.0f, 0.001f);
-    EXPECT_NEAR(t.worldMatrix._42, 60.0f, 0.001f);
-    EXPECT_NEAR(t.worldMatrix._43, 70.0f, 0.001f);
-}
-
-TEST_F(TransformSystemTest, MultipleEntities)
-{
-    std::vector<ECS::Actor> entities;
-    for (int i = 0; i < 100; ++i) {
-        ECS::Actor e = world_.CreateActor();
-        auto* t = world_.AddComponent<ECS::TransformData>(e);
-        t->position = Vector3(static_cast<float>(i), 0.0f, 0.0f);
-        entities.push_back(e);
-    }
-
-    world_.FixedUpdate(0.016f);
-
-    // 全てのTransformが更新されている
-    for (int i = 0; i < 100; ++i) {
-        auto* t = world_.GetComponent<ECS::TransformData>(entities[i]);
-        EXPECT_FALSE(t->dirty);
-        EXPECT_NEAR(t->worldMatrix._41, static_cast<float>(i), 0.001f);
-    }
-}
 
 //============================================================================
 // システム優先度テスト
@@ -264,6 +99,265 @@ TEST(RenderSystemTest, UpdateAndRenderSystemsExecuteSeparately)
     world.Render(0.5f);
     EXPECT_FALSE(g_updateCalled);
     EXPECT_TRUE(g_renderCalled);
+}
+
+//============================================================================
+// SystemGraph テスト
+//============================================================================
+#include "engine/ecs/system_graph.h"
+
+// SystemGraphテスト用のダミーシステム
+class SystemA final : public ECS::ISystem {
+public:
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(1); }
+    int Priority() const override { return 10; }
+    const char* Name() const override { return "SystemA"; }
+};
+
+class SystemB final : public ECS::ISystem {
+public:
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(2); }
+    int Priority() const override { return 20; }
+    const char* Name() const override { return "SystemB"; }
+};
+
+class SystemC final : public ECS::ISystem {
+public:
+    void OnUpdate(ECS::World&, float) override { g_priorityOrder.push_back(3); }
+    int Priority() const override { return 30; }
+    const char* Name() const override { return "SystemC"; }
+};
+
+class SystemGraphTest : public ::testing::Test {
+protected:
+    ECS::SystemGraph graph_;
+
+    void SetUp() override {
+        graph_.Clear();
+    }
+
+    // ヘルパー: 新APIでノードを追加
+    void AddNode(ECS::SystemId id, int priority, const char* name,
+                 const std::vector<ECS::SystemId>& runAfter = {},
+                 const std::vector<ECS::SystemId>& runBefore = {}) {
+        graph_.AddNode(id, priority, runAfter, runBefore, name);
+    }
+};
+
+TEST_F(SystemGraphTest, AddNode_Works)
+{
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    AddNode(idA, 10, "SystemA");
+
+    EXPECT_TRUE(graph_.HasNode(idA));
+    EXPECT_EQ(graph_.NodeCount(), 1u);
+}
+
+TEST_F(SystemGraphTest, TopologicalSort_Empty)
+{
+    auto sorted = graph_.TopologicalSort();
+    EXPECT_TRUE(sorted.empty());
+}
+
+TEST_F(SystemGraphTest, TopologicalSort_SingleNode)
+{
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    AddNode(idA, 10, "SystemA");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 1u);
+    EXPECT_EQ(sorted[0], idA);
+}
+
+TEST_F(SystemGraphTest, TopologicalSort_LinearChain)
+{
+    // A -> B -> C (AはBの前、BはCの前)
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    ECS::SystemId idB = std::type_index(typeid(SystemB));
+    ECS::SystemId idC = std::type_index(typeid(SystemC));
+
+    AddNode(idC, 30, "SystemC", {idB}, {});  // 逆順で追加
+    AddNode(idB, 20, "SystemB", {idA}, {});
+    AddNode(idA, 10, "SystemA");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 3u);
+    EXPECT_EQ(sorted[0], idA);
+    EXPECT_EQ(sorted[1], idB);
+    EXPECT_EQ(sorted[2], idC);
+}
+
+TEST_F(SystemGraphTest, TopologicalSort_Diamond)
+{
+    // ダイヤモンド依存: A -> B, A -> C, B -> D, C -> D
+    // 結果: A, [B または C], [C または B], D
+    class SystemD final : public ECS::ISystem {
+    public:
+        void OnUpdate(ECS::World&, float) override {}
+        int Priority() const override { return 40; }
+        const char* Name() const override { return "SystemD"; }
+    };
+
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    ECS::SystemId idB = std::type_index(typeid(SystemB));
+    ECS::SystemId idC = std::type_index(typeid(SystemC));
+    ECS::SystemId idD = std::type_index(typeid(SystemD));
+
+    AddNode(idD, 40, "SystemD", {idB, idC}, {});
+    AddNode(idC, 25, "SystemC", {idA}, {});
+    AddNode(idB, 20, "SystemB", {idA}, {});
+    AddNode(idA, 10, "SystemA");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 4u);
+
+    // Aは最初
+    EXPECT_EQ(sorted[0], idA);
+
+    // Dは最後
+    EXPECT_EQ(sorted[3], idD);
+
+    // BとCは中間（順序は優先度による）
+    // B(priority 20) < C(priority 25) なのでBが先
+    EXPECT_EQ(sorted[1], idB);
+    EXPECT_EQ(sorted[2], idC);
+}
+
+TEST_F(SystemGraphTest, PriorityFallback_NoDependencies)
+{
+    // 依存関係がない場合、優先度順にソート
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    ECS::SystemId idB = std::type_index(typeid(SystemB));
+    ECS::SystemId idC = std::type_index(typeid(SystemC));
+
+    AddNode(idC, 30, "SystemC");
+    AddNode(idA, 10, "SystemA");
+    AddNode(idB, 20, "SystemB");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 3u);
+
+    // 優先度順: A(10) < B(20) < C(30)
+    EXPECT_EQ(sorted[0], idA);
+    EXPECT_EQ(sorted[1], idB);
+    EXPECT_EQ(sorted[2], idC);
+}
+
+TEST_F(SystemGraphTest, RunBefore_CreatesEdge)
+{
+    // runBefore: A runs before B -> A -> B
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    ECS::SystemId idB = std::type_index(typeid(SystemB));
+
+    AddNode(idB, 10, "SystemB");
+    AddNode(idA, 100, "SystemA", {}, {idB});  // runBefore = {idB}
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 2u);
+
+    // AがBの前
+    EXPECT_EQ(sorted[0], idA);
+    EXPECT_EQ(sorted[1], idB);
+}
+
+TEST_F(SystemGraphTest, Clear_RemovesAll)
+{
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    AddNode(idA, 10, "SystemA");
+    EXPECT_EQ(graph_.NodeCount(), 1u);
+
+    graph_.Clear();
+    EXPECT_EQ(graph_.NodeCount(), 0u);
+}
+
+TEST_F(SystemGraphTest, HasNode_ReturnsFalse_WhenNotPresent)
+{
+    EXPECT_FALSE(graph_.HasNode(std::type_index(typeid(SystemA))));
+}
+
+TEST_F(SystemGraphTest, TopologicalSort_ReturnsSortedIds)
+{
+    // 優先度順に並ぶことを確認（SystemEntryは使わない新API版）
+    ECS::SystemId idA = std::type_index(typeid(SystemA));
+    ECS::SystemId idB = std::type_index(typeid(SystemB));
+
+    AddNode(idB, 20, "SystemB");
+    AddNode(idA, 10, "SystemA");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 2u);
+
+    // 優先度順
+    EXPECT_EQ(sorted[0], idA);
+    EXPECT_EQ(sorted[1], idB);
+}
+
+//============================================================================
+// RenderSystemGraph テスト
+//============================================================================
+class RenderSystemA final : public ECS::IRenderSystem {
+public:
+    void OnRender(ECS::World&, float) override { g_priorityOrder.push_back(1); }
+    int Priority() const override { return 10; }
+    const char* Name() const override { return "RenderSystemA"; }
+};
+
+class RenderSystemB final : public ECS::IRenderSystem {
+public:
+    void OnRender(ECS::World&, float) override { g_priorityOrder.push_back(2); }
+    int Priority() const override { return 20; }
+    const char* Name() const override { return "RenderSystemB"; }
+};
+
+class RenderSystemGraphTest : public ::testing::Test {
+protected:
+    ECS::RenderSystemGraph graph_;
+
+    void SetUp() override {
+        graph_.Clear();
+    }
+
+    // ヘルパー: 新APIでノードを追加
+    void AddNode(ECS::SystemId id, int priority, const char* name,
+                 const std::vector<ECS::SystemId>& runAfter = {},
+                 const std::vector<ECS::SystemId>& runBefore = {}) {
+        graph_.AddNode(id, priority, runAfter, runBefore, name);
+    }
+};
+
+TEST_F(RenderSystemGraphTest, AddNode_Works)
+{
+    ECS::SystemId idA = std::type_index(typeid(RenderSystemA));
+    AddNode(idA, 10, "RenderSystemA");
+
+    EXPECT_TRUE(graph_.HasNode(idA));
+    EXPECT_EQ(graph_.NodeCount(), 1u);
+}
+
+TEST_F(RenderSystemGraphTest, TopologicalSort_PriorityOrder)
+{
+    ECS::SystemId idA = std::type_index(typeid(RenderSystemA));
+    ECS::SystemId idB = std::type_index(typeid(RenderSystemB));
+
+    AddNode(idB, 20, "RenderSystemB");
+    AddNode(idA, 10, "RenderSystemA");
+
+    auto sorted = graph_.TopologicalSort();
+    ASSERT_EQ(sorted.size(), 2u);
+
+    // 優先度順
+    EXPECT_EQ(sorted[0], idA);
+    EXPECT_EQ(sorted[1], idB);
+}
+
+TEST_F(RenderSystemGraphTest, Clear_RemovesAll)
+{
+    ECS::SystemId idA = std::type_index(typeid(RenderSystemA));
+    AddNode(idA, 10, "RenderSystemA");
+    EXPECT_EQ(graph_.NodeCount(), 1u);
+
+    graph_.Clear();
+    EXPECT_EQ(graph_.NodeCount(), 0u);
 }
 
 } // namespace

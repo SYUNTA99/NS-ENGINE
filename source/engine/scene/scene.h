@@ -4,15 +4,11 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+#include "common/stl/stl_common.h"
+#include "common/stl/stl_threading.h"
 #include "engine/texture/texture_types.h"
 #include "engine/texture/texture_manager.h"
 #include "engine/ecs/world.h"
-#include <string>
-#include <cstdint>
-#include <atomic>
-#include <algorithm>
-#include <vector>
-#include <memory>
 
 //----------------------------------------------------------------------------
 //! @brief シーン基底クラス

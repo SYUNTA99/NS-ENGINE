@@ -3,6 +3,9 @@
 -- プロジェクト構成ファイル
 --============================================================================
 
+-- compile_commands.json生成モジュール
+require "premake/modules/export-compile-commands/export-compile-commands"
+
 -- ワークスペース設定
 workspace "NS-ENGINE"
     configurations { "Debug", "Release", "Burst" }
@@ -53,6 +56,13 @@ workspace "NS-ENGINE"
         architecture "x64"
 
     filter {}
+
+    -- Windows共通定義（全プロジェクト共通）
+    defines {
+        "_WIN32_WINNT=0x0A00",
+        "WIN32_LEAN_AND_MEAN",
+        "NOMINMAX"
+    }
 
 -- 出力ディレクトリ (build/配下に統一)
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
@@ -141,8 +151,9 @@ project "dx11"
     flags { "FatalWarnings" }
 
     -- ComPtr<View>の誤用チェック（ビルド前）
+    -- 作業ディレクトリをプロジェクトルートに変更してからスクリプトを実行
     prebuildcommands {
-        'call "%{wks.location}/../tools/check_raw_view_comptr.cmd"'
+        'cd /d "%{wks.location}/.." && call "tools/check_raw_view_comptr.cmd"'
     }
 
     buildoptions { "/utf-8", "/permissive-", "/FS" }
@@ -217,83 +228,6 @@ project "engine"
 
     -- リンカー警告を無視 (stb_imageシンボル重複: tinygltf/Assimpが両方使用)
     linkoptions { "/ignore:4006" }
-
---============================================================================
--- ゲーム実行ファイル
---============================================================================
-project "game"
-    kind "WindowedApp"
-    location "build/game"
-
-    targetdir (bindir .. "/%{prj.name}")
-    objdir (objdir_base .. "/%{prj.name}")
-
-    files {
-        "source/game/**.h",
-        "source/game/**.cpp"
-    }
-
-    includedirs {
-        "source",
-        "source/engine",
-        "external/DirectXTK/Inc"
-    }
-
-    -- ビルド済み外部ライブラリのパス
-    filter "configurations:Debug"
-        libdirs {
-            "external/lib/Debug",
-            assimp_lib_debug
-        }
-    filter "configurations:Release or Burst"
-        libdirs {
-            "external/lib/Release",
-            assimp_lib_release
-        }
-    filter {}
-
-    links {
-        "engine",
-        "dx11",
-        "DirectXTex",
-        "DirectXTK",
-        "d3d11",
-        "d3dcompiler",
-        "dxguid",
-        "dxgi",
-        "xinput"
-    }
-
-    -- Assimp 6.0.2 動的リンク（Debug/Releaseで異なるlib）
-    filter "configurations:Debug"
-        links { "assimp-vc143-mtd" }
-    filter "configurations:Release or Burst"
-        links { "assimp-vc143-mt" }
-    filter {}
-
-    defines {
-        "_WIN32_WINNT=0x0A00"
-    }
-
-    -- 作業ディレクトリ
-    debugdir "."
-
-    warnings "Extra"
-    buildoptions { "/utf-8", "/permissive-", "/FS" }
-
-    -- Assimp DLLをビルド出力ディレクトリにコピー
-    filter "configurations:Debug"
-        postbuildcommands {
-            '{COPY} "%{wks.location}/../' .. assimp_bin_debug .. '/assimp-vc143-mtd.dll" "%{cfg.targetdir}"'
-        }
-    filter "configurations:Release or Burst"
-        postbuildcommands {
-            '{COPY} "%{wks.location}/../' .. assimp_bin_release .. '/assimp-vc143-mt.dll" "%{cfg.targetdir}"'
-        }
-    filter {}
-
-    -- リンカー警告を無視 (外部ライブラリPDB不足)
-    linkoptions { "/ignore:4099" }
 
 --============================================================================
 -- テスト関連（ソリューションフォルダで非表示）
@@ -395,6 +329,7 @@ project "tests"
     debugdir "."
 
     warnings "Extra"
+    disablewarnings { "4244", "4834" }  -- テストコード用: 暗黙変換、[[nodiscard]]無視
     buildoptions { "/utf-8", "/permissive-", "/FS" }
 
     -- Assimp DLLをテスト出力ディレクトリにコピー

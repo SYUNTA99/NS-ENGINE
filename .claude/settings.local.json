@@ -1,8 +1,93 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./build_debug.cmd)",
-      "Bash(gh pr status:*)"
+      "Bash(tools\\:*)",
+      "Bash(gh:*)",
+      "Bash(git:*)",
+      "Bash(fxc:*)",
+      "Bash(where:*)",
+      "Bash(clang-tidy:*)",
+      "Bash(build\\bin\\:*)",
+      "Bash(premake5:*)",
+      "Bash(msbuild:*)",
+      "Bash(devenv:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(**/*credentials*)",
+      "Read(**/*password*)",
+      "Read(**/*token*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Write(./secrets/**)",
+      "Bash(rm -rf *)",
+      "Bash(del /s /q *)",
+      "Bash(rd /s /q *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -fd *)",
+      "Bash(git branch -D *)",
+      "Bash(git checkout -- *)",
+      "Bash(sudo *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(Invoke-WebRequest *)",
+      "Bash(ssh *)",
+      "Bash(format *)",
+      "Bash(reg *)",
+      "Bash(shutdown *)",
+      "Bash(taskkill /f *)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/record_time.ps1\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/stop_hook.ps1\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/post_tool_hook.ps1\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/notify.ps1\""
+          }
+        ]
+      }
     ]
   }
 }

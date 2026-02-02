@@ -25,15 +25,6 @@ obj/
 /debug/
 *debug*.txt
 
-# ドキュメント（ローカルのみ）
-docs/
-
-# Claude Code設定
-CLAUDE.md
-.claudeignore
-
-#gemini cli設定
-GEMINI.md
 
 # Serena MCP (キャッシュ・ログのみ除外)
 .serena/cache/
@@ -46,3 +37,6 @@ nul
 
 #assets/tests
 tmpclaude*
+
+# Claude実行時生成
+.claude/prompt_time.txt

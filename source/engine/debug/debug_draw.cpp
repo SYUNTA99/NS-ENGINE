@@ -6,7 +6,7 @@
 
 #ifdef _DEBUG
 
-#include "engine/c_systems/sprite_batch.h"
+#include "engine/graphics/sprite_batch.h"
 #include "engine/texture/texture_manager.h"
 #include "circle_renderer.h"
 #include <cmath>

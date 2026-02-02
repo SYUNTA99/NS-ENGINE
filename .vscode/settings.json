@@ -1,4 +1,6 @@
 {
+    "clang-format.style": "file:${workspaceFolder}/.claude/clang-format.yaml",
+    "editor.formatOnSave": false,
     "files.associations": {
         "algorithm": "cpp",
         "cmath": "cpp",

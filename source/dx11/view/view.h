@@ -21,7 +21,6 @@
 #include "dx11/gpu_common.h"
 #include "dx11/graphics_device.h"
 #include "common/logging/logging.h"
-#include <type_traits>
 
 //============================================================================
 //! @name ビュータグ型

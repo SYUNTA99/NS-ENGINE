@@ -7,7 +7,6 @@
 #include "dx11/graphics_device.h"
 #include "dx11/view/view.h"
 #include "common/logging/logging.h"
-#include <string>
 
 //----------------------------------------------------------------------------
 // Texture静的ファクトリメソッド

@@ -4,9 +4,9 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+#include "common/stl/stl_common.h"
 #include "actor.h"
-#include <vector>
-#include <cassert>
+#include "actor_record.h"
 
 namespace ECS {
 
@@ -40,11 +40,13 @@ public:
             index = freeList_.back();
             freeList_.pop_back();
             alive_[index] = true;
+            records_[index].Clear();  // レコードをクリア
         } else {
             // 新規スロット割り当て
             index = static_cast<uint32_t>(generations_.size());
             generations_.push_back(0);
             alive_.push_back(true);
+            records_.emplace_back();  // 新しいレコードを追加
         }
 
         ++aliveCount_;
@@ -67,6 +69,9 @@ public:
 
         // 生存フラグをオフ
         alive_[index] = false;
+
+        // レコードをクリア
+        records_[index].Clear();
 
         // フリーリストに追加
         freeList_.push_back(index);
@@ -106,8 +111,39 @@ public:
     void Clear() {
         generations_.clear();
         alive_.clear();
+        records_.clear();
         freeList_.clear();
         aliveCount_ = 0;
+    }
+
+    //------------------------------------------------------------------------
+    //! @brief アクターのレコードを取得
+    //! @param a 対象のアクター
+    //! @return ActorRecordへの参照
+    //------------------------------------------------------------------------
+    [[nodiscard]] ActorRecord& GetRecord(Actor a) {
+        assert(a.IsValid() && a.Index() < records_.size());
+        return records_[a.Index()];
+    }
+
+    [[nodiscard]] const ActorRecord& GetRecord(Actor a) const {
+        assert(a.IsValid() && a.Index() < records_.size());
+        return records_[a.Index()];
+    }
+
+    //------------------------------------------------------------------------
+    //! @brief アクターのレコードを設定
+    //! @param a 対象のアクター
+    //! @param archetype 所属Archetype
+    //! @param chunkIndex Chunkインデックス
+    //! @param indexInChunk Chunk内インデックス
+    //------------------------------------------------------------------------
+    void SetRecord(Actor a, Archetype* archetype, uint32_t chunkIndex, uint16_t indexInChunk) {
+        assert(a.IsValid() && a.Index() < records_.size());
+        auto& record = records_[a.Index()];
+        record.archetype = archetype;
+        record.chunkIndex = chunkIndex;
+        record.indexInChunk = indexInChunk;
     }
 
     //------------------------------------------------------------------------
@@ -125,9 +161,49 @@ public:
         }
     }
 
+    //------------------------------------------------------------------------
+    //! @brief 複数アクターを一括生成
+    //! @param count 生成数
+    //! @return 生成されたアクター配列
+    //------------------------------------------------------------------------
+    [[nodiscard]] std::vector<Actor> CreateBatch(size_t count) {
+        std::vector<Actor> actors;
+        actors.reserve(count);
+
+        // フリーリストから再利用できる数
+        size_t fromFreeList = (std::min)(count, freeList_.size());
+
+        // フリーリストから再利用
+        for (size_t i = 0; i < fromFreeList; ++i) {
+            uint32_t index = freeList_.back();
+            freeList_.pop_back();
+            alive_[index] = true;
+            records_[index].Clear();
+            actors.emplace_back(index, generations_[index]);
+        }
+
+        // 新規スロット割り当て
+        size_t remaining = count - fromFreeList;
+        if (remaining > 0) {
+            size_t startIndex = generations_.size();
+            generations_.resize(startIndex + remaining, 0);
+            alive_.resize(startIndex + remaining, true);
+            records_.resize(startIndex + remaining);
+
+            for (size_t i = 0; i < remaining; ++i) {
+                uint32_t index = static_cast<uint32_t>(startIndex + i);
+                actors.emplace_back(index, generations_[index]);
+            }
+        }
+
+        aliveCount_ += count;
+        return actors;
+    }
+
 private:
     std::vector<uint16_t> generations_;  //!< 各インデックスの現在の世代番号
-    std::vector<bool> alive_;            //!< 各インデックスの生存フラグ
+    std::vector<uint8_t> alive_;         //!< 各インデックスの生存フラグ（boolより高速）
+    std::vector<ActorRecord> records_;   //!< Actor→Archetype/Chunk位置の逆引き
     std::vector<uint32_t> freeList_;     //!< 再利用可能なインデックス
     size_t aliveCount_ = 0;              //!< 生存アクター数
 };

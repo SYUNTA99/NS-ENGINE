@@ -19,9 +19,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <cstdint>
-#include <cassert>
-#include <string_view>
+#include "common/stl/stl_common.h"
 #include "common/logging/logging.h"
 
 //============================================================================
@@ -45,13 +43,13 @@ enum class SingletonId : uint32_t {
     InputManager        = 1 << 6,
     RenderStateManager  = 1 << 7,
     SpriteBatch         = 1 << 8,
-    CollisionManager    = 1 << 9,
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     SceneManager        = 1 << 10,
     Renderer            = 1 << 11,
     MeshBatch           = 1 << 12,
     MeshManager         = 1 << 13,
     MaterialManager     = 1 << 14,
-    LightingManager     = 1 << 15,
+    // LightingManager削除 - ECS::LightingSystemに移行
     //! @}
 
     //! @name Debug

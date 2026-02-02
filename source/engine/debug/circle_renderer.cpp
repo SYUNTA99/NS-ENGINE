@@ -8,7 +8,6 @@
 
 #include "dx11/graphics_context.h"
 #include "engine/shader/shader_manager.h"
-#include "engine/component/camera2d.h"
 #include "common/logging/logging.h"
 #include <d3d11.h>
 
@@ -97,7 +96,7 @@ void CircleRenderer::Shutdown()
 }
 
 //----------------------------------------------------------------------------
-void CircleRenderer::Begin(const Camera2D& camera)
+void CircleRenderer::Begin(const Matrix& viewProjection)
 {
     if (!initialized_) {
         if (!Initialize()) {
@@ -108,8 +107,8 @@ void CircleRenderer::Begin(const Camera2D& camera)
     instances_.clear();
     isBegun_ = true;
 
-    // ビュープロジェクション行列を取得
-    constantData_ = Matrix(camera.GetViewProjectionMatrix());
+    // ビュープロジェクション行列を設定
+    constantData_ = viewProjection;
 }
 
 //----------------------------------------------------------------------------

@@ -4,8 +4,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <cstdint>
-#include <functional>
+#include "common/stl/stl_common.h"
+#include "common/stl/stl_metaprogramming.h"
 
 namespace ECS {
 
@@ -15,6 +15,9 @@ namespace ECS {
 //! 32ビットの軽量ID。インデックスと世代番号で構成される。
 //! - index: アクター配列内の位置 (20bit, 最大約100万)
 //! - generation: 再利用検出用の世代番号 (12bit, 最大4096)
+//!
+//! @note 世代番号は4096でラップアラウンドするため、同一indexが4096回
+//!       再利用されると理論上ID衝突の可能性がある。実用上は問題にならない。
 //============================================================================
 struct Actor {
     uint32_t id = kInvalidId;

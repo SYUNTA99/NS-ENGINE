@@ -1,22 +1,50 @@
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
-[09:33:13.795] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
-[09:33:13.795] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.778] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.779] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.780] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.781] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.781] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.782] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.783] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.784] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.784] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.810] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.811] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.812] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.813] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.814] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.815] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.816] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.816] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.817] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.818] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.819] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.819] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.820] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.820] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.821] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.822] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.823] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.823] [INFO] job_system.cpp(160): [JobSystem] 初期化完了: ワーカースレッド数=27
+[03:22:16.824] [INFO] job_system.cpp(188): [JobSystem] シャットダウン完了
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[03:22:16.914] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.914] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[03:22:16.916] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.916] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.916] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.916] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.916] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.916] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000
+[03:22:16.916] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.917] [INFO] time_manager.cpp(39): [TimeManager] Time frozen
+[03:22:16.917] [INFO] time_manager.cpp(54): [TimeManager] Time resumed
+[03:22:16.917] [INFO] time_manager.cpp(70): [TimeManager] Slow motion: 0.500000

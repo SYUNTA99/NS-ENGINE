@@ -19,6 +19,7 @@
 struct MeshLoadResult
 {
     std::vector<MeshPtr> meshes;                    //!< 読み込んだメッシュ
+    std::vector<MeshDesc> meshDescs;                //!< メッシュ記述子（コリジョン用）
     std::vector<MaterialDesc> materialDescs;       //!< マテリアル記述子
     std::vector<std::string> texturePathsToLoad;   //!< 読み込むべきテクスチャパス
     bool success = false;                          //!< 成功フラグ

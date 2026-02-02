@@ -52,6 +52,14 @@ bool Keyboard::IsAltPressed() const noexcept
     return IsKeyPressed(Key::LeftAlt) || IsKeyPressed(Key::RightAlt);
 }
 
+void Keyboard::ClearFrameFlags() noexcept
+{
+    for (auto& key : keys_) {
+        key.down = false;
+        key.up = false;
+    }
+}
+
 void Keyboard::Update(float deltaTime) noexcept
 {
     // GetAsyncKeyStateでキー状態をポーリング（Windowメッセージ不要）

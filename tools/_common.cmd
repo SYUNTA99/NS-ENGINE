@@ -31,7 +31,7 @@ goto %~1
 ::----------------------------------------------------------------------------
 :check_project
     if not exist "build\NS-ENGINE.sln" (
-        echo プロジェクトが見つかりません。先に @make_project.cmd を実行してください。
+        echo プロジェクトが見つかりません。先に tools\@make_project.cmd を実行してください。
         exit /b 1
     )
     exit /b 0

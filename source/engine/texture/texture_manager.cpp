@@ -13,15 +13,8 @@
 #include "dx11/graphics_context.h"
 #include "dx11/gpu/format.h"
 #include "common/utility/hash.h"
-#include <DirectXTex.h>
 #include "dx11/view/view.h"
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-
-#include <algorithm>
-#include <vector>
+#include <DirectXTex.h>
 
 namespace
 {
@@ -142,6 +135,7 @@ void TextureManager::Initialize(IReadableFileSystem* fileSystem)
     fileSystem_ = fileSystem;
     ddsLoader_ = std::make_unique<DDSTextureLoader>();
     wicLoader_ = std::make_unique<WICTextureLoader>();
+    tgaLoader_ = std::make_unique<TGATextureLoader>();
     cache_ = std::make_unique<WeakTextureCache>();
 }
 
@@ -179,6 +173,7 @@ void TextureManager::Shutdown()
     cache_.reset();
     ddsLoader_.reset();
     wicLoader_.reset();
+    tgaLoader_.reset();
     fileSystem_ = nullptr;
     initialized_ = false;
     stats_ = {};
@@ -827,6 +822,9 @@ ITextureLoader* TextureManager::GetLoaderForExtension(const std::string& path) c
     }
     if (wicLoader_ && wicLoader_->SupportsExtension(ext.c_str())) {
         return wicLoader_.get();
+    }
+    if (tgaLoader_ && tgaLoader_->SupportsExtension(ext.c_str())) {
+        return tgaLoader_.get();
     }
     return nullptr;
 }

@@ -6,8 +6,6 @@
 
 #include "dx11/gpu_common.h"
 #include "dx11/compile/shader_types_fwd.h"
-#include <string>
-#include <vector>
 
 //----------------------------------------------------------------------------
 //! シェーダーコンパイル結果

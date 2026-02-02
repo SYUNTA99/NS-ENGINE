@@ -1,0 +1,57 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+
+# インデント
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# ブレース（Allman + 空ブレースは1行にまとめる）
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: true
+  SplitEmptyFunction: false    # 空の関数を {} に
+  SplitEmptyRecord: false      # 空のクラス/構造体を {} に
+  SplitEmptyNamespace: false   # 空の名前空間を {} に
+
+# 列幅（ゲームコードは長い行が多い）
+ColumnLimit: 120
+
+# ポインタ・参照は型側に寄せる（int* ptr）
+PointerAlignment: Left
+
+# アクセス修飾子のインデント
+AccessModifierOffset: -4
+
+# 短い関数は1行にまとめてOK
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+AllowShortBlocksOnASingleLine: Empty
+
+# 引数が多い場合の折り返し
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: Align
+
+# インクルードのソート
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+
+# 名前空間のインデント
+NamespaceIndentation: All
+
+# クラス内の並び替えはしない
+SortUsingDeclarations: false

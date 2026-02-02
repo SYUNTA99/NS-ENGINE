@@ -24,6 +24,7 @@
 
 #include "dx11/gpu_common.h"
 #include "dx11/gpu/gpu.h"
+#include "dx11/view/view.h"
 
 // 既存クラス（state/）
 class BlendState;
@@ -103,6 +104,12 @@ public:
         uint32_t numRTVs, Texture* const* renderTargets, Texture* depthStencil,
         uint32_t uavStartSlot, uint32_t numUAVs,
         ID3D11UnorderedAccessView* const* uavs, const uint32_t* uavInitialCounts = nullptr);
+
+    //! 現在のレンダーターゲット状態をスタックにプッシュ
+    void PushRenderTarget();
+
+    //! スタックからレンダーターゲット状態をポップして復元
+    void PopRenderTarget();
 
     //!@}
     //----------------------------------------------------------
@@ -324,6 +331,14 @@ private:
     ~GraphicsContext() = default;
 
     ComPtr<ID3D11DeviceContext4> context_;
+
+    //! レンダーターゲット状態（Push/Pop用）
+    struct RenderTargetState {
+        View<RTV> rtv;
+        View<DSV> dsv;
+        D3D11_VIEWPORT viewport{};
+    };
+    std::vector<RenderTargetState> rtStack_;
 
     // ステートキャッシュ
     BlendState* cachedBlendState_ = nullptr;

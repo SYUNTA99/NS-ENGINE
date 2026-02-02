@@ -5,6 +5,7 @@
 #include "engine.h"
 #include "job_system.h"
 #include "service_locator.h"
+#include "engine/memory/memory_system.h"
 #include "engine/input/input_manager.h"
 #include "engine/fs/file_system_manager.h"
 #include "engine/fs/host_file_system.h"
@@ -12,15 +13,15 @@
 #include "engine/texture/texture_manager.h"
 #include "engine/shader/shader_manager.h"
 #include "engine/scene/scene_manager.h"
-#include "engine/c_systems/collision_manager.h"
-#include "engine/c_systems/sprite_batch.h"
-#include "engine/c_systems/mesh_batch.h"
-#include "engine/graphics2d/render_state_manager.h"
+// CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
+#include "engine/graphics/sprite_batch.h"
+#include "engine/graphics/mesh_batch.h"
+#include "engine/graphics/render_state_manager.h"
 #include "engine/mesh/mesh_manager.h"
 #include "engine/mesh/mesh_loader.h"
 #include "engine/mesh/mesh_loader_assimp.h"
 #include "engine/material/material_manager.h"
-#include "engine/lighting/lighting_manager.h"
+// LightingManager削除 - ECS::LightingSystemに移行
 #include "engine/platform/renderer.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
@@ -46,6 +47,9 @@ bool Engine::Initialize()
 
     LOG_INFO("[Engine] Initializing...");
 
+    // 0. メモリシステム初期化（最初に行う）
+    Memory::MemorySystem::Get().Initialize();
+
     // 1. シングルトン作成
     if (!CreateSingletons()) {
         LOG_ERROR("[Engine] Failed to create singletons");
@@ -61,6 +65,11 @@ bool Engine::Initialize()
     // 4. サブシステム初期化
     if (!InitializeSubsystems()) {
         LOG_ERROR("[Engine] Failed to initialize subsystems");
+        // ロールバック: 作成済みのシングルトンとサービスをクリーンアップ
+        Services::Clear();
+        FileSystemManager::Get().UnmountAll();
+        DestroySingletons();
+        Memory::MemorySystem::Get().Shutdown();
         return false;
     }
 
@@ -92,7 +101,7 @@ void Engine::Shutdown() noexcept
     CircleRenderer::Get().Shutdown();
     DebugDraw::Get().Shutdown();
 #endif
-    LightingManager::Get().Shutdown();
+    // LightingManager削除 - ECS::LightingSystemに移行
     MeshBatch::Get().Shutdown();
     SpriteBatch::Get().Shutdown();
     RenderStateManager::Get().Shutdown();
@@ -102,13 +111,16 @@ void Engine::Shutdown() noexcept
     Renderer::Get().Shutdown();
     TextureManager::Get().Shutdown();
     FileSystemManager::Get().UnmountAll();
-    CollisionManager::Get().Shutdown();
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
 
     // ServiceLocatorをクリア
     Services::Clear();
 
     // シングルトン破棄
     DestroySingletons();
+
+    // メモリシステム終了（最後に行う - 統計出力）
+    Memory::MemorySystem::Get().Shutdown();
 
     initialized_ = false;
     LOG_INFO("[Engine] Shutdown complete");
@@ -131,10 +143,10 @@ bool Engine::CreateSingletons()
     MeshBatch::Create();
 
     // 4. Systems
-    CollisionManager::Create();
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     MeshManager::Create();
     MaterialManager::Create();
-    LightingManager::Create();
+    // LightingManager削除 - ECS::LightingSystemに移行
     SceneManager::Create();
 
 #ifdef _DEBUG
@@ -154,10 +166,10 @@ void Engine::DestroySingletons() noexcept
     DebugDraw::Destroy();
 #endif
     SceneManager::Destroy();
-    LightingManager::Destroy();
+    // LightingManager削除 - ECS::LightingSystemに移行
     MaterialManager::Destroy();
     MeshManager::Destroy();
-    CollisionManager::Destroy();
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     MeshBatch::Destroy();
     SpriteBatch::Destroy();
     RenderStateManager::Destroy();
@@ -191,7 +203,7 @@ void Engine::RegisterServices()
     Services::Provide(&FileSystemManager::Get());
     Services::Provide(&ShaderManager::Get());
     Services::Provide(&SpriteBatch::Get());
-    Services::Provide(&CollisionManager::Get());
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     Services::Provide(&SceneManager::Get());
 }
 
@@ -200,8 +212,7 @@ bool Engine::InitializeSubsystems()
 {
     auto& fsManager = FileSystemManager::Get();
 
-    // 1. CollisionManager初期化
-    CollisionManager::Get().Initialize(64);
+    // 1. CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
 
     // 2. TextureManager初期化（Application層でCreate済み）
     auto* textureFs = fsManager.GetFileSystem("texture");
@@ -242,8 +253,7 @@ bool Engine::InitializeSubsystems()
     // 8. MaterialManager初期化
     MaterialManager::Get().Initialize();
 
-    // 9. LightingManager初期化
-    LightingManager::Get().Initialize();
+    // 9. LightingManager削除 - ECS::LightingSystemに移行
 
     LOG_INFO("[Engine] Subsystem initialization complete");
     return true;

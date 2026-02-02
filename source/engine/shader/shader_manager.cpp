@@ -472,9 +472,21 @@ uint64_t ShaderManager::ComputeCacheKey(
     uint64_t hash = HashUtil::Fnv1aString(path);
     hash = HashUtil::Fnv1aString(GetShaderProfile(type), hash);
 
-    for (const auto& def : defines) {
-        hash = HashUtil::Fnv1aString(def.name, hash);
-        hash = HashUtil::Fnv1aString(def.value, hash);
+    // definesをソートしてから計算（順序違いで異なるキーになることを防ぐ）
+    if (!defines.empty()) {
+        std::vector<const ShaderDefine*> sorted;
+        sorted.reserve(defines.size());
+        for (const auto& def : defines) {
+            sorted.push_back(&def);
+        }
+        std::sort(sorted.begin(), sorted.end(),
+            [](const ShaderDefine* a, const ShaderDefine* b) {
+                return a->name < b->name;
+            });
+        for (const auto* def : sorted) {
+            hash = HashUtil::Fnv1aString(def->name, hash);
+            hash = HashUtil::Fnv1aString(def->value, hash);
+        }
     }
 
     return hash;

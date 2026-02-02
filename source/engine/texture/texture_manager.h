@@ -314,6 +314,7 @@ private:
     IReadableFileSystem* fileSystem_ = nullptr;
     std::unique_ptr<ITextureLoader> ddsLoader_;
     std::unique_ptr<ITextureLoader> wicLoader_;
+    std::unique_ptr<ITextureLoader> tgaLoader_;
     std::unique_ptr<ITextureCache> cache_;
 
     // 統計情報

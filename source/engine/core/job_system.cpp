@@ -2,26 +2,13 @@
 //! @file   job_system.cpp
 //! @brief  マルチスレッドジョブシステム 実装
 //----------------------------------------------------------------------------
-
-// Windows.hのmin/maxマクロを無効化（最初に定義）
-#ifdef _WIN32
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-    #include <Windows.h>
-#endif
-
+#include "common/platform/win32.h"
+#include "common/stl/stl_common.h"
+#include "common/stl/stl_containers.h"
+#include "common/stl/stl_threading.h"
 #include "job_system.h"
 #include "singleton_registry.h"
 #include "common/logging/logging.h"
-
-#include <thread>
-#include <mutex>
-#include <shared_mutex>
-#include <condition_variable>
-#include <vector>
-#include <deque>
-#include <algorithm>
 #include <chrono>
 
 // マクロ干渉回避用

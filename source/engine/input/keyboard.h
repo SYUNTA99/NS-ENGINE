@@ -60,7 +60,12 @@ public:
 
     /// @brief 入力状態を更新（内部用）
     /// @param deltaTime 前フレームからの経過時間（秒）
+    /// @note ポーリング方式。OnKeyDown/OnKeyUpと併用しないこと
     void Update(float deltaTime) noexcept;
+
+    /// @brief フレーム開始時にdown/upフラグをクリア（OnKeyDown/OnKeyUp方式用）
+    /// @note イベント方式を使う場合、フレーム開始時に呼ぶこと
+    void ClearFrameFlags() noexcept;
 
     /// @brief キーダウンイベントを処理（内部用）
     /// @param key キーコード

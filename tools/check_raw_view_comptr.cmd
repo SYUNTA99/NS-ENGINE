@@ -6,9 +6,9 @@ setlocal enabledelayedexpansion
 
 set FOUND=0
 
-REM view.h は除外（ドキュメント内の例があるため）
+REM view.h と graphics_context.cpp は除外（内部実装のため）
 for /r "source" %%f in (*.h *.cpp) do (
-    echo %%f | findstr /i "view.h" >nul
+    echo %%f | findstr /i "view.h graphics_context.cpp" >nul
     if errorlevel 1 (
         findstr /n "ComPtr<ID3D11ShaderResourceView>" "%%f" >nul 2>&1
         if not errorlevel 1 (

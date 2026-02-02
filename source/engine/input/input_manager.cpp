@@ -4,7 +4,7 @@
 InputManager::InputManager() noexcept
     : keyboard_(std::make_unique<Keyboard>())
     , mouse_(std::make_unique<Mouse>())
-    , gamepadManager_(nullptr)
+    , gamepadManager_(std::make_unique<GamepadManager>())
 {
 }
 

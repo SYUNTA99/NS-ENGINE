@@ -5,7 +5,7 @@
 #pragma once
 
 #include "dx11/gpu_common.h"
-#include <stdexcept>
+#include <stdexcept>  // for std::runtime_error (not in stl_common.h)
 
 //! 16バイトアライメント
 constexpr size_t kGpuAlignment = 16;

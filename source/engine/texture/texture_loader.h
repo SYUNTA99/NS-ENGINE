@@ -83,3 +83,22 @@ public:
 
     [[nodiscard]] bool SupportsExtension(const char* extension) const override;
 };
+
+//===========================================================================
+//! TGAファイル専用ローダー（DirectXTex使用）
+//!
+//! 対応フォーマット: TGA（Targa）
+//===========================================================================
+class TGATextureLoader : public ITextureLoader
+{
+public:
+    TGATextureLoader() = default;
+    ~TGATextureLoader() override = default;
+
+    [[nodiscard]] bool Load(
+        const void* data,
+        size_t size,
+        TextureData& outData) override;
+
+    [[nodiscard]] bool SupportsExtension(const char* extension) const override;
+};

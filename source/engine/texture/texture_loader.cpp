@@ -156,7 +156,7 @@ bool WICTextureLoader::SupportsExtension(const char* ext) const
     std::transform(e.begin(), e.end(), e.begin(),
         [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return e == ".png" || e == ".jpg" || e == ".jpeg" ||
-           e == ".bmp" || e == ".tiff" || e == ".gif";
+           e == ".bmp" || e == ".tiff" || e == ".tif" || e == ".gif";
 }
 
 //============================================================================
@@ -222,4 +222,63 @@ bool DDSTextureLoader::SupportsExtension(const char* ext) const
     std::transform(e.begin(), e.end(), e.begin(),
         [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return e == ".dds";
+}
+
+//============================================================================
+// TGATextureLoader 実装
+//============================================================================
+bool TGATextureLoader::Load(
+    const void* data,
+    size_t size,
+    TextureData& outData)
+{
+    DirectX::TexMetadata metadata;
+    DirectX::ScratchImage scratchImage;
+
+    HRESULT hr = DirectX::LoadFromTGAMemory(
+        static_cast<const uint8_t*>(data),
+        size,
+        DirectX::TGA_FLAGS_NONE,
+        &metadata,
+        scratchImage);
+
+    if (FAILED(hr)) {
+        LOG_ERROR("[TGATextureLoader] TGAファイルの読み込みに失敗");
+        return false;
+    }
+
+    outData.width = static_cast<uint32_t>(metadata.width);
+    outData.height = static_cast<uint32_t>(metadata.height);
+    outData.mipLevels = 1;
+    outData.arraySize = 1;
+    outData.format = metadata.format;
+    outData.isCubemap = false;
+
+    // ピクセルデータをコピー
+    const DirectX::Image* image = scratchImage.GetImage(0, 0, 0);
+    if (!image) {
+        LOG_ERROR("[TGATextureLoader] 画像データの取得に失敗");
+        return false;
+    }
+
+    outData.pixels.resize(image->slicePitch);
+    std::memcpy(outData.pixels.data(), image->pixels, image->slicePitch);
+
+    // サブリソースデータを設定
+    outData.subresources.resize(1);
+    outData.subresources[0].pSysMem = outData.pixels.data();
+    outData.subresources[0].SysMemPitch = static_cast<UINT>(image->rowPitch);
+    outData.subresources[0].SysMemSlicePitch = static_cast<UINT>(image->slicePitch);
+
+    return true;
+}
+
+//----------------------------------------------------------------------------
+bool TGATextureLoader::SupportsExtension(const char* ext) const
+{
+    if (!ext) return false;
+    std::string e = ext;
+    std::transform(e.begin(), e.end(), e.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return e == ".tga";
 }

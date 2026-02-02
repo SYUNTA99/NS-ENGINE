@@ -183,22 +183,15 @@ MeshManager::ModelLoadResult MeshManager::LoadWithMaterials(
     IncrementRefCount(result.mesh);
     AddToScope(result.mesh, currentScope_);
 
-    // モデルのディレクトリパスを取得（テクスチャ読み込み用）
-    std::string modelDir;
+    // モデルのサブディレクトリパスを取得（テクスチャ読み込み用）
+    // 例: "model:/stage/model.fbx" → "stage/"
+    std::string modelSubDir;
     size_t colonPos = path.find(":/");
     if (colonPos != std::string::npos) {
-        // マウントパス形式 (例: "model:/characters/pipib/ppb.pmx")
         size_t lastSlash = path.find_last_of('/');
-        if (lastSlash != std::string::npos && lastSlash > colonPos) {
-            modelDir = path.substr(0, lastSlash + 1);
-        } else {
-            modelDir = path.substr(0, colonPos + 2);
-        }
-    } else {
-        // 通常のパス
-        size_t lastSlash = path.find_last_of("/\\");
-        if (lastSlash != std::string::npos) {
-            modelDir = path.substr(0, lastSlash + 1);
+        if (lastSlash != std::string::npos && lastSlash > colonPos + 1) {
+            // "model:/stage/model.fbx" → "stage/"
+            modelSubDir = path.substr(colonPos + 2, lastSlash - colonPos - 1);
         }
     }
 
@@ -229,13 +222,68 @@ MeshManager::ModelLoadResult MeshManager::LoadWithMaterials(
                     if (c == '\\') c = '/';
                 }
 
-                // texture:/ マウントから読み込む
-                std::string texPath = "texture:/" + texPathFromModel;
-                TextureHandle texHandle = texMgr.Load(texPath);
+                LOG_INFO("[MeshManager] Texture path from model: " + texPathFromModel);
+                LOG_INFO("[MeshManager] Model subdir: " + modelSubDir);
+
+                // ファイル名のみ取得
+                std::string texFileName = texPathFromModel;
+                size_t lastSlash = texPathFromModel.find_last_of('/');
+                if (lastSlash != std::string::npos) {
+                    texFileName = texPathFromModel.substr(lastSlash + 1);
+                }
+
+                TextureHandle texHandle;
+
+                // 1. モデルと同じサブディレクトリから読み込む（優先）
+                if (!modelSubDir.empty()) {
+                    std::string texPath = "texture:/" + modelSubDir + texFileName;
+                    LOG_INFO("[MeshManager] Trying texture path 1: " + texPath);
+                    texHandle = texMgr.Load(texPath);
+                    if (texHandle.IsValid()) {
+                        LOG_INFO("[MeshManager] Loaded texture from model subdir: " + texPath);
+                    }
+                }
+
+                // 2. フルパスで試す
+                if (!texHandle.IsValid()) {
+                    std::string texPath = "texture:/" + texPathFromModel;
+                    LOG_INFO("[MeshManager] Trying texture path 2: " + texPath);
+                    texHandle = texMgr.Load(texPath);
+                }
+
+                // 3. ルートディレクトリでファイル名のみで試す
+                if (!texHandle.IsValid()) {
+                    std::string texPath = "texture:/" + texFileName;
+                    LOG_INFO("[MeshManager] Trying texture path 3: " + texPath);
+                    texHandle = texMgr.Load(texPath);
+                }
+
+                // 4. モデルと同名のテクスチャを探す（拡張子違い）
+                if (!texHandle.IsValid() && !modelSubDir.empty()) {
+                    // モデルファイル名からベース名を取得
+                    size_t modelLastSlash = path.find_last_of('/');
+                    size_t modelDot = path.find_last_of('.');
+                    if (modelLastSlash != std::string::npos && modelDot != std::string::npos && modelDot > modelLastSlash) {
+                        std::string modelBaseName = path.substr(modelLastSlash + 1, modelDot - modelLastSlash - 1);
+                        // 一般的な画像拡張子を試す
+                        const char* extensions[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
+                        for (const char* ext : extensions) {
+                            std::string texPath = "texture:/" + modelSubDir + modelBaseName + ext;
+                            LOG_INFO("[MeshManager] Trying texture path 4: " + texPath);
+                            texHandle = texMgr.Load(texPath);
+                            if (texHandle.IsValid()) {
+                                LOG_INFO("[MeshManager] Loaded texture with model name: " + texPath);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (texHandle.IsValid()) {
                     matDesc.textures[static_cast<size_t>(MaterialTextureSlot::Albedo)] = texHandle;
+                    LOG_INFO("[MeshManager] Texture loaded successfully");
                 } else {
-                    LOG_WARN("[MeshManager] Failed to load texture: " + texPath);
+                    LOG_WARN("[MeshManager] Failed to load texture: " + texPathFromModel);
                 }
             }
 

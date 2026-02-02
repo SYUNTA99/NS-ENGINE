@@ -4,12 +4,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <Windows.h>
-#include <string>
-#include <format>
-#include <source_location>
-#include <vector>
-#include <memory>
+#include "common/platform/win32.h"
+#include "common/stl/stl_common.h"
 
 //----------------------------------------------------------------------------
 // ログレベル定義
@@ -164,20 +160,26 @@ private:
 
 //----------------------------------------------------------------------------
 // デバッグ + コンソール両方出力
+// リリースビルドではコンソールを開かない
 //----------------------------------------------------------------------------
 class MultiLogOutput : public ILogOutput {
 public:
     void write(LogLevel level, const std::string& message) override {
         debug_.write(level, message);
+#ifdef _DEBUG
         console_.write(level, message);
+#endif
     }
 private:
     DebugLogOutput debug_;
+#ifdef _DEBUG
     ConsoleLogOutput console_;
+#endif
 };
 
 //----------------------------------------------------------------------------
 // デバッグ + コンソール + ファイル出力
+// リリースビルドではコンソールを開かない
 //----------------------------------------------------------------------------
 class FullLogOutput : public ILogOutput {
 public:
@@ -197,7 +199,9 @@ public:
 
     void write(LogLevel level, const std::string& message) override {
         debug_.write(level, message);
+#ifdef _DEBUG
         console_.write(level, message);
+#endif
         if (file_.isOpen()) {
             file_.write(level, message);
         }
@@ -207,7 +211,9 @@ public:
 
 private:
     DebugLogOutput debug_;
+#ifdef _DEBUG
     ConsoleLogOutput console_;
+#endif
     FileLogOutput file_;
 };
 

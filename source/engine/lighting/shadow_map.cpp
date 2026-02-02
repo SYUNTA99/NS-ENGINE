@@ -84,7 +84,11 @@ void ShadowMap::BeginShadowPass()
     }
 
     // 現在のレンダーターゲットを保存
-    d3dCtx->OMGetRenderTargets(1, &prevRtv_, &prevDsv_);
+    ID3D11RenderTargetView* rtv = nullptr;
+    ID3D11DepthStencilView* dsv = nullptr;
+    d3dCtx->OMGetRenderTargets(1, &rtv, &dsv);
+    prevRtv_ = rtv;  // 参照カウントを引き継ぐ（AddRefしない）
+    prevDsv_ = dsv;
 
     // シャドウマップをレンダーターゲットに設定（カラーなし、デプスのみ）
     ID3D11RenderTargetView* nullRtv = nullptr;

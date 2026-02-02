@@ -43,9 +43,10 @@ void Timer::Update(float maxDeltaTime)
     // FPS計算（1秒ごと）
     ++fpsFrameCount_;
     fpsTimer_ += deltaTime_;
-    while (fpsTimer_ >= 1.0f) {
+    if (fpsTimer_ >= 1.0f) {
+        // 実際の経過時間でFPSを計算（端数も含めた正確な値）
         fps_ = static_cast<float>(fpsFrameCount_) / fpsTimer_;
         fpsFrameCount_ = 0;
-        fpsTimer_ -= 1.0f;  // 端数を保持して精度向上
+        fpsTimer_ = 0.0f;
     }
 }

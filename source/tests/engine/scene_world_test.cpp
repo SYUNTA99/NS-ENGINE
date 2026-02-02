@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 #include "engine/scene/scene.h"
 #include "engine/ecs/system.h"
-#include "engine/ecs/components/transform_data.h"
-#include "engine/ecs/systems/transform_system.h"
+#include "engine/ecs/components/transform/transform_components.h"
+#include "engine/ecs/systems/transform/transform_system.h"
 
 namespace
 {
@@ -16,7 +16,7 @@ static bool g_renderSystemCalled = false;
 
 class TestRenderSystem final : public ECS::IRenderSystem {
 public:
-    void Render(ECS::World&, float) override {
+    void OnRender(ECS::World&, float) override {
         g_renderSystemCalled = true;
     }
     int Priority() const override { return 0; }
@@ -97,18 +97,22 @@ TEST_F(SceneWorldTest, FixedUpdateCallsWorldFixedUpdate)
     TestECSScene scene;
     scene.OnEnter();
 
-    // エンティティ追加
+    // エンティティ追加（LocalTransform + LocalToWorld）
     ECS::Actor e = scene.GetWorld()->CreateActor();
-    auto* t = scene.GetWorld()->AddComponent<ECS::TransformData>(e);
-    t->position = Vector3(10.0f, 20.0f, 30.0f);
-    EXPECT_TRUE(t->dirty);
+    auto* transform = scene.GetWorld()->AddComponent<ECS::LocalTransform>(e);
+    transform->position = Vector3(10.0f, 20.0f, 30.0f);
+    scene.GetWorld()->AddComponent<ECS::LocalToWorld>(e);
+    scene.GetWorld()->AddComponent<ECS::TransformDirty>(e);
+
+    EXPECT_TRUE(scene.GetWorld()->HasComponent<ECS::TransformDirty>(e));
 
     // FixedUpdate呼び出し
     scene.FixedUpdate(1.0f / 60.0f);
 
     EXPECT_TRUE(scene.fixedUpdateCalled);
-    EXPECT_FALSE(t->dirty);  // TransformSystemが処理済み
-    EXPECT_NEAR(t->worldMatrix._41, 10.0f, 0.001f);
+    EXPECT_FALSE(scene.GetWorld()->HasComponent<ECS::TransformDirty>(e));  // TransformSystemが処理済み
+    auto* ltw = scene.GetWorld()->GetComponent<ECS::LocalToWorld>(e);
+    EXPECT_NEAR(ltw->GetPosition().x, 10.0f, 0.001f);
 }
 
 TEST_F(SceneWorldTest, RenderCallsWorldRender)
@@ -203,12 +207,14 @@ TEST_F(SceneWorldTest, ComponentsUpdateCorrectly)
 
     auto* world = scene.GetWorld();
 
-    // 複数エンティティ
+    // 複数エンティティ（LocalTransform + LocalToWorld）
     std::vector<ECS::Actor> entities;
     for (int i = 0; i < 10; ++i) {
         ECS::Actor e = world->CreateActor();
-        auto* t = world->AddComponent<ECS::TransformData>(e);
-        t->position = Vector3(static_cast<float>(i * 10), 0.0f, 0.0f);
+        auto* transform = world->AddComponent<ECS::LocalTransform>(e);
+        transform->position = Vector3(static_cast<float>(i * 10), 0.0f, 0.0f);
+        world->AddComponent<ECS::LocalToWorld>(e);
+        world->AddComponent<ECS::TransformDirty>(e);
         entities.push_back(e);
     }
 
@@ -217,9 +223,9 @@ TEST_F(SceneWorldTest, ComponentsUpdateCorrectly)
 
     // 全て更新されていることを確認
     for (int i = 0; i < 10; ++i) {
-        auto* t = world->GetComponent<ECS::TransformData>(entities[i]);
-        EXPECT_FALSE(t->dirty);
-        EXPECT_NEAR(t->worldMatrix._41, static_cast<float>(i * 10), 0.001f);
+        EXPECT_FALSE(world->HasComponent<ECS::TransformDirty>(entities[i]));
+        auto* ltw = world->GetComponent<ECS::LocalToWorld>(entities[i]);
+        EXPECT_NEAR(ltw->GetPosition().x, static_cast<float>(i * 10), 0.001f);
     }
 }
 
@@ -248,7 +254,9 @@ TEST_F(SceneWorldTest, OnExitCleanup)
 
     auto* world = scene->GetWorld();
     ECS::Actor e = world->CreateActor();
-    world->AddComponent<ECS::TransformData>(e);
+    auto* transform = world->AddComponent<ECS::LocalTransform>(e);
+    transform->position = Vector3::Zero;
+    world->AddComponent<ECS::LocalToWorld>(e);
     EXPECT_EQ(world->ActorCount(), 1u);
 
     scene->OnExit();

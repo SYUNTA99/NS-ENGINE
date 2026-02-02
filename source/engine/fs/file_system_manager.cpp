@@ -5,11 +5,8 @@
 #include "file_system_manager.h"
 #include "file_system_types.h"
 #include "engine/core/singleton_registry.h"
-#include <algorithm>
+#include "common/platform/win32.h"
 #include <filesystem>
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
 //============================================================================
 // ユーティリティ関数
@@ -65,8 +62,31 @@ std::wstring FileSystemManager::GetExecutableDirectory()
 
 std::wstring FileSystemManager::GetProjectRoot()
 {
-    std::filesystem::path projectRoot = std::filesystem::path(GetExecutableDirectory()) / L"../../../../";
-    return std::filesystem::weakly_canonical(projectRoot).wstring() + L"/";
+    std::wstring exeDir = GetExecutableDirectory();
+
+    // 1. パッケージ配布環境: exeと同階層にassetsフォルダがある場合
+    std::filesystem::path flatAssetsPath = std::filesystem::path(exeDir) / L"assets";
+    if (std::filesystem::exists(flatAssetsPath) && std::filesystem::is_directory(flatAssetsPath)) {
+        auto result = std::filesystem::weakly_canonical(exeDir).wstring();
+        if (!result.empty() && result.back() != L'/' && result.back() != L'\\') {
+            result += L'/';
+        }
+        return result;
+    }
+
+    // 2. 開発環境: build/bin/Config/game/ から4階層上
+    std::filesystem::path devRoot = std::filesystem::path(exeDir) / L"../../../../";
+    std::filesystem::path devAssetsPath = devRoot / L"assets";
+    if (std::filesystem::exists(devAssetsPath) && std::filesystem::is_directory(devAssetsPath)) {
+        return std::filesystem::weakly_canonical(devRoot).wstring() + L"/";
+    }
+
+    // 3. フォールバック: exeディレクトリ（assetsが見つからない場合）
+    auto result = std::filesystem::weakly_canonical(exeDir).wstring();
+    if (!result.empty() && result.back() != L'/' && result.back() != L'\\') {
+        result += L'/';
+    }
+    return result;
 }
 
 std::wstring FileSystemManager::GetAssetsDirectory()

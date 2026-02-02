@@ -3,9 +3,11 @@
 //! @brief  ECSコンポーネントデータ構造体のテスト
 //----------------------------------------------------------------------------
 #include <gtest/gtest.h>
-#include "engine/ecs/components/transform_data.h"
-#include "engine/ecs/components/sprite_data.h"
-#include "engine/ecs/components/mesh_data.h"
+#include "engine/ecs/components/transform/transform_data.h"
+#include "engine/ecs/components/rendering/sprite_data.h"
+#include "engine/ecs/components/rendering/mesh_data.h"
+#include "engine/ecs/components/camera/camera2d_data.h"
+#include "engine/ecs/components/camera/camera3d_data.h"
 
 namespace
 {
@@ -239,7 +241,7 @@ TEST_F(MeshDataTest, DefaultConstruction)
 {
     ECS::MeshData m;
     EXPECT_FALSE(m.mesh.IsValid());
-    EXPECT_TRUE(m.materials.empty());
+    EXPECT_EQ(m.GetMaterialCount(), 0u);
     EXPECT_TRUE(m.visible);
     EXPECT_TRUE(m.castShadow);
     EXPECT_TRUE(m.receiveShadow);
@@ -314,6 +316,181 @@ TEST_F(MeshDataTest, HasValidMesh)
 
     ECS::MeshData m2(MeshHandle::Create(1, 0));
     EXPECT_TRUE(m2.HasValidMesh());
+}
+
+TEST_F(MeshDataTest, MaterialArrayBoundary)
+{
+    ECS::MeshData m;
+
+    // 最大数まで設定可能
+    for (size_t i = 0; i < ECS::MeshData::kMaxMaterials; ++i) {
+        m.SetMaterial(i, MaterialHandle::Create(static_cast<uint32_t>(i + 1), 0));
+    }
+    EXPECT_EQ(m.GetMaterialCount(), ECS::MeshData::kMaxMaterials);
+
+    // 範囲外は無視される（クラッシュしない）
+    m.SetMaterial(ECS::MeshData::kMaxMaterials, MaterialHandle::Create(999, 0));
+    EXPECT_EQ(m.GetMaterialCount(), ECS::MeshData::kMaxMaterials);
+
+    // 範囲外の取得はInvalidを返す
+    EXPECT_FALSE(m.GetMaterial(ECS::MeshData::kMaxMaterials).IsValid());
+    EXPECT_FALSE(m.GetMaterial(ECS::MeshData::kMaxMaterials + 100).IsValid());
+}
+
+TEST_F(MeshDataTest, SetMaterialsTruncatesOverflow)
+{
+    ECS::MeshData m;
+
+    // kMaxMaterialsより多くのマテリアルを設定
+    std::vector<MaterialHandle> mats;
+    for (size_t i = 0; i < ECS::MeshData::kMaxMaterials + 10; ++i) {
+        mats.push_back(MaterialHandle::Create(static_cast<uint32_t>(i + 1), 0));
+    }
+
+    m.SetMaterials(mats);
+
+    // 最大数で切り捨てられる
+    EXPECT_EQ(m.GetMaterialCount(), ECS::MeshData::kMaxMaterials);
+
+    // 最後のマテリアルが正しく設定されている
+    EXPECT_EQ(m.GetMaterial(ECS::MeshData::kMaxMaterials - 1).GetIndex(),
+              ECS::MeshData::kMaxMaterials);
+}
+
+TEST_F(MeshDataTest, IsTriviallyCopyable)
+{
+    // MeshDataがmemcpyで安全にコピーできることを確認
+    static_assert(std::is_trivially_copyable_v<ECS::MeshData>,
+        "MeshData must be trivially copyable for ECS archetype storage");
+}
+
+//============================================================================
+// Camera3DData テスト
+//============================================================================
+class Camera3DDataTest : public ::testing::Test {};
+
+TEST_F(Camera3DDataTest, DefaultConstruction)
+{
+    ECS::Camera3DData cam;
+    EXPECT_NEAR(cam.fovY, 60.0f, 0.001f);
+    EXPECT_NEAR(cam.aspectRatio, 16.0f / 9.0f, 0.001f);
+    EXPECT_NEAR(cam.nearPlane, 0.1f, 0.001f);
+    EXPECT_NEAR(cam.farPlane, 1000.0f, 0.001f);
+    EXPECT_TRUE(cam.dirty);
+}
+
+TEST_F(Camera3DDataTest, ConstructWithFovAndAspect)
+{
+    ECS::Camera3DData cam(45.0f, 4.0f / 3.0f);
+    EXPECT_NEAR(cam.fovY, 45.0f, 0.001f);
+    EXPECT_NEAR(cam.aspectRatio, 4.0f / 3.0f, 0.001f);
+}
+
+TEST_F(Camera3DDataTest, SetPosition)
+{
+    ECS::Camera3DData cam;
+    cam.dirty = false;
+
+    cam.SetPosition(10.0f, 20.0f, 30.0f);
+
+    EXPECT_NEAR(cam.position.x, 10.0f, 0.001f);
+    EXPECT_NEAR(cam.position.y, 20.0f, 0.001f);
+    EXPECT_NEAR(cam.position.z, 30.0f, 0.001f);
+    EXPECT_TRUE(cam.dirty);
+}
+
+TEST_F(Camera3DDataTest, LookAt)
+{
+    ECS::Camera3DData cam;
+    cam.dirty = false;
+
+    cam.LookAt(Vector3(100.0f, 50.0f, 200.0f));
+
+    EXPECT_NEAR(cam.target.x, 100.0f, 0.001f);
+    EXPECT_NEAR(cam.target.y, 50.0f, 0.001f);
+    EXPECT_NEAR(cam.target.z, 200.0f, 0.001f);
+    EXPECT_TRUE(cam.dirty);
+}
+
+TEST_F(Camera3DDataTest, GetViewMatrix)
+{
+    ECS::Camera3DData cam;
+    cam.SetPosition(0.0f, 0.0f, -10.0f);
+    cam.LookAt(Vector3::Zero);
+
+    Matrix view = cam.GetViewMatrix();
+
+    // ビュー行列が単位行列ではないことを確認
+    EXPECT_NE(view, Matrix::Identity);
+    // dirty=falseになっている（キャッシュ更新済み）
+    EXPECT_FALSE(cam.dirty);
+}
+
+TEST_F(Camera3DDataTest, GetProjectionMatrix)
+{
+    ECS::Camera3DData cam(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+
+    Matrix proj = cam.GetProjectionMatrix();
+
+    // プロジェクション行列が単位行列ではないことを確認
+    EXPECT_NE(proj, Matrix::Identity);
+}
+
+TEST_F(Camera3DDataTest, IsTriviallyCopyable)
+{
+    static_assert(std::is_trivially_copyable_v<ECS::Camera3DData>,
+        "Camera3DData must be trivially copyable for ECS archetype storage");
+}
+
+//============================================================================
+// Camera2DData テスト
+//============================================================================
+class Camera2DDataTest : public ::testing::Test {};
+
+TEST_F(Camera2DDataTest, DefaultConstruction)
+{
+    ECS::Camera2DData cam;
+    EXPECT_NEAR(cam.position.x, 0.0f, 0.001f);
+    EXPECT_NEAR(cam.position.y, 0.0f, 0.001f);
+    EXPECT_NEAR(cam.zoom, 1.0f, 0.001f);
+    EXPECT_NEAR(cam.rotation, 0.0f, 0.001f);
+}
+
+TEST_F(Camera2DDataTest, SetPosition)
+{
+    ECS::Camera2DData cam;
+    cam.SetPosition(100.0f, 200.0f);
+
+    EXPECT_NEAR(cam.position.x, 100.0f, 0.001f);
+    EXPECT_NEAR(cam.position.y, 200.0f, 0.001f);
+}
+
+TEST_F(Camera2DDataTest, SetZoom)
+{
+    ECS::Camera2DData cam;
+    cam.SetZoom(2.0f);
+
+    EXPECT_NEAR(cam.zoom, 2.0f, 0.001f);
+}
+
+TEST_F(Camera2DDataTest, GetViewProjectionMatrix)
+{
+    ECS::Camera2DData cam;
+    cam.SetPosition(100.0f, 100.0f);
+    cam.SetZoom(2.0f);
+    cam.viewportWidth = 1920.0f;
+    cam.viewportHeight = 1080.0f;
+
+    Matrix viewProj = cam.GetViewProjectionMatrix();
+
+    // ビュープロジェクション行列が単位行列ではないことを確認
+    EXPECT_NE(viewProj, Matrix::Identity);
+}
+
+TEST_F(Camera2DDataTest, IsTriviallyCopyable)
+{
+    static_assert(std::is_trivially_copyable_v<ECS::Camera2DData>,
+        "Camera2DData must be trivially copyable for ECS archetype storage");
 }
 
 } // namespace

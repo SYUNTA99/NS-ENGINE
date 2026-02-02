@@ -4,9 +4,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+#include "common/stl/stl_common.h"
 #include "engine/memory/memory_system.h"
-#include <cstddef>
-#include <cstdint>
 
 namespace ECS {
 

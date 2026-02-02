@@ -6,10 +6,15 @@
 #include "engine/core/engine.h"
 #include "engine/platform/application.h"
 #include "engine/core/job_system.h"
+#include "engine/memory/memory_system.h"
 #include "engine/scene/scene_manager.h"
 #include "dx11/graphics_context.h"
 #include "common/logging/logging.h"
-#include "ecs_model_scene.h"
+#include "title_scene.h"
+#include "game_scene.h"
+#include "result_scene.h"
+#include "animation_test_scene.h"
+#include "cube_editor_scene.h"
 
 //----------------------------------------------------------------------------
 Game::Game() = default;
@@ -23,9 +28,10 @@ bool Game::Initialize()
         return false;
     }
 
-    // 初期シーン: ECSを使った3Dモデル表示
-    SceneManager::Get().Load<ECSModelScene>();
-
+    // 初期シーン: CubeEditorScene
+    SceneManager::Get().Load<TitleScene>();
+    //SceneManager::Get().Load<GameScene>();
+    //SceneManager::Get().Load<AnimationTestScene>();
     LOG_INFO("[Game] Initialization complete");
     return true;
 }
@@ -54,8 +60,9 @@ void Game::Shutdown() noexcept
 //----------------------------------------------------------------------------
 void Game::FixedUpdate(float dt)
 {
-    // フレーム開始（ジョブカウンターリセット）
-    JobSystem::Get().BeginFrame();
+    // フレーム開始
+    Memory::MemorySystem::Get().BeginFrame();  // フレームアロケータリセット
+    JobSystem::Get().BeginFrame();             // ジョブカウンターリセット
 
     if (currentScene_) {
         currentScene_->FixedUpdate(dt);
@@ -68,8 +75,9 @@ void Game::FixedUpdate(float dt)
 //----------------------------------------------------------------------------
 void Game::Update()
 {
-    // フレーム開始（ジョブカウンターリセット）- 従来互換用
-    JobSystem::Get().BeginFrame();
+    // フレーム開始（従来互換用）
+    Memory::MemorySystem::Get().BeginFrame();  // フレームアロケータリセット
+    JobSystem::Get().BeginFrame();             // ジョブカウンターリセット
 
     if (currentScene_) {
         currentScene_->Update();
@@ -94,6 +102,9 @@ void Game::EndFrame()
 {
     // フレーム内ジョブの完了を待機
     JobSystem::Get().EndFrame();
+
+    // メモリシステムのフレーム終了処理
+    Memory::MemorySystem::Get().EndFrame();
 
     SceneManager::Get().ApplyPendingChange(currentScene_);
 }

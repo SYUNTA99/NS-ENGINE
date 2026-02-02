@@ -6,9 +6,6 @@
 
 #include "dx11/gpu_common.h"
 #include "dx11/graphics/shader/shader_parameter.h"
-#include <memory>
-#include <vector>
-#include <string>
 
 //===========================================================================
 //! リソースバインド情報（スロット情報付き）

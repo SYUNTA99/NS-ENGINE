@@ -380,12 +380,13 @@ MeshLoadResult MeshLoaderAssimp::LoadFromMemory(
     auto mesh = Mesh::Create(meshDesc);
     if (mesh) {
         result.meshes.push_back(mesh);
+        result.meshDescs.push_back(std::move(meshDesc));  // コリジョン用にMeshDescを保持
         result.success = true;
 
         LOG_INFO("[MeshLoaderAssimp] Loaded mesh with " +
-                 std::to_string(meshDesc.vertices.size()) + " vertices, " +
-                 std::to_string(meshDesc.indices.size()) + " indices, " +
-                 std::to_string(meshDesc.subMeshes.size()) + " submeshes");
+                 std::to_string(result.meshDescs.back().vertices.size()) + " vertices, " +
+                 std::to_string(result.meshDescs.back().indices.size()) + " indices, " +
+                 std::to_string(result.meshDescs.back().subMeshes.size()) + " submeshes");
     }
     else {
         result.errorMessage = "Failed to create mesh";

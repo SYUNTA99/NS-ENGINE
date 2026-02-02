@@ -4,9 +4,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <atomic>
-#include <cstdint>
-#include <type_traits>
+#include "common/stl/stl_threading.h"
+#include "common/stl/stl_metaprogramming.h"
 
 namespace mutra {
 

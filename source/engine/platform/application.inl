@@ -28,7 +28,8 @@ template<typename TGame>
 void Application::MainLoop(TGame& game)
 {
     Renderer& renderer = Renderer::Get();
-    const float fixedDt = desc_.fixedDeltaTime;
+    // ゼロ除算防止: fixedDtが0以下の場合はデフォルト値を使用
+    const float fixedDt = (desc_.fixedDeltaTime > 0.0f) ? desc_.fixedDeltaTime : (1.0f / 60.0f);
     const bool useFixed = desc_.useFixedTimestep;
     accumulator_ = 0.0f;
 

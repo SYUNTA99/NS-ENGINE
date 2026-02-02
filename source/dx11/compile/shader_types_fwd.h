@@ -4,9 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
+#include "common/stl/stl_common.h"
 
 // コンパイラ・キャッシュ
 class IShaderCompiler;

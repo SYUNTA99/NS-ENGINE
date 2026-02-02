@@ -3,6 +3,8 @@
 //! @brief  メッシュローダー共通実装
 //----------------------------------------------------------------------------
 #include "mesh_loader.h"
+#include "engine/memory/linear_allocator.h"
+#include "engine/memory/memory_utils.h"
 #include "common/logging/logging.h"
 #include <algorithm>
 #include <cctype>
@@ -144,9 +146,17 @@ void CalculateNormals(std::vector<MeshVertex>& vertices, const std::vector<uint3
 
 void CalculateTangents(std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices)
 {
-    // タンジェント計算用のバッファ
-    std::vector<Vector3> tan1(vertices.size(), Vector3(0, 0, 0));
-    std::vector<Vector3> tan2(vertices.size(), Vector3(0, 0, 0));
+    // タンジェント計算用のバッファ（ScopedLinearAllocatorで一時確保）
+    size_t vertexCount = vertices.size();
+    size_t bufferSize = sizeof(Vector3) * vertexCount * 2;  // tan1 + tan2
+    Memory::ScopedLinearAllocator tempAlloc(bufferSize);
+
+    auto* tan1 = Memory::AllocateArray<Vector3>(tempAlloc.Get(), vertexCount);
+    auto* tan2 = Memory::AllocateArray<Vector3>(tempAlloc.Get(), vertexCount);
+
+    // ゼロ初期化
+    std::memset(tan1, 0, sizeof(Vector3) * vertexCount);
+    std::memset(tan2, 0, sizeof(Vector3) * vertexCount);
 
     for (size_t i = 0; i + 2 < indices.size(); i += 3) {
         uint32_t i0 = indices[i];

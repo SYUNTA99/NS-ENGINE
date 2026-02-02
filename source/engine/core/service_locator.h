@@ -4,13 +4,12 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-#include <cassert>
+#include "common/stl/stl_common.h"
 
 // 前方宣言
 class TextureManager;
 class InputManager;
-class CollisionManager;
-class CollisionManager3D;
+// CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
 class SpriteBatch;
 class SceneManager;
 class FileSystemManager;
@@ -41,8 +40,7 @@ public:
 
     static void Provide(TextureManager* tm) noexcept { textureManager_ = tm; }
     static void Provide(InputManager* im) noexcept { inputManager_ = im; }
-    static void Provide(CollisionManager* cm) noexcept { collisionManager_ = cm; }
-    static void Provide(CollisionManager3D* cm3d) noexcept { collisionManager3D_ = cm3d; }
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     static void Provide(SpriteBatch* sb) noexcept { spriteBatch_ = sb; }
     static void Provide(SceneManager* sm) noexcept { sceneManager_ = sm; }
     static void Provide(FileSystemManager* fs) noexcept { fileSystem_ = fs; }
@@ -63,15 +61,7 @@ public:
         return *inputManager_;
     }
 
-    [[nodiscard]] static CollisionManager& Collision2D() noexcept {
-        assert(collisionManager_ && "CollisionManager not provided");
-        return *collisionManager_;
-    }
-
-    [[nodiscard]] static CollisionManager3D& Collision3D() noexcept {
-        assert(collisionManager3D_ && "CollisionManager3D not provided");
-        return *collisionManager3D_;
-    }
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
 
     [[nodiscard]] static SpriteBatch& Sprites() noexcept {
         assert(spriteBatch_ && "SpriteBatch not provided");
@@ -104,8 +94,7 @@ public:
 
     [[nodiscard]] static bool HasTextures() noexcept { return textureManager_ != nullptr; }
     [[nodiscard]] static bool HasInput() noexcept { return inputManager_ != nullptr; }
-    [[nodiscard]] static bool HasCollision2D() noexcept { return collisionManager_ != nullptr; }
-    [[nodiscard]] static bool HasCollision3D() noexcept { return collisionManager3D_ != nullptr; }
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     [[nodiscard]] static bool HasSprites() noexcept { return spriteBatch_ != nullptr; }
     [[nodiscard]] static bool HasScenes() noexcept { return sceneManager_ != nullptr; }
     [[nodiscard]] static bool HasFileSystem() noexcept { return fileSystem_ != nullptr; }
@@ -119,8 +108,7 @@ public:
     static void Clear() noexcept {
         textureManager_ = nullptr;
         inputManager_ = nullptr;
-        collisionManager_ = nullptr;
-        collisionManager3D_ = nullptr;
+        // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
         spriteBatch_ = nullptr;
         sceneManager_ = nullptr;
         fileSystem_ = nullptr;
@@ -133,8 +121,7 @@ private:
 
     static inline TextureManager* textureManager_ = nullptr;
     static inline InputManager* inputManager_ = nullptr;
-    static inline CollisionManager* collisionManager_ = nullptr;
-    static inline CollisionManager3D* collisionManager3D_ = nullptr;
+    // CollisionManager削除 - ECS::Collision2DSystem/Collision3DSystemに移行
     static inline SpriteBatch* spriteBatch_ = nullptr;
     static inline SceneManager* sceneManager_ = nullptr;
     static inline FileSystemManager* fileSystem_ = nullptr;

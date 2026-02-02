@@ -10,7 +10,6 @@
 #include "dx11/state/sampler_state.h"
 #include "engine/core/singleton_registry.h"
 #include "common/logging/logging.h"
-#include <cstring>
 
 //===========================================================================
 // インスタンス取得
@@ -262,6 +261,51 @@ void GraphicsContext::SetRenderTargetsAndUnorderedAccessViews(
     }
     ID3D11DepthStencilView* dsv = depthStencil ? depthStencil->Dsv() : nullptr;
     ctx->OMSetRenderTargetsAndUnorderedAccessViews(numRTVs, rtvs, dsv, uavStartSlot, numUAVs, uavs, uavInitialCounts);
+}
+
+void GraphicsContext::PushRenderTarget()
+{
+    auto* ctx = context_.Get();
+    if (!ctx) return;
+
+    RenderTargetState state;
+
+    // 現在のレンダーターゲットを取得
+    ID3D11RenderTargetView* rtv = nullptr;
+    ID3D11DepthStencilView* dsv = nullptr;
+    ctx->OMGetRenderTargets(1, &rtv, &dsv);
+
+    // Viewに所有権を移譲（Attach相当）
+    // View<Tag>::D3DTypeを使用してComPtrの型を取得
+    ComPtr<View<RTV>::D3DType> rtvPtr;
+    ComPtr<View<DSV>::D3DType> dsvPtr;
+    rtvPtr.Attach(rtv);
+    dsvPtr.Attach(dsv);
+    state.rtv = View<RTV>(std::move(rtvPtr));
+    state.dsv = View<DSV>(std::move(dsvPtr));
+
+    // 現在のビューポートを取得
+    UINT numViewports = 1;
+    ctx->RSGetViewports(&numViewports, &state.viewport);
+
+    rtStack_.push_back(std::move(state));
+}
+
+void GraphicsContext::PopRenderTarget()
+{
+    auto* ctx = context_.Get();
+    if (!ctx || rtStack_.empty()) return;
+
+    auto& state = rtStack_.back();
+
+    // レンダーターゲットを復元
+    ID3D11RenderTargetView* rtv = state.rtv.Get();
+    ctx->OMSetRenderTargets(1, &rtv, state.dsv.Get());
+
+    // ビューポートを復元
+    ctx->RSSetViewports(1, &state.viewport);
+
+    rtStack_.pop_back();
 }
 
 //===========================================================================

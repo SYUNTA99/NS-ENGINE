@@ -3,7 +3,7 @@
 //! @brief  CollisionLayerのテスト
 //----------------------------------------------------------------------------
 #include <gtest/gtest.h>
-#include "engine/c_systems/collision_layers.h"
+#include "engine/ecs/collision/collision_layers.h"
 
 namespace
 {

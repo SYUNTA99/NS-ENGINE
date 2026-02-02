@@ -21,6 +21,8 @@
 
 struct ID3D11InputLayout;
 
+// Camera2D前方宣言は削除（ECS版Camera2DDataを使用）
+
 //----------------------------------------------------------------------------
 //! @brief 円描画クラス（デバッグ用）
 //----------------------------------------------------------------------------
@@ -62,7 +64,8 @@ public:
     );
 
     //! @brief バッチ描画開始
-    void Begin(const class Camera2D& camera);
+    //! @param viewProjection ビュープロジェクション行列
+    void Begin(const Matrix& viewProjection);
 
     //! @brief バッチ描画終了（実際に描画）
     void End();

@@ -4,15 +4,10 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+#include "common/stl/stl_common.h"
+#include "common/stl/stl_threading.h"
+#include "common/stl/stl_metaprogramming.h"
 #include "common/utility/non_copyable.h"
-#include <functional>
-#include <atomic>
-#include <memory>
-#include <cstdint>
-#include <cassert>
-#include <vector>
-#include <string>
-#include <string_view>
 
 //! @brief ジョブ優先度
 enum class JobPriority : uint8_t {

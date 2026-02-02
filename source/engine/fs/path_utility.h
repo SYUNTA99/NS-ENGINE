@@ -1,13 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "common/stl/stl_common.h"
+#include "common/platform/win32.h"
 
 
 //! パスユーティリティ（静的関数）

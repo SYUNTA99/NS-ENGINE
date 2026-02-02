@@ -7,7 +7,6 @@
 #include "dx11/gpu_common.h"
 #include "gpu_resource.h"
 #include "dx11/compile/shader_type.h"
-#include <d3dcompiler.h>
 
 //===========================================================================
 //! @brief GPUシェーダークラス（統一設計）

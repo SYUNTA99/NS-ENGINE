@@ -1,7 +1,5 @@
 #include "mouse.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "common/platform/win32.h"
 
 bool Mouse::IsButtonPressed(MouseButton button) const noexcept
 {

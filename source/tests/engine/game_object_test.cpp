@@ -1,39 +1,15 @@
 //----------------------------------------------------------------------------
 //! @file   game_object_test.cpp
-//! @brief  GameObjectのテスト
+//! @brief  GameObject（ECS Actorラッパー）のテスト
 //----------------------------------------------------------------------------
 #include <gtest/gtest.h>
-#include "engine/component/game_object.h"
-#include "engine/component/transform.h"
-#include "engine/component/animator.h"
+#include "engine/ecs/world.h"
+#include "engine/ecs/components/transform/transform_data.h"
+#include "engine/ecs/components/rendering/sprite_data.h"
+#include "engine/game_object/game_object_impl.h"
 
 namespace
 {
-
-//============================================================================
-// テスト用カスタムコンポーネント
-//============================================================================
-class TestComponent : public Component
-{
-public:
-    int value = 0;
-    bool wasUpdated = false;
-    bool wasAttached = false;
-    bool wasDetached = false;
-
-    void Update([[maybe_unused]] float deltaTime) override {
-        wasUpdated = true;
-        value++;
-    }
-
-    void OnAttach() override {
-        wasAttached = true;
-    }
-
-    void OnDetach() override {
-        wasDetached = true;
-    }
-};
 
 //============================================================================
 // GameObject 基本テスト
@@ -41,266 +17,238 @@ public:
 class GameObjectTest : public ::testing::Test
 {
 protected:
-    GameObject gameObject_{"TestObject"};
+    void SetUp() override {
+        world_ = std::make_unique<ECS::World>();
+        go_ = world_->CreateGameObject("TestObject");
+    }
+
+    void TearDown() override {
+        world_.reset();
+    }
+
+    std::unique_ptr<ECS::World> world_;
+    GameObject* go_ = nullptr;
 };
+
+TEST_F(GameObjectTest, CreateGameObjectReturnsValid)
+{
+    EXPECT_NE(go_, nullptr);
+}
 
 TEST_F(GameObjectTest, ConstructorSetsName)
 {
-    EXPECT_EQ(gameObject_.GetName(), "TestObject");
+    EXPECT_EQ(go_->GetName(), "TestObject");
 }
 
 TEST_F(GameObjectTest, DefaultName)
 {
-    GameObject go;
-    EXPECT_EQ(go.GetName(), "GameObject");
+    GameObject* go = world_->CreateGameObject();
+    EXPECT_EQ(go->GetName(), "GameObject");
 }
 
 TEST_F(GameObjectTest, SetName)
 {
-    gameObject_.SetName("NewName");
-    EXPECT_EQ(gameObject_.GetName(), "NewName");
+    go_->SetName("NewName");
+    EXPECT_EQ(go_->GetName(), "NewName");
 }
 
 TEST_F(GameObjectTest, InitiallyActive)
 {
-    EXPECT_TRUE(gameObject_.IsActive());
+    EXPECT_TRUE(go_->IsActive());
 }
 
-TEST_F(GameObjectTest, SetActivefalse)
+TEST_F(GameObjectTest, SetActiveFalse)
 {
-    gameObject_.SetActive(false);
-    EXPECT_FALSE(gameObject_.IsActive());
+    go_->SetActive(false);
+    EXPECT_FALSE(go_->IsActive());
 }
 
-TEST_F(GameObjectTest, DefaultLayer)
+TEST_F(GameObjectTest, HasValidActor)
 {
-    EXPECT_EQ(gameObject_.GetLayer(), 0);
+    ECS::Actor actor = go_->GetActor();
+    EXPECT_TRUE(actor.IsValid());
 }
 
-TEST_F(GameObjectTest, SetLayer)
+TEST_F(GameObjectTest, HasWorldReference)
 {
-    gameObject_.SetLayer(5);
-    EXPECT_EQ(gameObject_.GetLayer(), 5);
+    EXPECT_EQ(go_->GetWorld(), world_.get());
 }
 
 //============================================================================
-// AddComponent テスト
+// Add テスト
 //============================================================================
-TEST_F(GameObjectTest, AddComponentReturnsPointer)
+TEST_F(GameObjectTest, AddComponentMakesHasReturnTrue)
 {
-    auto* comp = gameObject_.AddComponent<TestComponent>();
-    EXPECT_NE(comp, nullptr);
-}
-
-TEST_F(GameObjectTest, AddComponentSetsOwner)
-{
-    auto* comp = gameObject_.AddComponent<TestComponent>();
-    EXPECT_EQ(comp->GetOwner(), &gameObject_);
-}
-
-TEST_F(GameObjectTest, AddComponentCallsOnAttach)
-{
-    auto* comp = gameObject_.AddComponent<TestComponent>();
-    EXPECT_TRUE(comp->wasAttached);
+    EXPECT_FALSE(go_->Has<ECS::TransformData>());
+    go_->Add<ECS::TransformData>();
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
 }
 
 TEST_F(GameObjectTest, AddComponentWithArgs)
 {
-    // AnimatorはコンストラクタにU引数を取る
-    auto* anim = gameObject_.AddComponent<Animator>(4, 8, 6);
-    EXPECT_NE(anim, nullptr);
-    EXPECT_EQ(anim->GetRowCount(), 4);
-    EXPECT_EQ(anim->GetColumnCount(), 8);
+    Vector3 pos(1.0f, 2.0f, 3.0f);
+    Quaternion rot = Quaternion::Identity;
+    Vector3 scale(2.0f, 2.0f, 2.0f);
+
+    go_->Add<ECS::TransformData>(pos, rot, scale);
+
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
+    auto& t = go_->Get<ECS::TransformData>();
+    EXPECT_FLOAT_EQ(t.position.x, 1.0f);
+    EXPECT_FLOAT_EQ(t.position.y, 2.0f);
+    EXPECT_FLOAT_EQ(t.position.z, 3.0f);
+    EXPECT_FLOAT_EQ(t.scale.x, 2.0f);
+}
+
+TEST_F(GameObjectTest, AddMultipleComponentTypes)
+{
+    go_->Add<ECS::TransformData>();
+    go_->Add<ECS::SpriteData>();
+
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
+    EXPECT_TRUE(go_->Has<ECS::SpriteData>());
 }
 
 //============================================================================
-// GetComponent テスト
+// Get テスト
 //============================================================================
-TEST_F(GameObjectTest, GetComponentReturnsNullIfNotAdded)
+TEST_F(GameObjectTest, GetReturnsAddedComponent)
 {
-    auto* comp = gameObject_.GetComponent<TestComponent>();
-    EXPECT_EQ(comp, nullptr);
+    go_->Add<ECS::TransformData>();
+    auto& t = go_->Get<ECS::TransformData>();
+    t.position.x = 100.0f;
+
+    // 再度取得しても同じデータ
+    auto& t2 = go_->Get<ECS::TransformData>();
+    EXPECT_FLOAT_EQ(t2.position.x, 100.0f);
 }
 
-TEST_F(GameObjectTest, GetComponentReturnsAddedComponent)
+TEST_F(GameObjectTest, GetDifferentComponentTypes)
 {
-    auto* added = gameObject_.AddComponent<TestComponent>();
-    auto* got = gameObject_.GetComponent<TestComponent>();
-    EXPECT_EQ(added, got);
+    go_->Add<ECS::TransformData>();
+    go_->Add<ECS::SpriteData>();
+
+    auto& t = go_->Get<ECS::TransformData>();
+    auto& s = go_->Get<ECS::SpriteData>();
+
+    // 両方アクセスできる
+    t.position.x = 50.0f;
+    s.visible = false;
+
+    EXPECT_FLOAT_EQ(go_->Get<ECS::TransformData>().position.x, 50.0f);
+    EXPECT_FALSE(go_->Get<ECS::SpriteData>().visible);
 }
 
-TEST_F(GameObjectTest, GetComponentReturnsFirstOfType)
+TEST_F(GameObjectTest, ConstGetReturnsConstReference)
 {
-    auto* first = gameObject_.AddComponent<TestComponent>();
-    (void)gameObject_.AddComponent<TestComponent>();  // 2つ目
+    go_->Add<ECS::TransformData>();
+    go_->Get<ECS::TransformData>().position.x = 42.0f;
 
-    auto* got = gameObject_.GetComponent<TestComponent>();
-    EXPECT_EQ(got, first);
-}
-
-TEST_F(GameObjectTest, GetComponentDifferentTypes)
-{
-    auto* test = gameObject_.AddComponent<TestComponent>();
-    auto* transform = gameObject_.AddComponent<Transform>();
-
-    EXPECT_EQ(gameObject_.GetComponent<TestComponent>(), test);
-    EXPECT_EQ(gameObject_.GetComponent<Transform>(), transform);
-}
-
-//============================================================================
-// GetComponents テスト
-//============================================================================
-TEST_F(GameObjectTest, GetComponentsEmptyVector)
-{
-    auto comps = gameObject_.GetComponents<TestComponent>();
-    EXPECT_TRUE(comps.empty());
-}
-
-TEST_F(GameObjectTest, GetComponentsReturnsAll)
-{
-    auto* c1 = gameObject_.AddComponent<TestComponent>();
-    auto* c2 = gameObject_.AddComponent<TestComponent>();
-    auto* c3 = gameObject_.AddComponent<TestComponent>();
-
-    auto comps = gameObject_.GetComponents<TestComponent>();
-    ASSERT_EQ(comps.size(), 3);
-    EXPECT_EQ(comps[0], c1);
-    EXPECT_EQ(comps[1], c2);
-    EXPECT_EQ(comps[2], c3);
+    const GameObject* constGo = go_;
+    const auto& t = constGo->Get<ECS::TransformData>();
+    EXPECT_FLOAT_EQ(t.position.x, 42.0f);
 }
 
 //============================================================================
-// RemoveComponent テスト
+// Has テスト
 //============================================================================
-TEST_F(GameObjectTest, RemoveComponentReturnsFalseIfNotPresent)
+TEST_F(GameObjectTest, HasReturnsFalseIfNotAdded)
 {
-    EXPECT_FALSE(gameObject_.RemoveComponent<TestComponent>());
+    EXPECT_FALSE(go_->Has<ECS::TransformData>());
 }
 
-TEST_F(GameObjectTest, RemoveComponentReturnsTrue)
+TEST_F(GameObjectTest, HasReturnsTrueAfterAdd)
 {
-    gameObject_.AddComponent<TestComponent>();
-    EXPECT_TRUE(gameObject_.RemoveComponent<TestComponent>());
+    go_->Add<ECS::TransformData>();
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
 }
 
-TEST_F(GameObjectTest, RemoveComponentCallsOnDetach)
+TEST_F(GameObjectTest, HasIsTypeSpecific)
 {
-    auto* comp = gameObject_.AddComponent<TestComponent>();
-    (void)comp;  // 使用しないが、AddComponentが正常動作することを確認
-
-    gameObject_.RemoveComponent<TestComponent>();
-    // 注: compはもう無効だが、wasDetachedはコールバック時に設定される
-    // このテストはRemoveの実装に依存
-    // 実際にはデストラクタで解放されるのでアクセスは危険
-    // ここではRemoveが正常に動作することだけ確認
-    EXPECT_TRUE(true);
-}
-
-TEST_F(GameObjectTest, RemoveComponentNullsOwner)
-{
-    // RemoveComponent後にGetComponent呼び出しでnullが返る
-    gameObject_.AddComponent<TestComponent>();
-    gameObject_.RemoveComponent<TestComponent>();
-    EXPECT_EQ(gameObject_.GetComponent<TestComponent>(), nullptr);
-}
-
-TEST_F(GameObjectTest, RemoveFirstOfMultiple)
-{
-    (void)gameObject_.AddComponent<TestComponent>();
-    auto* second = gameObject_.AddComponent<TestComponent>();
-
-    gameObject_.RemoveComponent<TestComponent>();
-
-    // 2つ目が残っている
-    auto* remaining = gameObject_.GetComponent<TestComponent>();
-    EXPECT_EQ(remaining, second);
+    go_->Add<ECS::TransformData>();
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
+    EXPECT_FALSE(go_->Has<ECS::SpriteData>());
 }
 
 //============================================================================
-// Update テスト
+// Remove テスト
 //============================================================================
-TEST_F(GameObjectTest, UpdateCallsComponentUpdate)
+TEST_F(GameObjectTest, RemoveMakesHasReturnFalse)
 {
-    auto* comp = gameObject_.AddComponent<TestComponent>();
+    go_->Add<ECS::TransformData>();
+    EXPECT_TRUE(go_->Has<ECS::TransformData>());
 
-    gameObject_.Update(0.016f);
-
-    EXPECT_TRUE(comp->wasUpdated);
+    go_->Remove<ECS::TransformData>();
+    EXPECT_FALSE(go_->Has<ECS::TransformData>());
 }
 
-TEST_F(GameObjectTest, UpdateDoesNothingWhenInactive)
+TEST_F(GameObjectTest, RemoveDoesNotAffectOtherComponents)
 {
-    auto* comp = gameObject_.AddComponent<TestComponent>();
+    go_->Add<ECS::TransformData>();
+    go_->Add<ECS::SpriteData>();
 
-    gameObject_.SetActive(false);
-    gameObject_.Update(0.016f);
+    go_->Remove<ECS::TransformData>();
 
-    EXPECT_FALSE(comp->wasUpdated);
-}
-
-TEST_F(GameObjectTest, UpdateSkipsDisabledComponents)
-{
-    auto* comp = gameObject_.AddComponent<TestComponent>();
-    comp->SetEnabled(false);
-
-    gameObject_.Update(0.016f);
-
-    EXPECT_FALSE(comp->wasUpdated);
-}
-
-TEST_F(GameObjectTest, UpdateUpdatesMultipleComponents)
-{
-    auto* c1 = gameObject_.AddComponent<TestComponent>();
-    auto* c2 = gameObject_.AddComponent<TestComponent>();
-
-    gameObject_.Update(0.016f);
-
-    EXPECT_TRUE(c1->wasUpdated);
-    EXPECT_TRUE(c2->wasUpdated);
+    EXPECT_FALSE(go_->Has<ECS::TransformData>());
+    EXPECT_TRUE(go_->Has<ECS::SpriteData>());
 }
 
 //============================================================================
-// デストラクタテスト
+// 複数GameObjectテスト
 //============================================================================
-TEST(GameObjectDestructorTest, DetachesAllComponents)
+TEST_F(GameObjectTest, MultipleGameObjectsAreIndependent)
 {
-    bool detached = false;
+    GameObject* go1 = world_->CreateGameObject("Object1");
+    GameObject* go2 = world_->CreateGameObject("Object2");
 
-    {
-        GameObject go;
-        auto* comp = go.AddComponent<TestComponent>();
-        // unique_ptrで所有されているので、デストラクタ時にOnDetachが呼ばれる
-        (void)comp;
-    }
-    // GameObjectのスコープを抜けた後、コンポーネントは破棄されている
+    // Add all components first, then modify
+    // (Adding components may reallocate storage, invalidating references)
+    go1->Add<ECS::TransformData>();
+    go2->Add<ECS::TransformData>();
 
-    EXPECT_TRUE(true);  // クラッシュしなければOK
+    // Now modify - references are stable
+    go1->Get<ECS::TransformData>().position.x = 10.0f;
+    go2->Get<ECS::TransformData>().position.x = 20.0f;
+
+    EXPECT_FLOAT_EQ(go1->Get<ECS::TransformData>().position.x, 10.0f);
+    EXPECT_FLOAT_EQ(go2->Get<ECS::TransformData>().position.x, 20.0f);
+}
+
+TEST_F(GameObjectTest, EachGameObjectHasUniqueActor)
+{
+    GameObject* go1 = world_->CreateGameObject("Object1");
+    GameObject* go2 = world_->CreateGameObject("Object2");
+
+    EXPECT_NE(go1->GetActor().Index(), go2->GetActor().Index());
 }
 
 //============================================================================
-// ムーブテスト
+// World連携テスト
 //============================================================================
-TEST(GameObjectMoveTest, MoveConstructor)
+TEST_F(GameObjectTest, WorldCanAccessGameObjectComponents)
 {
-    GameObject go1("Original");
-    (void)go1.AddComponent<TestComponent>();
+    go_->Add<ECS::TransformData>();
+    go_->Get<ECS::TransformData>().position.x = 123.0f;
 
-    GameObject go2(std::move(go1));
-
-    EXPECT_EQ(go2.GetName(), "Original");
-    EXPECT_NE(go2.GetComponent<TestComponent>(), nullptr);
+    // Worldから直接アクセスしても同じデータ
+    auto* t = world_->GetComponent<ECS::TransformData>(go_->GetActor());
+    ASSERT_NE(t, nullptr);
+    EXPECT_FLOAT_EQ(t->position.x, 123.0f);
 }
 
-TEST(GameObjectMoveTest, MoveAssignment)
+TEST_F(GameObjectTest, WorldForEachIncludesGameObjectComponents)
 {
-    GameObject go1("First");
-    (void)go1.AddComponent<TestComponent>();
+    go_->Add<ECS::TransformData>();
+    go_->Get<ECS::TransformData>().position.x = 999.0f;
 
-    GameObject go2("Second");
-    go2 = std::move(go1);
+    bool found = false;
+    world_->ForEach<ECS::TransformData>([&](ECS::Actor, ECS::TransformData& t) {
+        if (t.position.x == 999.0f) {
+            found = true;
+        }
+    });
 
-    EXPECT_EQ(go2.GetName(), "First");
-    EXPECT_NE(go2.GetComponent<TestComponent>(), nullptr);
+    EXPECT_TRUE(found);
 }
 
 } // namespace
