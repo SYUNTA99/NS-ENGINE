@@ -1,8 +1,11 @@
 @echo off
-setlocal enabledelayedexpansion
-
+::============================================================================
+:: run_tests.cmd
 :: テストをビルドして実行するスクリプト
+::
 :: 使用方法: run_tests.cmd [Debug|Release]
+::============================================================================
+call tools\_common.cmd :init
 
 set CONFIG=%1
 if "%CONFIG%"=="" set CONFIG=Debug
@@ -11,30 +14,20 @@ echo ===================================
 echo テストビルド・実行 (%CONFIG%)
 echo ===================================
 
-:: MSBuild パスを検索
-set "MSBUILD="
-for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe 2^>nul`) do (
-    set "MSBUILD=%%i"
-)
-
-if "%MSBUILD%"=="" (
-    echo [ERROR] MSBuild が見つかりません
-    exit /b 1
-)
-
-:: プロジェクト再生成
+:: プロジェクト再生成（日本語パス対応）
 echo.
 echo [1/3] プロジェクト生成中...
-call tools\premake5.exe vs2022
-if errorlevel 1 (
-    echo [ERROR] Premake失敗
-    exit /b 1
-)
+call tools\_common.cmd :generate_project
+if errorlevel 1 exit /b 1
 
-:: ビルド
+:: MSBuild環境セットアップ
+call tools\_common.cmd :setup_msbuild
+if errorlevel 1 exit /b 1
+
+:: ビルド（ソリューション全体をビルド）
 echo.
 echo [2/3] テストビルド中...
-"%MSBUILD%" build\NS-ENGINE.sln /t:tests /p:Configuration=%CONFIG% /p:Platform=x64 /m /v:minimal
+msbuild build\NS-ENGINE.sln /p:Configuration=%CONFIG% /p:Platform=x64 /m /v:minimal
 if errorlevel 1 (
     echo [ERROR] ビルド失敗
     exit /b 1

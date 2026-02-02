@@ -21,6 +21,12 @@ class MeshRenderer;
 class Transform;
 class ShadowMap;
 
+// ECS前方宣言
+namespace ECS {
+    struct MeshData;
+    struct TransformData;
+}
+
 //============================================================================
 //! @brief メッシュバッチレンダラー（シングルトン）
 //!
@@ -132,6 +138,11 @@ public:
     //! @param renderer MeshRendererコンポーネント
     //! @param transform Transformコンポーネント
     void Draw(const MeshRenderer& renderer, Transform& transform);
+
+    //! @brief ECS MeshData + TransformDataから描画
+    //! @param meshData ECSメッシュデータ
+    //! @param transform ECSトランスフォームデータ
+    void Draw(const ECS::MeshData& meshData, const ECS::TransformData& transform);
 
     //! @brief バッチ終了・フラッシュ
     void End();

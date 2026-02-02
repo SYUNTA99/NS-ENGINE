@@ -116,41 +116,10 @@ TEST(AABBTest, ContainsPointOutside)
 }
 
 //============================================================================
-// ColliderHandle テスト
-//============================================================================
-TEST(ColliderHandleTest, DefaultIsInvalid)
-{
-    ColliderHandle handle;
-    EXPECT_FALSE(handle.IsValid());
-    EXPECT_EQ(handle.index, CollisionConstants::kInvalidIndex);
-}
-
-TEST(ColliderHandleTest, ValidHandle)
-{
-    ColliderHandle handle;
-    handle.index = 0;
-    handle.generation = 1;
-    EXPECT_TRUE(handle.IsValid());
-}
-
-TEST(ColliderHandleTest, Equality)
-{
-    ColliderHandle a{ 5, 10 };
-    ColliderHandle b{ 5, 10 };
-    ColliderHandle c{ 5, 11 };
-    ColliderHandle d{ 6, 10 };
-
-    EXPECT_TRUE(a == b);
-    EXPECT_FALSE(a == c);
-    EXPECT_FALSE(a == d);
-}
-
-//============================================================================
 // CollisionConstants テスト
 //============================================================================
 TEST(CollisionConstantsTest, DefaultValues)
 {
-    EXPECT_EQ(CollisionConstants::kInvalidIndex, UINT16_MAX);
     EXPECT_EQ(CollisionConstants::kDefaultLayer, 0x01);
     EXPECT_EQ(CollisionConstants::kDefaultMask, 0xFF);
     EXPECT_EQ(CollisionConstants::kDefaultCellSize, 256);

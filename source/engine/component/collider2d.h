@@ -6,25 +6,60 @@
 
 #include "component.h"
 #include "engine/math/math_types.h"
-#include "engine/c_systems/collision_manager.h"
+#include <functional>
 #include <cstdint>
+
+class Collider2D;
+
+//============================================================================
+//! @brief AABB（軸平行境界ボックス）
+//============================================================================
+struct AABB {
+    float minX = 0.0f;
+    float minY = 0.0f;
+    float maxX = 0.0f;
+    float maxY = 0.0f;
+
+    AABB() = default;
+    AABB(float x, float y, float w, float h)
+        : minX(x), minY(y), maxX(x + w), maxY(y + h) {}
+
+    [[nodiscard]] bool Intersects(const AABB& other) const noexcept {
+        return minX < other.maxX && maxX > other.minX &&
+               minY < other.maxY && maxY > other.minY;
+    }
+
+    [[nodiscard]] bool Contains(float px, float py) const noexcept {
+        return px >= minX && px < maxX && py >= minY && py < maxY;
+    }
+
+    [[nodiscard]] Vector2 GetCenter() const noexcept {
+        return Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
+    }
+
+    [[nodiscard]] Vector2 GetSize() const noexcept {
+        return Vector2(maxX - minX, maxY - minY);
+    }
+};
+
+//============================================================================
+//! @brief 衝突コールバック型
+//============================================================================
+using CollisionCallback = std::function<void(Collider2D*, Collider2D*)>;
 
 //============================================================================
 //! @brief 2D当たり判定コンポーネント（AABB）
 //!
 //! GameObjectにアタッチして当たり判定を追加する。
-//! 実データはCollisionManagerが所有し、このクラスはハンドルのみ保持。
+//! Unity風の設計: コンポーネントがデータを保持し、
+//! CollisionManagerは参照して衝突検出を行う。
 //============================================================================
 class Collider2D : public Component {
 public:
     Collider2D() = default;
 
-    //------------------------------------------------------------------------
-    //! @brief コンストラクタ
-    //! @param size 当たり判定のサイズ
-    //! @param offset 中心からのオフセット
-    //------------------------------------------------------------------------
-    explicit Collider2D(const Vector2& size, const Vector2& offset = Vector2::Zero);
+    explicit Collider2D(const Vector2& size, const Vector2& offset = Vector2::Zero)
+        : size_(size), offset_(offset) {}
 
     //------------------------------------------------------------------------
     // Component オーバーライド
@@ -35,77 +70,90 @@ public:
     void Update(float deltaTime) override;
 
     //------------------------------------------------------------------------
-    // 位置（毎フレーム更新用）
+    // 位置
     //------------------------------------------------------------------------
 
-    //! @brief 位置を直接設定（Transformを使わない場合）
-    void SetPosition(float x, float y);
-    void SetPosition(const Vector2& pos);
+    void SetPosition(float x, float y) noexcept {
+        position_ = Vector2(x, y);
+        syncWithTransform_ = false;
+    }
+
+    void SetPosition(const Vector2& pos) noexcept {
+        position_ = pos;
+        syncWithTransform_ = false;
+    }
+
+    [[nodiscard]] const Vector2& GetPosition() const noexcept { return position_; }
 
     //------------------------------------------------------------------------
     // サイズとオフセット
     //------------------------------------------------------------------------
 
-    void SetSize(float width, float height);
-    void SetSize(const Vector2& size);
-    [[nodiscard]] Vector2 GetSize() const;
+    void SetSize(float width, float height) noexcept { size_ = Vector2(width, height); }
+    void SetSize(const Vector2& size) noexcept { size_ = size; }
+    [[nodiscard]] const Vector2& GetSize() const noexcept { return size_; }
 
-    void SetOffset(float x, float y);
-    void SetOffset(const Vector2& offset);
-    [[nodiscard]] Vector2 GetOffset() const;
+    void SetOffset(float x, float y) noexcept { offset_ = Vector2(x, y); }
+    void SetOffset(const Vector2& offset) noexcept { offset_ = offset; }
+    [[nodiscard]] const Vector2& GetOffset() const noexcept { return offset_; }
 
-    //------------------------------------------------------------------------
-    //! @brief 左上と右下の座標からコライダーを設定
-    //! @param min 左上座標（Transform位置からの相対座標）
-    //! @param max 右下座標（Transform位置からの相対座標）
-    //------------------------------------------------------------------------
-    void SetBounds(const Vector2& min, const Vector2& max);
+    void SetBounds(const Vector2& min, const Vector2& max) noexcept {
+        size_ = Vector2(max.x - min.x, max.y - min.y);
+        offset_ = Vector2(min.x + size_.x * 0.5f, min.y + size_.y * 0.5f);
+    }
 
     //------------------------------------------------------------------------
     // レイヤーとマスク
     //------------------------------------------------------------------------
 
-    void SetLayer(uint8_t layer);
-    [[nodiscard]] uint8_t GetLayer() const;
+    void SetLayer(uint8_t layer) noexcept { layer_ = layer; }
+    [[nodiscard]] uint8_t GetLayer() const noexcept { return layer_; }
 
-    void SetMask(uint8_t mask);
-    [[nodiscard]] uint8_t GetMask() const;
+    void SetMask(uint8_t mask) noexcept { mask_ = mask; }
+    [[nodiscard]] uint8_t GetMask() const noexcept { return mask_; }
 
-    [[nodiscard]] bool CanCollideWith(uint8_t otherLayer) const;
+    [[nodiscard]] bool CanCollideWith(uint8_t otherLayer) const noexcept {
+        return (mask_ & otherLayer) != 0;
+    }
 
     //------------------------------------------------------------------------
     // トリガーモード
     //------------------------------------------------------------------------
 
-    void SetTrigger(bool trigger);
-    [[nodiscard]] bool IsTrigger() const;
+    void SetTrigger(bool trigger) noexcept { trigger_ = trigger; }
+    [[nodiscard]] bool IsTrigger() const noexcept { return trigger_; }
 
     //------------------------------------------------------------------------
     // 有効/無効
     //------------------------------------------------------------------------
 
-    void SetColliderEnabled(bool enabled);
-    [[nodiscard]] bool IsColliderEnabled() const;
+    void SetColliderEnabled(bool enabled) noexcept { enabled_ = enabled; }
+    [[nodiscard]] bool IsColliderEnabled() const noexcept { return enabled_; }
 
     //------------------------------------------------------------------------
     // AABB取得
     //------------------------------------------------------------------------
 
-    [[nodiscard]] AABB GetAABB() const;
+    [[nodiscard]] AABB GetAABB() const noexcept {
+        float halfW = size_.x * 0.5f;
+        float halfH = size_.y * 0.5f;
+        float cx = position_.x + offset_.x;
+        float cy = position_.y + offset_.y;
+        return AABB(cx - halfW, cy - halfH, size_.x, size_.y);
+    }
 
     //------------------------------------------------------------------------
     // 衝突コールバック
     //------------------------------------------------------------------------
 
-    void SetOnCollision(CollisionCallback callback);
-    void SetOnCollisionEnter(CollisionCallback callback);
-    void SetOnCollisionExit(CollisionCallback callback);
+    void SetOnCollision(CollisionCallback callback) { onCollision_ = std::move(callback); }
+    void SetOnCollisionEnter(CollisionCallback callback) { onEnter_ = std::move(callback); }
+    void SetOnCollisionExit(CollisionCallback callback) { onExit_ = std::move(callback); }
 
-    //------------------------------------------------------------------------
-    // ハンドル取得（内部使用）
-    //------------------------------------------------------------------------
-
-    [[nodiscard]] ColliderHandle GetHandle() const noexcept { return handle_; }
+    // Manager用：コールバック呼び出し
+    void InvokeOnCollision(Collider2D* other) { if (onCollision_) onCollision_(this, other); }
+    void InvokeOnEnter(Collider2D* other) { if (onEnter_) onEnter_(this, other); }
+    void InvokeOnExit(Collider2D* other) { if (onExit_) onExit_(this, other); }
 
     //------------------------------------------------------------------------
     // ユーザーデータ
@@ -124,23 +172,23 @@ public:
     // Transform同期設定
     //------------------------------------------------------------------------
 
-    //! @brief Transformとの自動同期を設定
-    //! @param sync trueで自動同期、falseで手動更新モード
     void SetSyncWithTransform(bool sync) noexcept { syncWithTransform_ = sync; }
-
-    //! @brief Transformとの自動同期状態を取得
     [[nodiscard]] bool IsSyncWithTransform() const noexcept { return syncWithTransform_; }
 
 private:
-    ColliderHandle handle_;
+    Vector2 position_ = Vector2::Zero;
+    Vector2 size_ = Vector2::Zero;
+    Vector2 offset_ = Vector2::Zero;
 
-    // 初期化用の一時保存（OnAttach前に設定された値を保持）
-    Vector2 initSize_ = Vector2::Zero;
-    Vector2 initOffset_ = Vector2::Zero;
-    uint8_t initLayer_ = CollisionConstants::kDefaultLayer;
-    uint8_t initMask_ = CollisionConstants::kDefaultMask;
-    bool initTrigger_ = false;
-    bool syncWithTransform_ = true;  //!< Transformと自動同期するか
+    uint8_t layer_ = 0x01;
+    uint8_t mask_ = 0xFF;
+    bool trigger_ = false;
+    bool enabled_ = true;
+    bool syncWithTransform_ = true;
 
-    void* userData_ = nullptr;  //!< ユーザー定義データ
+    CollisionCallback onCollision_;
+    CollisionCallback onEnter_;
+    CollisionCallback onExit_;
+
+    void* userData_ = nullptr;
 };

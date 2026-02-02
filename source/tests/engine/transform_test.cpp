@@ -22,32 +22,31 @@ TEST_F(TransformTest, DefaultPosition)
 {
     EXPECT_FLOAT_EQ(transform_.GetPosition().x, 0.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().y, 0.0f);
-    EXPECT_FLOAT_EQ(transform_.GetZ(), 0.0f);
+    EXPECT_FLOAT_EQ(transform_.GetPosition().z, 0.0f);
 }
 
 TEST_F(TransformTest, DefaultRotation)
 {
-    EXPECT_FLOAT_EQ(transform_.GetRotation(), 0.0f);
+    Quaternion q = transform_.GetRotation();
+    EXPECT_FLOAT_EQ(q.x, 0.0f);
+    EXPECT_FLOAT_EQ(q.y, 0.0f);
+    EXPECT_FLOAT_EQ(q.z, 0.0f);
+    EXPECT_FLOAT_EQ(q.w, 1.0f);
 }
 
 TEST_F(TransformTest, DefaultScale)
 {
     EXPECT_FLOAT_EQ(transform_.GetScale().x, 1.0f);
     EXPECT_FLOAT_EQ(transform_.GetScale().y, 1.0f);
+    EXPECT_FLOAT_EQ(transform_.GetScale().z, 1.0f);
 }
 
-TEST_F(TransformTest, SetPositionVector2)
+TEST_F(TransformTest, SetPositionVector3)
 {
-    transform_.SetPosition(Vector2(10.0f, 20.0f));
+    transform_.SetPosition(Vector3(10.0f, 20.0f, 30.0f));
     EXPECT_FLOAT_EQ(transform_.GetPosition().x, 10.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().y, 20.0f);
-}
-
-TEST_F(TransformTest, SetPositionXY)
-{
-    transform_.SetPosition(15.0f, 25.0f);
-    EXPECT_FLOAT_EQ(transform_.GetPosition().x, 15.0f);
-    EXPECT_FLOAT_EQ(transform_.GetPosition().y, 25.0f);
+    EXPECT_FLOAT_EQ(transform_.GetPosition().z, 30.0f);
 }
 
 TEST_F(TransformTest, SetPositionXYZ)
@@ -55,73 +54,63 @@ TEST_F(TransformTest, SetPositionXYZ)
     transform_.SetPosition(1.0f, 2.0f, 3.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().x, 1.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().y, 2.0f);
-    EXPECT_FLOAT_EQ(transform_.GetZ(), 3.0f);
+    EXPECT_FLOAT_EQ(transform_.GetPosition().z, 3.0f);
 }
 
-TEST_F(TransformTest, GetPosition3D)
+TEST_F(TransformTest, TranslateVector3)
 {
-    transform_.SetPosition(5.0f, 10.0f, 15.0f);
-    Vector3 pos = transform_.GetPosition3D();
-    EXPECT_FLOAT_EQ(pos.x, 5.0f);
-    EXPECT_FLOAT_EQ(pos.y, 10.0f);
-    EXPECT_FLOAT_EQ(pos.z, 15.0f);
-}
-
-TEST_F(TransformTest, TranslateXY)
-{
-    transform_.SetPosition(10.0f, 20.0f);
-    transform_.Translate(5.0f, -5.0f);
+    transform_.SetPosition(10.0f, 20.0f, 30.0f);
+    transform_.Translate(Vector3(5.0f, -5.0f, 10.0f));
     EXPECT_FLOAT_EQ(transform_.GetPosition().x, 15.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().y, 15.0f);
+    EXPECT_FLOAT_EQ(transform_.GetPosition().z, 40.0f);
 }
 
-TEST_F(TransformTest, TranslateVector2)
+TEST_F(TransformTest, TranslateXYZ)
 {
-    transform_.SetPosition(10.0f, 20.0f);
-    transform_.Translate(Vector2(3.0f, 7.0f));
+    transform_.SetPosition(10.0f, 20.0f, 30.0f);
+    transform_.Translate(3.0f, 7.0f, -10.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().x, 13.0f);
     EXPECT_FLOAT_EQ(transform_.GetPosition().y, 27.0f);
+    EXPECT_FLOAT_EQ(transform_.GetPosition().z, 20.0f);
 }
 
 //============================================================================
 // Rotation テスト
 //============================================================================
-TEST_F(TransformTest, SetRotationRadians)
+TEST_F(TransformTest, SetRotationQuaternion)
 {
-    float radians = DirectX::XM_PI / 4.0f;  // 45度
-    transform_.SetRotation(radians);
-    EXPECT_FLOAT_EQ(transform_.GetRotation(), radians);
+    Quaternion q = Quaternion::CreateFromAxisAngle(Vector3::UnitZ, DirectX::XM_PI / 4.0f);
+    transform_.SetRotation(q);
+    Quaternion result = transform_.GetRotation();
+    EXPECT_NEAR(result.x, q.x, 0.001f);
+    EXPECT_NEAR(result.y, q.y, 0.001f);
+    EXPECT_NEAR(result.z, q.z, 0.001f);
+    EXPECT_NEAR(result.w, q.w, 0.001f);
 }
 
-TEST_F(TransformTest, SetRotationDegrees)
+TEST_F(TransformTest, RotateAroundAxis)
 {
-    transform_.SetRotationDegrees(90.0f);
-    EXPECT_FLOAT_EQ(transform_.GetRotationDegrees(), 90.0f);
-    EXPECT_FLOAT_EQ(transform_.GetRotation(), DirectX::XM_PI / 2.0f);
-}
+    transform_.SetRotation(Quaternion::Identity);
+    transform_.Rotate(Vector3::UnitY, DirectX::XM_PI / 2.0f);
 
-TEST_F(TransformTest, Rotate)
-{
-    transform_.SetRotation(0.0f);
-    transform_.Rotate(DirectX::XM_PI);
-    EXPECT_FLOAT_EQ(transform_.GetRotation(), DirectX::XM_PI);
-}
-
-TEST_F(TransformTest, RotateDegrees)
-{
-    transform_.SetRotationDegrees(0.0f);
-    transform_.RotateDegrees(45.0f);
-    EXPECT_FLOAT_EQ(transform_.GetRotationDegrees(), 45.0f);
+    Quaternion expected = Quaternion::CreateFromAxisAngle(Vector3::UnitY, DirectX::XM_PI / 2.0f);
+    Quaternion result = transform_.GetRotation();
+    EXPECT_NEAR(result.x, expected.x, 0.001f);
+    EXPECT_NEAR(result.y, expected.y, 0.001f);
+    EXPECT_NEAR(result.z, expected.z, 0.001f);
+    EXPECT_NEAR(result.w, expected.w, 0.001f);
 }
 
 //============================================================================
 // Scale テスト
 //============================================================================
-TEST_F(TransformTest, SetScaleVector2)
+TEST_F(TransformTest, SetScaleVector3)
 {
-    transform_.SetScale(Vector2(2.0f, 3.0f));
+    transform_.SetScale(Vector3(2.0f, 3.0f, 4.0f));
     EXPECT_FLOAT_EQ(transform_.GetScale().x, 2.0f);
     EXPECT_FLOAT_EQ(transform_.GetScale().y, 3.0f);
+    EXPECT_FLOAT_EQ(transform_.GetScale().z, 4.0f);
 }
 
 TEST_F(TransformTest, SetScaleUniform)
@@ -129,29 +118,34 @@ TEST_F(TransformTest, SetScaleUniform)
     transform_.SetScale(5.0f);
     EXPECT_FLOAT_EQ(transform_.GetScale().x, 5.0f);
     EXPECT_FLOAT_EQ(transform_.GetScale().y, 5.0f);
-}
-
-TEST_F(TransformTest, SetScaleXY)
-{
-    transform_.SetScale(1.5f, 2.5f);
-    EXPECT_FLOAT_EQ(transform_.GetScale().x, 1.5f);
-    EXPECT_FLOAT_EQ(transform_.GetScale().y, 2.5f);
+    EXPECT_FLOAT_EQ(transform_.GetScale().z, 5.0f);
 }
 
 //============================================================================
-// Pivot テスト
+// 方向ベクトルテスト
 //============================================================================
-TEST_F(TransformTest, DefaultPivot)
+TEST_F(TransformTest, GetForwardDefault)
 {
-    EXPECT_FLOAT_EQ(transform_.GetPivot().x, 0.0f);
-    EXPECT_FLOAT_EQ(transform_.GetPivot().y, 0.0f);
+    Vector3 forward = transform_.GetForward();
+    EXPECT_NEAR(forward.x, 0.0f, 0.001f);
+    EXPECT_NEAR(forward.y, 0.0f, 0.001f);
+    EXPECT_NEAR(forward.z, 1.0f, 0.001f);  // LH forward is +Z
 }
 
-TEST_F(TransformTest, SetPivotVector2)
+TEST_F(TransformTest, GetRightDefault)
 {
-    transform_.SetPivot(Vector2(50.0f, 50.0f));
-    EXPECT_FLOAT_EQ(transform_.GetPivot().x, 50.0f);
-    EXPECT_FLOAT_EQ(transform_.GetPivot().y, 50.0f);
+    Vector3 right = transform_.GetRight();
+    EXPECT_NEAR(right.x, 1.0f, 0.001f);
+    EXPECT_NEAR(right.y, 0.0f, 0.001f);
+    EXPECT_NEAR(right.z, 0.0f, 0.001f);
+}
+
+TEST_F(TransformTest, GetUpDefault)
+{
+    Vector3 up = transform_.GetUp();
+    EXPECT_NEAR(up.x, 0.0f, 0.001f);
+    EXPECT_NEAR(up.y, 1.0f, 0.001f);
+    EXPECT_NEAR(up.z, 0.0f, 0.001f);
 }
 
 //============================================================================
@@ -243,89 +237,50 @@ TEST_F(TransformTest, PreventCyclicReference)
 //============================================================================
 TEST_F(TransformTest, WorldPositionWithoutParent)
 {
-    transform_.SetPosition(100.0f, 200.0f);
-    Vector2 worldPos = transform_.GetWorldPosition();
+    transform_.SetPosition(100.0f, 200.0f, 50.0f);
+    Vector3 worldPos = transform_.GetWorldPosition();
     EXPECT_FLOAT_EQ(worldPos.x, 100.0f);
     EXPECT_FLOAT_EQ(worldPos.y, 200.0f);
+    EXPECT_FLOAT_EQ(worldPos.z, 50.0f);
 }
 
 TEST_F(TransformTest, WorldPositionWithParent)
 {
     Transform parent;
-    parent.SetPosition(100.0f, 100.0f);
+    parent.SetPosition(100.0f, 100.0f, 0.0f);
 
     transform_.SetParent(&parent);
-    transform_.SetPosition(50.0f, 50.0f);
+    transform_.SetPosition(50.0f, 50.0f, 10.0f);
 
-    Vector2 worldPos = transform_.GetWorldPosition();
+    Vector3 worldPos = transform_.GetWorldPosition();
     EXPECT_FLOAT_EQ(worldPos.x, 150.0f);
     EXPECT_FLOAT_EQ(worldPos.y, 150.0f);
+    EXPECT_FLOAT_EQ(worldPos.z, 10.0f);
 }
 
 TEST_F(TransformTest, WorldRotationWithoutParent)
 {
-    transform_.SetRotationDegrees(45.0f);
-    float worldRot = transform_.GetWorldRotation();
-    EXPECT_NEAR(ToDegrees(worldRot), 45.0f, 0.01f);
-}
-
-TEST_F(TransformTest, WorldRotationWithParent)
-{
-    Transform parent;
-    parent.SetRotationDegrees(30.0f);
-
-    transform_.SetParent(&parent);
-    transform_.SetRotationDegrees(15.0f);
-
-    float worldRot = transform_.GetWorldRotation();
-    EXPECT_NEAR(ToDegrees(worldRot), 45.0f, 0.01f);
+    Quaternion q = Quaternion::CreateFromAxisAngle(Vector3::UnitZ, DirectX::XM_PI / 4.0f);
+    transform_.SetRotation(q);
+    Quaternion worldRot = transform_.GetWorldRotation();
+    EXPECT_NEAR(worldRot.x, q.x, 0.001f);
+    EXPECT_NEAR(worldRot.y, q.y, 0.001f);
+    EXPECT_NEAR(worldRot.z, q.z, 0.001f);
+    EXPECT_NEAR(worldRot.w, q.w, 0.001f);
 }
 
 TEST_F(TransformTest, WorldScaleWithParent)
 {
     Transform parent;
-    parent.SetScale(2.0f, 3.0f);
+    parent.SetScale(Vector3(2.0f, 3.0f, 1.5f));
 
     transform_.SetParent(&parent);
-    transform_.SetScale(1.5f, 2.0f);
+    transform_.SetScale(Vector3(1.5f, 2.0f, 2.0f));
 
-    Vector2 worldScale = transform_.GetWorldScale();
+    Vector3 worldScale = transform_.GetWorldScale();
     EXPECT_FLOAT_EQ(worldScale.x, 3.0f);   // 2.0 * 1.5
     EXPECT_FLOAT_EQ(worldScale.y, 6.0f);   // 3.0 * 2.0
-}
-
-//============================================================================
-// 3D回転テスト
-//============================================================================
-TEST_F(TransformTest, Default3DRotationDisabled)
-{
-    EXPECT_FALSE(transform_.Is3DRotationEnabled());
-}
-
-TEST_F(TransformTest, Enable3DRotation)
-{
-    transform_.Enable3DRotation();
-    EXPECT_TRUE(transform_.Is3DRotationEnabled());
-}
-
-TEST_F(TransformTest, Disable3DRotation)
-{
-    transform_.Enable3DRotation();
-    transform_.Disable3DRotation();
-    EXPECT_FALSE(transform_.Is3DRotationEnabled());
-}
-
-TEST_F(TransformTest, SetRotation3DQuaternion)
-{
-    Quaternion q = Quaternion::CreateFromAxisAngle(Vector3::UnitY, DirectX::XM_PI / 2.0f);
-    transform_.SetRotation3D(q);
-
-    EXPECT_TRUE(transform_.Is3DRotationEnabled());
-    Quaternion result = transform_.GetRotation3D();
-    EXPECT_NEAR(result.x, q.x, 0.001f);
-    EXPECT_NEAR(result.y, q.y, 0.001f);
-    EXPECT_NEAR(result.z, q.z, 0.001f);
-    EXPECT_NEAR(result.w, q.w, 0.001f);
+    EXPECT_FLOAT_EQ(worldScale.z, 3.0f);   // 1.5 * 2.0
 }
 
 } // namespace

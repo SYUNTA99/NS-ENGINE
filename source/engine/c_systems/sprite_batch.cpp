@@ -6,6 +6,8 @@
 #include "engine/component/transform.h"
 #include "engine/component/camera2d.h"
 #include "engine/component/animator.h"
+#include "engine/ecs/components/sprite_data.h"
+#include "engine/ecs/components/transform_data.h"
 #include "engine/graphics2d/render_state_manager.h"
 #include "dx11/graphics_device.h"
 #include "dx11/graphics_context.h"
@@ -352,10 +354,14 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform& transfor
         );
     }
 
-    // Transformからパラメータ取得
-    Vector2 position = transform.GetPosition();
-    float rotation = transform.GetRotation();
-    Vector2 scale = transform.GetScale();
+    // Transformからパラメータ取得（3D→2D変換）
+    const Vector3& pos3 = transform.GetPosition();
+    Vector2 position(pos3.x, pos3.y);
+    // QuaternionからZ軸回転を抽出
+    const Quaternion& q = transform.GetRotation();
+    float rotation = 2.0f * std::atan2(q.z, q.w);
+    const Vector3& scl3 = transform.GetScale();
+    Vector2 scale(scl3.x, scl3.y);
 
     // SpriteRendererのpivotを使用（なければ左上原点）
     Vector2 pivot = renderer.GetPivot();
@@ -381,10 +387,14 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform& transfor
     float frameWidth = static_cast<float>(texture->Width()) * std::abs(uvSize.x);
     float frameHeight = static_cast<float>(texture->Height()) * std::abs(uvSize.y);
 
-    // Transformからパラメータ取得
-    Vector2 position = transform.GetPosition();
-    float rotation = transform.GetRotation();
-    Vector2 scale = transform.GetScale();
+    // Transformからパラメータ取得（3D→2D変換）
+    const Vector3& pos3 = transform.GetPosition();
+    Vector2 position(pos3.x, pos3.y);
+    // QuaternionからZ軸回転を抽出
+    const Quaternion& q = transform.GetRotation();
+    float rotation = 2.0f * std::atan2(q.z, q.w);
+    const Vector3& scl3 = transform.GetScale();
+    Vector2 scale(scl3.x, scl3.y);
 
     // SpriteRendererのpivotを使用
     Vector2 pivot = renderer.GetPivot();
@@ -449,6 +459,83 @@ void SpriteBatch::Draw(const SpriteRenderer& renderer, const Transform& transfor
     info.vertices[1] = { Vector3(p1.x, p1.y, z), Vector2(u1, v0), renderer.GetColor() };
     info.vertices[2] = { Vector3(p2.x, p2.y, z), Vector2(u0, v1), renderer.GetColor() };
     info.vertices[3] = { Vector3(p3.x, p3.y, z), Vector2(u1, v1), renderer.GetColor() };
+
+    spriteQueue_.push_back(info);
+}
+
+void SpriteBatch::Draw(const ECS::SpriteData& sprite, const ECS::TransformData& transform, Texture* texture) {
+    if (!isBegun_) {
+        return;
+    }
+    if (!texture || !sprite.visible) {
+        return;
+    }
+
+    // TransformDataからパラメータ取得
+    Vector2 position = transform.GetPosition2D();
+    float rotation = transform.GetRotationZ();
+    Vector2 scale = transform.GetScale2D();
+
+    // SpriteDataからパラメータ取得
+    Vector2 size = sprite.size;
+    if (size.x <= 0 || size.y <= 0) {
+        size = Vector2(
+            static_cast<float>(texture->Width()),
+            static_cast<float>(texture->Height())
+        );
+    }
+
+    // スプライトサイズ
+    float width = size.x * scale.x;
+    float height = size.y * scale.y;
+
+    // 原点（pivot）
+    Vector2 origin = sprite.pivot;
+
+    // 4頂点の計算（原点を考慮）
+    float x0 = -origin.x * scale.x;
+    float y0 = -origin.y * scale.y;
+    float x1 = x0 + width;
+    float y1 = y0 + height;
+
+    // 回転行列
+    float cosR = std::cos(rotation);
+    float sinR = std::sin(rotation);
+
+    auto rotatePoint = [&](float x, float y) -> Vector2 {
+        return Vector2(
+            x * cosR - y * sinR + position.x,
+            x * sinR + y * cosR + position.y
+        );
+    };
+
+    // UV座標（uvOffset + uvSize から計算）
+    float u0 = sprite.uvOffset.x;
+    float v0 = sprite.uvOffset.y;
+    float u1 = sprite.uvOffset.x + sprite.uvSize.x;
+    float v1 = sprite.uvOffset.y + sprite.uvSize.y;
+
+    // 反転
+    if (sprite.flipX) std::swap(u0, u1);
+    if (sprite.flipY) std::swap(v0, v1);
+
+    SpriteInfo info;
+    info.texture = texture;
+    info.sortingLayer = sprite.sortingLayer;
+    info.orderInLayer = sprite.orderInLayer;
+
+    Vector2 p0 = rotatePoint(x0, y0);
+    Vector2 p1 = rotatePoint(x1, y0);
+    Vector2 p2 = rotatePoint(x0, y1);
+    Vector2 p3 = rotatePoint(x1, y1);
+
+    // sortingLayer/orderInLayerから深度値を計算
+    float z = CalculateDepth(sprite.sortingLayer, sprite.orderInLayer);
+
+    info.vertices[0] = { Vector3(p0.x, p0.y, z), Vector2(u0, v0), sprite.color };
+    info.vertices[1] = { Vector3(p1.x, p1.y, z), Vector2(u1, v0), sprite.color };
+    info.vertices[2] = { Vector3(p2.x, p2.y, z), Vector2(u0, v1), sprite.color };
+    info.vertices[3] = { Vector3(p3.x, p3.y, z), Vector2(u1, v1), sprite.color };
 
     spriteQueue_.push_back(info);
 }

@@ -25,21 +25,18 @@ Camera3D::Camera3D(float fovDegrees, float aspectRatio)
 void Camera3D::OnAttach()
 {
     transform_ = GetOwner()->GetComponent<Transform>();
-    if (transform_) {
-        transform_->Enable3DRotation();
-    }
 }
 
 //----------------------------------------------------------------------------
 Vector3 Camera3D::GetPosition() const noexcept
 {
-    return transform_ ? transform_->GetPosition3D() : Vector3::Zero;
+    return transform_ ? transform_->GetPosition() : Vector3::Zero;
 }
 
 //----------------------------------------------------------------------------
 void Camera3D::SetPosition(const Vector3& position) noexcept
 {
-    if (transform_) transform_->SetPosition3D(position);
+    if (transform_) transform_->SetPosition(position);
 }
 
 //----------------------------------------------------------------------------
@@ -51,25 +48,25 @@ void Camera3D::SetPosition(float x, float y, float z) noexcept
 //----------------------------------------------------------------------------
 void Camera3D::Translate(const Vector3& delta) noexcept
 {
-    if (transform_) transform_->Translate(delta.x, delta.y, delta.z);
+    if (transform_) transform_->Translate(delta);
 }
 
 //----------------------------------------------------------------------------
 Quaternion Camera3D::GetRotation() const noexcept
 {
-    return transform_ ? transform_->GetRotation3D() : Quaternion::Identity;
+    return transform_ ? transform_->GetRotation() : Quaternion::Identity;
 }
 
 //----------------------------------------------------------------------------
 void Camera3D::SetRotation(const Quaternion& rotation) noexcept
 {
-    if (transform_) transform_->SetRotation3D(rotation);
+    if (transform_) transform_->SetRotation(rotation);
 }
 
 //----------------------------------------------------------------------------
 void Camera3D::SetRotation(float pitch, float yaw, float roll) noexcept
 {
-    if (transform_) transform_->SetRotation3D(pitch, yaw, roll);
+    if (transform_) transform_->SetRotation(Quaternion::CreateFromYawPitchRoll(yaw, pitch, roll));
 }
 
 //----------------------------------------------------------------------------

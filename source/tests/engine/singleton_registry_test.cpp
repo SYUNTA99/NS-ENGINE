@@ -104,7 +104,7 @@ TEST(SingletonIdTest, BitwiseAndMasksFlags)
 TEST(SingletonIdTest, BitwiseNotInvertsFlags)
 {
     SingletonId result = ~SingletonId::None;
-    EXPECT_NE(static_cast<uint32_t>(result), 0);
+    EXPECT_NE(static_cast<uint32_t>(result), 0u);
 }
 
 } // namespace

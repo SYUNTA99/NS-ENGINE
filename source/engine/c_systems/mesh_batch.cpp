@@ -7,6 +7,8 @@
 #include "engine/component/camera3d.h"
 #include "engine/component/mesh_renderer.h"
 #include "engine/component/transform.h"
+#include "engine/ecs/components/mesh_data.h"
+#include "engine/ecs/components/transform_data.h"
 #include "engine/mesh/mesh_manager.h"
 #include "engine/mesh/mesh.h"
 #include "engine/material/material_manager.h"
@@ -379,6 +381,45 @@ void MeshBatch::Draw(const MeshRenderer& renderer, Transform& transform)
 
         DrawCommand cmd;
         cmd.mesh = mesh;
+        cmd.material = material;
+        cmd.subMeshIndex = i;
+        cmd.worldMatrix = world;
+
+        Vector3 meshCenter = Vector3(world._41, world._42, world._43);
+        cmd.distanceToCamera = (meshCenter - cameraPosition_).LengthSquared();
+
+        drawQueue_.push_back(cmd);
+    }
+}
+
+void MeshBatch::Draw(const ECS::MeshData& meshData, const ECS::TransformData& transform)
+{
+    if (!isBegun_) {
+        return;
+    }
+
+    if (!meshData.visible || !meshData.mesh.IsValid()) {
+        return;
+    }
+
+    // ワールド行列を取得
+    const Matrix& world = transform.worldMatrix;
+
+    // メッシュを取得
+    Mesh* meshPtr = MeshManager::Get().Get(meshData.mesh);
+    if (!meshPtr) {
+        return;
+    }
+
+    const auto& subMeshes = meshPtr->GetSubMeshes();
+    for (uint32_t i = 0; i < subMeshes.size(); ++i) {
+        MaterialHandle material = meshData.GetMaterial(i);
+        if (!material.IsValid() && !meshData.materials.empty()) {
+            material = meshData.materials[0];  // フォールバック
+        }
+
+        DrawCommand cmd;
+        cmd.mesh = meshData.mesh;
         cmd.material = material;
         cmd.subMeshIndex = i;
         cmd.worldMatrix = world;
