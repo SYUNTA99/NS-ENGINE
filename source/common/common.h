@@ -1,9 +1,9 @@
-// =============================================================================
-// File: common.h
-// Description: Master include for common utilities
-// =============================================================================
-
+/// @file common.h
+/// @brief 共通ユーティリティのマスターインクルード
 #pragma once
+
+// Macros（最初にインクルード）
+#include "common/utility/macros.h"
 
 // STL
 #include "common/stl/stl_common.h"
