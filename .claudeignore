@@ -1,0 +1,53 @@
+# ビルド成果物
+build/
+*.exe
+*.obj
+*.pdb
+*.ilk
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# デバッグログ
+debug/
+
+# バイナリアセット（コード理解に不要）
+*.png
+*.jpg
+*.wav
+*.mp3
+*.dds
+
+# テスト用スクリーンショット
+assets/test/
+assets/texture/
+
+# 外部ライブラリ（ビルド済み）
+external/
+*.lib
+
+# Serena MCP (clangd LSP含む)
+.serena/
+
+# VSCode設定（任意）
+.vscode/
+
+# VS起動スクリプト (Claude Code不要)
+@open_project.cmd
+
+# GitHub Actions (CI設定)
+.github/
+
+# テスト (現在無効化中)
+tests/
+
+# ビルドツール
+tools/
+
+# CodeRabbit設定
+.coderabbit.yaml
+
+# Gemini CLI設定
+GEMINI.md

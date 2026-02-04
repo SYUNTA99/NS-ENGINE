@@ -129,83 +129,8 @@ Source/Engine/
 
 # Plan Mode
 
-## 使い分け
-
-| 状況 | プラン形式 |
-|------|-----------|
-| 小さな変更、構造が明確 | コード付き |
-| 大きな設計変更、方針比較 | 文章のみ |
-
-## 計画に含めること
-
-- 目的
-- 変更対象ファイル
-- アプローチ（概念レベル）
-- 検証方法（ビルド/テスト/動作確認）
-- 影響範囲
-- TODOリスト（実装時にチェック）
-
-```markdown
-- [ ] ファイルA修正
-- [ ] ファイルB追加
-- [x] 完了したらチェック
-```
-
-※ TODO が 10 項目を超える場合 → 「大規模機能の計画」へ
-
-## 文章のみプランの場合
-
-コードは書かない。実装は承認後に改めて考える。
-
-## 大きな変更時の確認
-
-1. 既存実装を残すか削除するか質問
-2. 削除する場合：新実装完成→動作確認→削除計画→削除実行
-
-## 大規模機能の計画
-
-### いつ使うか
-
-通常の計画で TODO が 10 項目を超える、または複数の独立したサブシステムにまたがる場合。
-
-### 構造
-
-```
-.claude/plans/<feature-name>/
-  README.md           ← 概要とサブ計画へのリンク（TODO は書かない）
-  <sub-topic-1>.md    ← 実装計画（TODO 必須）
-  <sub-topic-2>.md
-  ...
-```
-
-### 例: RHI実装
-
-README.md にサブ計画へのリンクを列挙:
-- [GPUデバイス抽象化](gpu-device.md)
-- [テクスチャリソース](texture-resource.md)
-- [コマンドバッファ](command-buffer.md)
-
-各 .md は TODO 5 項目以内の実装計画。
-
-### 細分化の基準
-
-1 セッションで完了できるサイズまで分割する。
-目安: 実装 TODO が 5 項目以内に収まればそれ以上分割しない。
-超えるならさらにファイルを分ける。
-
-### セッション再開時
-
-新しいセッションや `/compact` 後は、まず `.claude/plans/` 配下の README.md を読み、
-未完了のサブ計画から作業を再開すること。
-
-### 計画の変更
-
-実装中に計画と乖離した場合、先に計画ファイルを更新してから作業を続行する。
-
-### TODO の更新
-
-サブ計画の TODO は、実装完了時にその場でチェックを付けること。
-全 TODO 完了後、README.md 側のリンクにも完了を明記する。
+→ 計画: `/plan-large-scale` スキル（大規模機能の分割・追跡）
+→ 実装: `/planning-with-files` スキル（作業記憶の永続化）
 
 ---
 
@@ -249,18 +174,14 @@ README.md にサブ計画へのリンクを列挙:
 
 # 開発ワークフロー
 
-**Windowsコマンドは `powershell -Command` 経由で実行。シェルは `/usr/bin/bash`（Windows上でも）。パスは `/` で書く。**
+**Windowsコマンドは `powershell -Command` 経由で実行**
 
 ```bash
 # 1. パス指定
 C:/Users/nanat/file.txt                    # ✓ フォワードスラッシュ
 C:\Users\nanat\file.txt                    # ✗ エスケープと解釈される
 
-# 2. Windowsコマンド実行
-powershell -Command "dir"                  # ✓ powershell経由
-dir                                        # ✗ bashで直接実行不可
-
-# 3. hooks のパス
+# 2. hooks のパス
 "bash \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/hook.sh\""  # ✓ 絶対パス
 "bash \"$PROJECT_ROOT/.claude/hooks/hook.sh\""                     # ✗ 環境変数は展開されない
 ```
