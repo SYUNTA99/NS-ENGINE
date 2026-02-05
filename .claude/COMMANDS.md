@@ -63,6 +63,15 @@
 | [`/security-scan`](skills/security-scan/SKILL.md) | セキュリティ脆弱性スキャン |
 | [`/dependency-audit`](skills/dependency-audit/SKILL.md) | 依存関係の脆弱性を監査 |
 
+## 計画・レビュー
+
+| コマンド | 説明 |
+|----------|------|
+| [`/planning-with-files`](skills/planning-with-files/SKILL.md) | ファイルベースの計画管理（task_plan.md, findings.md, progress.md） |
+| [`/plan-doc-checker`](skills/plan-doc-checker/SKILL.md) | 計画とドキュメントの整合性チェック（齟齬・完全性・矛盾） |
+| [`/plan-doc-review`](skills/plan-doc-review/SKILL.md) | ドキュメント参照型計画の厳格レビュー |
+| [`/plan-accuracy-predictor`](skills/plan-accuracy-predictor/SKILL.md) | 計画の実装精度を予測・評価 |
+
 ## ドキュメント
 
 | コマンド | 説明 |
