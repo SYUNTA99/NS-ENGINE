@@ -10,6 +10,9 @@
 - ビルド・テスト方法は書かない（スキルにある）
 
 ---
+## ディレクトリ命名規則
+
+- **フォルダ名: PascalCase**
 
 # モジュール構造
 
@@ -50,13 +53,6 @@ Source/Engine/
 
 - Public/Internal/Private全て `NS::Module::`
 - 内部専用型: `NS::Module::Private::`
-
----
-
-# Plan Mode
-
-→ 計画: `/plan-large-scale` スキル（大規模機能の分割・追跡）
-→ 実装: `/planning-with-files` スキル（作業記憶の永続化）
 
 ---
 
