@@ -10,7 +10,8 @@
       "Bash(build\\bin\\:*)",
       "Bash(premake5:*)",
       "Bash(msbuild:*)",
-      "Bash(devenv:*)"
+      "Bash(devenv:*)",
+      "Bash(powershell*RecycleBin*)"
     ],
     "deny": [
       "Read(./.env)",
@@ -24,9 +25,14 @@
       "Write(./.env)",
       "Write(./.env.*)",
       "Write(./secrets/**)",
+      "Bash(rm *)",
       "Bash(rm -rf *)",
+      "Bash(del *)",
       "Bash(del /s /q *)",
+      "Bash(rd *)",
       "Bash(rd /s /q *)",
+      "Bash(rmdir *)",
+      "Bash(Remove-Item *)",
       "Bash(git push --force *)",
       "Bash(git push -f *)",
       "Bash(git reset --hard *)",

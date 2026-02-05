@@ -1,3 +1,8 @@
+---
+paths:
+  - "Source/Engine/platform/**"
+---
+
 # HAL（Hardware Abstraction Layer）設計原則
 
 ハードウェア・OS固有機能の抽象化レイヤー。

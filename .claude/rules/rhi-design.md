@@ -1,3 +1,8 @@
+---
+paths:
+  - "Source/Engine/graphics/**"
+---
+
 # RHI（Render Hardware Interface）設計原則
 
 グラフィックスAPI（DirectX 12、Vulkan等）の抽象化レイヤー。
