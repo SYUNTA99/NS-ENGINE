@@ -100,6 +100,55 @@ project "common"
     }
 
 --============================================================================
+-- HAL (Hardware Abstraction Layer)
+--============================================================================
+project "hal"
+    kind "StaticLib"
+    location "build/hal"
+
+    targetdir (bindir .. "/%{prj.name}")
+    objdir (objdir_base .. "/%{prj.name}")
+
+    files {
+        "source/engine/hal/Public/**.h",
+        "source/engine/hal/Private/**.cpp",
+        "source/engine/hal/Private/**.h"
+    }
+
+    includedirs {
+        "source/engine/hal/Public",
+        "source"  -- commonモジュールをインクルードパスに追加
+    }
+
+    -- Windows固有設定
+    filter "system:windows"
+        defines {
+            "NS_COMPILED_PLATFORM=Windows"
+        }
+        links {
+            "dbghelp",  -- スタックウォーク用
+            "ole32"     -- COM用
+        }
+
+    -- ビルド構成別定義
+    filter "configurations:Debug"
+        defines { "NS_DEBUG=1", "NS_DEVELOPMENT=1" }
+        symbols "On"
+
+    filter "configurations:Release or Burst"
+        defines { "NS_RELEASE=1" }
+        optimize "Full"
+
+    filter {}
+
+    warnings "Extra"
+    flags { "FatalWarnings" }
+    buildoptions { "/utf-8", "/permissive-", "/FS" }
+
+    -- リンカー警告を無視 (Windows SDK重複定義)
+    linkoptions { "/ignore:4006" }
+
+--============================================================================
 -- dx11ライブラリ
 --============================================================================
 project "dx11"
@@ -176,9 +225,15 @@ project "engine"
         "source/engine/**.cpp"
     }
 
+    -- halプロジェクトのファイルは除外（別プロジェクトでビルド）
+    removefiles {
+        "source/engine/hal/**"
+    }
+
     includedirs {
         "source",
         "source/engine",
+        "source/engine/hal/Public",
         "external/DirectXTex/DirectXTex",
         "external/DirectXTK/Inc",
         -- NuGetパッケージ
@@ -200,6 +255,7 @@ project "engine"
     filter {}
 
     links {
+        "hal",
         "dx11",
         "DirectXTex",
         "DirectXTK"
