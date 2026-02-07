@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "../actor.h"
 #include "../archetype.h"
 #include "query_cache.h"

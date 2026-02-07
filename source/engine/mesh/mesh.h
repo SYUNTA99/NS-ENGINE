@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "vertex_format.h"
 #include "dx11/gpu/buffer.h"
 #include "common/utility/non_copyable.h"

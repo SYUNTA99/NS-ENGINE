@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "dx11/gpu_common.h"
 #include "dx11/gpu/gpu.h"
 #include "dx11/compile/shader_type.h"

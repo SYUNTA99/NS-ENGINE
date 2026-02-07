@@ -2,6 +2,7 @@
 /// @brief エラー定義用マクロ
 #pragma once
 
+
 #include "common/result/Error/ErrorCategory.h"
 #include "common/result/Error/ErrorRange.h"
 #include "common/result/Error/ErrorResultBase.h"

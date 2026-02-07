@@ -2,6 +2,7 @@
 /// @brief エラーの性質分類（時間的性質、重大度）
 #pragma once
 
+
 #include "common/result/Core/Result.h"
 #include "common/result/Core/ResultTraits.h"
 #include <cstdint>

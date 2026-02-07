@@ -2,6 +2,7 @@
 /// @brief Result操作用ヘルパーマクロ
 #pragma once
 
+
 #include "common/result/Core/Result.h"
 
 //=============================================================================

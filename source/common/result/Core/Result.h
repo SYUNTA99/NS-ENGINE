@@ -2,6 +2,7 @@
 /// @brief 処理結果を表す型
 #pragma once
 
+
 #include "common/result/Core/ResultBase.h"
 #include <type_traits>
 

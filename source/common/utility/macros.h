@@ -31,33 +31,12 @@
 // 1. 言語サポートマクロ
 // =============================================================================
 
-/// アライメント指定
-#define NS_ALIGNAS(n) alignas(n)
-
-/// アライメント取得
-#define NS_ALIGNOF(type) alignof(type)
-
-/// 戻らない関数
-#define NS_NORETURN [[noreturn]]
-
-/// 例外を投げない
-#define NS_NOEXCEPT noexcept
-
-/// 仮想関数オーバーライド
-#define NS_OVERRIDE override
-
-/// 戻り値無視警告
-#define NS_NODISCARD [[nodiscard]]
-
 /// 定数初期化
 #if __cplusplus >= 202002L
 #define NS_CONSTINIT constinit
 #else
 #define NS_CONSTINIT
 #endif
-
-/// C++17 maybe_unused
-#define NS_MAYBE_UNUSED [[maybe_unused]]
 
 // =============================================================================
 // 2. インライン制御マクロ
@@ -85,15 +64,6 @@
 // 3. 警告抑制マクロ
 // =============================================================================
 
-/// 未使用変数警告抑制
-#define NS_UNUSED(var) (void)(var)
-
-/// 暗黙変換の意図明示（何もしないが意図を示す）
-#define NS_IMPLICIT
-
-/// 定数条件分岐の意図明示
-#define NS_STATIC_CONDITION(cond) (cond)
-
 /// 非推奨マーク
 #if NS_COMPILER_MSVC
 #define NS_DEPRECATED(msg) __declspec(deprecated(msg))
@@ -102,9 +72,6 @@
 #else
 #define NS_DEPRECATED(msg)
 #endif
-
-/// [[deprecated]] 属性版
-#define NS_DEPRECATED_ATTR(msg) [[deprecated(msg)]]
 
 // =============================================================================
 // 4. メモリレイアウト制御
@@ -187,9 +154,6 @@ template <typename T, std::size_t N> constexpr std::size_t NsArraySizeImpl(const
 /// トークン連結
 #define NS_MACRO_CONCATENATE_IMPL(a, b) a##b
 #define NS_MACRO_CONCATENATE(a, b) NS_MACRO_CONCATENATE_IMPL(a, b)
-
-/// switch フォールスルー
-#define NS_FALL_THROUGH [[fallthrough]]
 
 /// 到達不能 default
 #if NS_COMPILER_MSVC

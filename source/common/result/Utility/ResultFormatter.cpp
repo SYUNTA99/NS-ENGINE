@@ -1,3 +1,4 @@
+
 /// @file ResultFormatter.cpp
 /// @brief Resultのフォーマット実装
 #include "common/result/Utility/ResultFormatter.h"

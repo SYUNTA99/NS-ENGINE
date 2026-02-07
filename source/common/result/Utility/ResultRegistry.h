@@ -2,6 +2,7 @@
 /// @brief エラー型レジストリ
 #pragma once
 
+
 #include "common/result/Core/Result.h"
 
 #include <atomic>

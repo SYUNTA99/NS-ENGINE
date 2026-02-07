@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "buffer_header.h"
 #include "buffer_element.h"
 #include "internal_buffer_capacity.h"

@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "../access_mode.h"
 #include "../actor.h"
 #include "../archetype.h"

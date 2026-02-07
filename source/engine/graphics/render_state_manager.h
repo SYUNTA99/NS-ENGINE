@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "dx11/gpu_common.h"
 #include "dx11/state/blend_state.h"
 #include "dx11/state/sampler_state.h"

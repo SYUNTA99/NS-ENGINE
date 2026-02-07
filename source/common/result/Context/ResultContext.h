@@ -2,6 +2,7 @@
 /// @brief コンテキスト付きResult型
 #pragma once
 
+
 #include "common/result/Context/SourceLocation.h"
 #include "common/result/Core/Result.h"
 #include "common/result/Core/ResultConfig.h"

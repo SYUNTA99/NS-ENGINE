@@ -11,10 +11,10 @@
 
 ## TODO
 
-- [ ] `FileError::ToResult()` メンバ関数を追加
-- [ ] `FileErrorFromResult(NS::Result)` 変換関数を追加（互換性用）
-- [ ] 変換テーブルを実装
-- [ ] 単体テストを追加
+- [x] `FileError::ToResult()` メンバ関数を追加 — file_error.h L52, file_error.cpp L62-98
+- [x] `FileError::FromResult(NS::Result)` 静的関数を追加（互換性用） — file_error.h L57, file_error.cpp L100-140
+- [x] 変換テーブルを実装 — 全14コードの双方向マッピング完了
+- [x] 単体テストを追加 — source/tests/engine/file_error_test.cpp（189行）
 
 ## アプローチ
 
