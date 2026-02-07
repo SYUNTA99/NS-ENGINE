@@ -10,10 +10,10 @@
 
 ## TODO
 
-- [ ] `ResultInvalidMount()` を追加（InvalidMount エラー対応）
-- [ ] `ResultIsNotDirectory()` を追加（IsNotDirectory エラー対応）
-- [ ] エラーコードの説明コメントを追加
-- [ ] FileError::Code との対応表をコメントで記載
+- [x] `ResultMountNotFound()` を追加（InvalidMount エラー対応） — FileSystemResult.h L114, error code 500
+- [x] `ResultNotADirectory()` を追加（IsNotDirectory エラー対応） — FileSystemResult.h L44, error code 7
+- [x] エラーコードの説明コメントを追加 — 各関数にドキュメントコメント記載済み
+- [x] FileError::Code との対応表をコメントで記載 — FileSystemResult.h 冒頭（L4-20）に完全な対応表
 
 ## アプローチ
 

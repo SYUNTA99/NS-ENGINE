@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "animator_state.h"
 #include "animator_parameter.h"
 #include <vector>

@@ -7,6 +7,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "actor.h"
 #include "ecs_assert.h"
 #include <cstdint>

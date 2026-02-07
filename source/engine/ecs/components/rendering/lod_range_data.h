@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "engine/ecs/component_data.h"
 #include <limits>
 #include <cmath>

@@ -2,6 +2,7 @@
 /// @brief 特定エラーを表すコンパイル時型テンプレート
 #pragma once
 
+
 #include "common/result/Core/InternalAccessor.h"
 #include "common/result/Core/ResultBase.h"
 

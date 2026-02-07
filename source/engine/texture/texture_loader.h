@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "dx11/gpu_common.h"
 #include <vector>
 #include <wincodec.h>

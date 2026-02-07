@@ -13,8 +13,8 @@
 
 | # | 計画 | 状態 |
 |---|------|------|
-| 1 | [FileSystemResult拡張](01-filesystem-result-extension.md) | **complete** |
-| 2 | [FileError置き換え](02-file-error-replacement.md) | pending |
+| 1 | [FileSystemResult拡張](01-filesystem-result-extension.md) | **complete** ✅ 確認済み |
+| 2 | [FileError置き換え](02-file-error-replacement.md) | **complete** ✅ |
 | 3 | [FileReadResult置き換え](03-file-read-result-replacement.md) | pending |
 | 4 | [FileOperationResult置き換え](04-file-operation-result-replacement.md) | pending |
 
@@ -33,6 +33,9 @@
 | 変換ユーティリティを用意 | 移行期間中の互換性を確保 |
 | AsyncReadStateは維持 | 状態enumであり、Result型とは概念が異なる |
 | outパラメータでデータ返却 | Result<T>より既存コードとの親和性が高い |
+| nativeError情報は移行時に喪失を許容 | ログ出力で対応。NS::Resultは32bit制約があり追加データを含められない |
+| AsyncReadHandleは今回の移行対象外 | 非同期パターンの再設計が必要。将来的にテンプレート化を検討 |
+| readAsText/readAsCharsはread()のデフォルト実装を利用 | read()の署名変更に伴い自動的に移行される |
 
 ## 移行戦略
 

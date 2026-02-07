@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "common/platform/win32.h"
 #include "common/stl/stl_common.h"
 

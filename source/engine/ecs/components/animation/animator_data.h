@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "engine/ecs/component_data.h"
 #include "engine/math/math_types.h"
 #include <array>

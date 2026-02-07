@@ -2,6 +2,7 @@
 /// @brief モジュールID定義
 #pragma once
 
+
 namespace NS::result
 {
 

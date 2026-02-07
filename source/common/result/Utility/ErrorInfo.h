@@ -2,6 +2,7 @@
 /// @brief エラー情報取得ユーティリティ
 #pragma once
 
+
 #include "common/result/Core/Result.h"
 #include "common/result/Module/ModuleId.h"
 

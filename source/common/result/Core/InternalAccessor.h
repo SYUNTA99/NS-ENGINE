@@ -2,6 +2,7 @@
 /// @brief Result型の内部アクセス用クラス
 #pragma once
 
+
 #include "common/result/Core/Result.h"
 
 namespace NS::result::detail

@@ -7,6 +7,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+
 #include "access_mode.h"
 #include "archetype_storage.h"
 #include <type_traits>

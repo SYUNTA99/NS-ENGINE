@@ -2,6 +2,7 @@
 /// @brief エラー発生箇所情報
 #pragma once
 
+
 #include <cstdint>
 #include <source_location>
 #include <string_view>

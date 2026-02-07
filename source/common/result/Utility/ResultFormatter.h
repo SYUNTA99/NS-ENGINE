@@ -2,6 +2,7 @@
 /// @brief Resultのフォーマットユーティリティ
 #pragma once
 
+
 #include "common/result/Context/ErrorChain.h"
 #include "common/result/Context/ResultContext.h"
 #include "common/result/Core/Result.h"

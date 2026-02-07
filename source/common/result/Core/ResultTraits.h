@@ -2,6 +2,7 @@
 /// @brief Result型の内部表現とビット操作
 #pragma once
 
+
 #include <climits>
 #include <cstdint>
 #include <type_traits>

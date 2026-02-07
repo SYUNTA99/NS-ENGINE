@@ -2,6 +2,7 @@
 /// @brief Result型のCRTP基底クラス
 #pragma once
 
+
 #include "common/result/Core/ResultTraits.h"
 
 namespace NS::result::detail
