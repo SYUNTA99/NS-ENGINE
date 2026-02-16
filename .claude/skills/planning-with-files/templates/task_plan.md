@@ -14,6 +14,11 @@ implementation
 .claude/plans/<feature>/XX-subplan.md
 -->
 
+## OpenSpec
+<!-- 関連する OpenSpec リソースがあれば記載。なければこのセクションを削除。 -->
+<!-- spec: openspec/specs/<module>/spec.md -->
+<!-- change: openspec/changes/<change-name>/ -->
+
 ## Goal
 <!-- 
   WHAT: One clear sentence describing what you're trying to achieve.

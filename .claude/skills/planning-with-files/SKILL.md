@@ -1,7 +1,7 @@
 ---
 name: planning-with-files
 version: "2.10.0-custom"
-description: Implements Manus-style file-based planning for complex tasks. Creates task_plan.md, findings.md, and progress.md in .claude/plans/current/. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls.
+description: Implements Manus-style file-based planning for complex tasks. Creates task_plan.md, findings.md, and progress.md in .claude/plans/current/. OpenSpec双方向連携: 開始時にopenspec/specs/を読み込み、完了時に確定仕様を反映。Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls.
 user-invocable: true
 allowed-tools:
   - Read
@@ -73,13 +73,33 @@ Work like Manus: Use persistent markdown files as your "working memory on disk."
 | `.claude/plans/current/` | Active planning files |
 | `.claude/plans/<feature>/` | Completed/archived plans |
 
+## OpenSpec 連携
+
+タスクが **新機能の設計・API追加・仕様変更** を含む場合のみ連携する。
+バグ修正・リファクタリング・ドキュメント更新など仕様に影響しないタスクでは一切スキップ。
+
+### 開始時: コンテキスト読み込み
+
+タスク内容が仕様関連と判断した場合のみ:
+
+```bash
+powershell -Command "& '.claude/skills/planning-with-files/scripts/openspec-context.ps1' -Module '<module>'"
+```
+
+関連 spec があれば読み、`findings.md` の「OpenSpec コンテキスト」に要約を記載。
+
+### 完了時: 仕様フィードバック
+
+実装で **新しいPublic API・動作仕様の変更・既存仕様の修正** が確定した場合のみ:
+ユーザーに「OpenSpec に仕様を反映しますか？」と確認。承認時 `/opsx:sync` で反映。
+
 ## Quick Start
 
 Before ANY complex task:
 
 1. **Create `.claude/plans/current/` directory**
 2. **Create `task_plan.md`** — Use [templates/task_plan.md](templates/task_plan.md) as reference
-3. **Create `findings.md`** — Use [templates/findings.md](templates/findings.md) as reference
+3. **Create `findings.md`** — Use [templates/findings.md](templates/findings.md) as reference（OpenSpec コンテキストを含む）
 4. **Create `progress.md`** — Use [templates/progress.md](templates/progress.md) as reference
 5. **Re-read plan before decisions** — Refreshes goals in attention window
 6. **Update after each phase** — Mark complete, log errors
@@ -203,7 +223,9 @@ If you can answer these, your context management is solid:
 
 タスク完了時、**ユーザーの明示的な指示があるまで current/ を初期化・削除しない**。
 
-ユーザーがアーカイブを指示した場合のみ:
+完了時チェックリスト:
+1. 実装で新しい仕様が確定した場合 → OpenSpec 仕様フィードバックを提案（上記「完了時」参照）
+2. ユーザーがアーカイブを指示した場合のみ:
 
 ```bash
 mv .claude/plans/current .claude/plans/<feature-name>

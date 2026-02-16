@@ -1,0 +1,26 @@
+schema: spec-driven
+
+context: |
+  3D三人称視点プラットフォーマー/ジャンプアクションゲーム専用エンジン
+  C++20, DirectX 11, Premake5, Visual Studio 2022, Windows 10+
+  モジュール構造: Public/Internal/Private 3層
+  namespace: NS:: (公開), NS::Private::ModuleName:: (内部)
+  ディレクトリ: PascalCase (新規), lowercase (レガシー)
+  ECS: Archetype-Chunk-Handle パターン (16KB SoA)
+  RHI: UE5準拠GPU抽象 (設計完了, dx11統合未実装)
+  座標系: 左手 (DirectX標準)
+
+rules:
+  proposal:
+    - 影響を受けるモジュールを列挙すること
+    - 既存APIへの破壊的変更の有無を明記
+  specs:
+    - WHEN/THEN形式でシナリオを記述
+    - 既存エンジンパターンを参照
+  design:
+    - スレッド安全性を考慮
+    - メモリ管理方針を記述
+    - Public/Internal/Private配置を明記
+  tasks:
+    - ファイル追加時はpremake5再生成ステップを含める
+    - ビルド検証ステップを含める

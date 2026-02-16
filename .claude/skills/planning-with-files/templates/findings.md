@@ -5,8 +5,16 @@
   WHEN: Update after ANY discovery, especially after 2 view/browser/search operations (2-Action Rule).
 -->
 
+## OpenSpec コンテキスト
+<!--
+  WHAT: openspec/specs/ から読み込んだ関連仕様。
+  WHY: 既存の仕様を踏まえて実装するため。
+  WHEN: タスク開始時に自動で読み込む。関連specがなければこのセクションを削除。
+-->
+<!-- openspec/specs/<module>/spec.md から要約 -->
+
 ## Requirements
-<!-- 
+<!--
   WHAT: What the user asked for, broken down into specific requirements.
   WHY: Keeps requirements visible so you don't forget what you're building.
   WHEN: Fill this in during Phase 1 (Requirements & Discovery).
