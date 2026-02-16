@@ -1,4 +1,4 @@
-/// @file RHIUniformBufferLayout.h
+﻿/// @file RHIUniformBufferLayout.h
 /// @brief UniformBufferレイアウト定義・ビルダー
 /// @details シェーダー定数バッファのメモリレイアウト管理、型安全なUniformBufferを提供。
 /// @see 24-01-uniform-buffer-layout.md
@@ -10,8 +10,7 @@
 #include <memory>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
 
     //=========================================================================
     // ERHIUniformType (24-01)
@@ -239,4 +238,4 @@ namespace NS::RHI
     /// パディング挿入用
 #define RHI_UNIFORM_PAD(bytes) uint8 NS_MACRO_CONCATENATE(_pad_, __LINE__)[bytes]
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

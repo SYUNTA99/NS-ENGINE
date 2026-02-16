@@ -1,4 +1,4 @@
-/// @file RHISubmissionThread.h
+﻿/// @file RHISubmissionThread.h
 /// @brief サブミッション/インタラプトスレッド
 /// @details 3段パイプライン（レンダー→サブミッション→インタラプト）のスレッド実装。
 /// @see 01-17b-submission-pipeline.md
@@ -15,13 +15,11 @@
 #include <queue>
 #include <thread>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     struct RHIPayload;
 }
 
-namespace NS::RHI::Private
-{
+namespace NS { namespace RHI { namespace Private {
     class RHIObjectPool;
 
     //=========================================================================
@@ -136,4 +134,4 @@ namespace NS::RHI::Private
         RHIObjectPool* m_objectPools[static_cast<uint8>(ERHIQueueType::Count)] = {};
     };
 
-} // namespace NS::RHI::Private
+}}} // namespace NS::RHI::Private

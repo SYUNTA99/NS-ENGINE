@@ -1,4 +1,4 @@
-/// @file RHISubmission.h
+﻿/// @file RHISubmission.h
 /// @brief RHIPayload・サブミッションキュー型定義
 /// @details レンダースレッドからサブミッションスレッドへの送信単位を定義。
 /// @see 01-17b-submission-pipeline.md
@@ -9,8 +9,7 @@
 #include "RHIFwd.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIPayload: サブミッション単位
     //=========================================================================
@@ -47,4 +46,4 @@ namespace NS::RHI
         uint32 usedAllocatorCount = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

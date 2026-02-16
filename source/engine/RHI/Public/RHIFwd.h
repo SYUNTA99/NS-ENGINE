@@ -1,12 +1,11 @@
-/// @file RHIFwd.h
+﻿/// @file RHIFwd.h
 /// @brief RHI全体の前方宣言
 /// @details 全RHIインターフェースと構造体の前方宣言を提供する。
 ///          循環依存を防ぎ、コンパイル時間を短縮するために使用。
 /// @see 01-01-fwd-macros.md
 #pragma once
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // スマートポインタ
     //=========================================================================
@@ -629,4 +628,4 @@ namespace NS::RHI
     struct RHIPSOWarmupProgress;
     class RHIPSOWarmupManager;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file RHIBufferAllocator.h
+﻿/// @file RHIBufferAllocator.h
 /// @brief バッファメモリアロケーター
 /// @details リニア、リング、プール方式のバッファ割り当て機構を提供。
 /// @see 11-02-buffer-allocator.md
@@ -7,8 +7,7 @@
 #include "IRHIBuffer.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     class IRHIDevice;
 
     //=========================================================================
@@ -404,4 +403,4 @@ namespace NS::RHI
         RHIConstantBufferAllocator m_constantAllocator;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

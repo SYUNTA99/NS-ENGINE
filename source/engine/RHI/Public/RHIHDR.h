@@ -1,4 +1,4 @@
-/// @file RHIHDR.h
+﻿/// @file RHIHDR.h
 /// @brief HDR（High Dynamic Range）サポート
 /// @details HDRメタデータ、カラースペース、出力能力、トーンマッピング、Auto HDRを提供。
 /// @see 12-04-hdr.md
@@ -8,8 +8,7 @@
 #include "RHIPixelFormat.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIHDRMetadataType (12-04)
     //=========================================================================
@@ -205,4 +204,4 @@ namespace NS::RHI
         float shadowRetention = 0.5f;    ///< シャドウ保持強度
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

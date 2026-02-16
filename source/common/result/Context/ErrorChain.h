@@ -1,4 +1,4 @@
-/// @file ErrorChain.h
+﻿/// @file ErrorChain.h
 /// @brief エラーチェーン（原因追跡）
 #pragma once
 
@@ -16,8 +16,7 @@
 #include <string_view>
 #include <vector>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// チェーン内のエラーエントリ
     struct ChainEntry
@@ -237,4 +236,4 @@ namespace NS::result
 
 #endif
 
-} // namespace NS::result
+}} // namespace NS::result

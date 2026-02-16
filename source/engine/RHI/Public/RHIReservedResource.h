@@ -1,4 +1,4 @@
-/// @file RHIReservedResource.h
+﻿/// @file RHIReservedResource.h
 /// @brief Reserved/Sparse Resourceシステム
 /// @details 物理メモリの部分コミットによるリソース管理を提供。
 /// @see 11-06-reserved-resources.md
@@ -7,8 +7,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIReservedResourceCapabilities (11-06)
     //=========================================================================
@@ -86,4 +85,4 @@ namespace NS::RHI
         uint64 totalVirtualSize = 0; ///< 総仮想サイズ（バイト）
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

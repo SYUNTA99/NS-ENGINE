@@ -1,4 +1,4 @@
-/// @file RHITransientAllocator.h
+﻿/// @file RHITransientAllocator.h
 /// @brief Transientリソースアロケーター
 /// @details フレーム内一時リソースの効率的な割り当て・メモリエイリアシングを提供。
 /// @see 23-01-transient-allocator.md
@@ -11,8 +11,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHICommandContext;
     class IRHIFence;
@@ -256,4 +255,4 @@ namespace NS::RHI
         const char* debugName = "TransientHeap";
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

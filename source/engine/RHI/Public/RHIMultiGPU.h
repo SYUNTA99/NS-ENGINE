@@ -1,4 +1,4 @@
-/// @file RHIMultiGPU.h
+﻿/// @file RHIMultiGPU.h
 /// @brief マルチGPUサポート
 /// @details ノード管理、クロスノードリソース共有、AFR/SFRレンダリング支援を提供。
 /// @see 19-04-multi-gpu.md
@@ -9,8 +9,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIDevice;
     class IRHIFence;
@@ -349,4 +348,4 @@ namespace NS::RHI
         uint32 m_screenHeight = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

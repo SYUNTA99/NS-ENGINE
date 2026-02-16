@@ -1,4 +1,4 @@
-/// @file RHIGPUEvent.h
+﻿/// @file RHIGPUEvent.h
 /// @brief GPUイベントマーカーとブレッドクラム
 /// @details イベントマーカー、ブレッドクラム、デバイスロスト診断、プロファイラ統合を提供。
 /// @see 09-03-gpu-event.md
@@ -10,8 +10,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIEventColor (09-03)
     //=========================================================================
@@ -194,4 +193,4 @@ namespace NS::RHI
         uint32 captureFrameCount = 1;      ///< キャプチャフレーム数
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

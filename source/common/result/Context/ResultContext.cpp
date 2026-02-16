@@ -1,12 +1,11 @@
-/// @file ResultContext.cpp
+﻿/// @file ResultContext.cpp
 /// @brief コンテキスト付きResult型の実装
 #include "common/result/Context/ResultContext.h"
 
 #include <algorithm>
 #include <chrono>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     namespace
     {
@@ -134,4 +133,4 @@ namespace NS::result
 
     } // namespace detail
 
-} // namespace NS::result
+}} // namespace NS::result

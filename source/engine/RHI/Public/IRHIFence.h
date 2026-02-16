@@ -1,4 +1,4 @@
-/// @file IRHIFence.h
+﻿/// @file IRHIFence.h
 /// @brief フェンスインターフェース
 /// @details GPU同期のためのフェンス、フェンス値トラッカーを提供。
 /// @see 09-01-fence-interface.md
@@ -9,8 +9,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIFenceDesc (09-01)
     //=========================================================================
@@ -146,4 +145,4 @@ namespace NS::RHI
         uint64 m_nextValue = 1;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

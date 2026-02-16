@@ -1,4 +1,4 @@
-
+﻿
 /// @file ResultFormatter.cpp
 /// @brief Resultのフォーマット実装
 #include "common/result/Utility/ResultFormatter.h"
@@ -7,8 +7,7 @@
 #include <cstring>
 #include <format>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     namespace
     {
@@ -193,4 +192,4 @@ namespace NS::result
         return std::format("0x{:08X}", result.GetRawValue());
     }
 
-} // namespace NS::result
+}} // namespace NS::result

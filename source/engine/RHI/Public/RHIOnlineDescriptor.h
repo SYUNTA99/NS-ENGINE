@@ -1,4 +1,4 @@
-/// @file RHIOnlineDescriptor.h
+﻿/// @file RHIOnlineDescriptor.h
 /// @brief オンラインディスクリプタ管理
 /// @details GPU可視のオンラインディスクリプタヒープ、マネージャー、ステージングを提供。
 /// @see 10-02-online-descriptor.md
@@ -6,8 +6,7 @@
 
 #include "RHIDescriptorHeap.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIOnlineDescriptorHeap (10-02)
     //=========================================================================
@@ -218,4 +217,4 @@ namespace NS::RHI
         uint32 m_batchCapacity = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

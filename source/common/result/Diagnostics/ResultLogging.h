@@ -1,4 +1,4 @@
-/// @file ResultLogging.h
+﻿/// @file ResultLogging.h
 /// @brief Result診断ログ
 #pragma once
 
@@ -11,8 +11,7 @@
 #include <functional>
 #include <string_view>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// ログレベル
     enum class ResultLogLevel
@@ -148,4 +147,4 @@ namespace NS::result
 
 #endif
 
-} // namespace NS::result
+}} // namespace NS::result

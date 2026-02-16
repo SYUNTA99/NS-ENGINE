@@ -1,4 +1,4 @@
-/// @file RHIRefCountPtr.h
+﻿/// @file RHIRefCountPtr.h
 /// @brief 参照カウントスマートポインタ
 /// @details RHIリソースのライフサイクル管理。T は AddRef()/Release()/GetRefCount() を持つこと。
 /// @see 01-11-ref-count-ptr.md
@@ -8,8 +8,7 @@
 #include "RHIMacros.h"
 #include <cstddef>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     /// 参照カウントスマートポインタ
     /// T は AddRef() / Release() / GetRefCount() メソッドを持つ必要がある
     template <typename T> class TRefCountPtr
@@ -267,4 +266,4 @@ namespace NS::RHI
         return TRefCountPtr<To>(dynamic_cast<To*>(from.Get()));
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

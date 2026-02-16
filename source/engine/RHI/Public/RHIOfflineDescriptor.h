@@ -1,4 +1,4 @@
-/// @file RHIOfflineDescriptor.h
+﻿/// @file RHIOfflineDescriptor.h
 /// @brief オフラインディスクリプタ管理
 /// @details CPU専用のオフラインディスクリプタヒープ、タイプ別マネージャー、ビューキャッシュを提供。
 /// @see 10-03-offline-descriptor.md
@@ -6,8 +6,7 @@
 
 #include "RHIDescriptorHeap.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIOfflineDescriptorHeap (10-03)
     //=========================================================================
@@ -192,4 +191,4 @@ namespace NS::RHI
     /// UAVキャッシュ
     using RHIUAVCache = RHIViewCache<IRHIUnorderedAccessView, RHITextureUAVDesc>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file ResultLogging.cpp
+﻿/// @file ResultLogging.cpp
 /// @brief Result診断ログの実装
 #include "common/result/Diagnostics/ResultLogging.h"
 
@@ -10,8 +10,7 @@
 
 #include <cstdio>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     ResultLogger& ResultLogger::Instance() noexcept
     {
@@ -125,4 +124,4 @@ namespace NS::result
         }
     }
 
-} // namespace NS::result
+}} // namespace NS::result

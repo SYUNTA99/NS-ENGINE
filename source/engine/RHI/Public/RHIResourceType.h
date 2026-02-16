@@ -1,4 +1,4 @@
-/// @file RHIResourceType.h
+﻿/// @file RHIResourceType.h
 /// @brief リソースタイプ分類・型安全キャストユーティリティ
 /// @details ERHIResourceTypeの分類関数、DECLARE_RHI_RESOURCE_TYPE マクロ、RHICast/IsA を提供。
 /// @see 01-13-resource-type.md
@@ -7,8 +7,7 @@
 #include "IRHIResource.h"
 #include "RHIRefCountPtr.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // リソースタイプ名取得
     //=========================================================================
@@ -202,4 +201,4 @@ namespace NS::RHI
         return resource && resource->GetResourceType() == type;
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

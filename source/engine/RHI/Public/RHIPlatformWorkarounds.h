@@ -1,4 +1,4 @@
-/// @file RHIPlatformWorkarounds.h
+﻿/// @file RHIPlatformWorkarounds.h
 /// @brief プラットフォーム回避策フラグ
 /// @details GPU/ドライバ固有のバグ・制限を回避するためのフラグシステム。
 /// @see 11-07-platform-workarounds.md
@@ -6,8 +6,7 @@
 
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIPlatformWorkarounds (11-07)
     //=========================================================================
@@ -109,4 +108,4 @@ namespace NS::RHI
     /// @note RHI初期化時にバックエンドが呼び出す
     RHI_API void InitializePlatformWorkarounds(RHIPlatformWorkarounds& outWorkarounds);
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

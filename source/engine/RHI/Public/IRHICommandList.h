@@ -1,4 +1,4 @@
-/// @file IRHICommandList.h
+﻿/// @file IRHICommandList.h
 /// @brief コマンドリストインターフェース
 /// @details 記録されたGPUコマンドを保持するオブジェクト。ライフサイクル、バンドル、プール、統計を提供。
 /// @see 02-05-command-list.md
@@ -8,8 +8,7 @@
 #include "RHIEnums.h"
 #include "RHIResourceType.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHICommandListState
     //=========================================================================
@@ -153,4 +152,4 @@ namespace NS::RHI
         virtual uint32 GetPooledCount() const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

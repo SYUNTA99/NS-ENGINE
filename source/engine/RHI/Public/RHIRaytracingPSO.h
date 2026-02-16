@@ -1,4 +1,4 @@
-/// @file RHIRaytracingPSO.h
+﻿/// @file RHIRaytracingPSO.h
 /// @brief レイトレーシングパイプラインステートオブジェクト
 /// @details DXILライブラリ、ヒットグループ構成、RTPSO記述子、ビルダーを提供。DXR 1.1準拠。
 /// @see 19-03-raytracing-pso.md
@@ -10,8 +10,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIDXILLibraryDesc (19-03)
     //=========================================================================
@@ -248,4 +247,4 @@ namespace NS::RHI
         mutable RHIRaytracingPipelineStateDesc m_desc;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

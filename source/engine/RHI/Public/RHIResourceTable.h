@@ -1,4 +1,4 @@
-/// @file RHIResourceTable.h
+﻿/// @file RHIResourceTable.h
 /// @brief リソーステーブル・マテリアル/グローバル/Bindlessリソース管理
 /// @details シェーダーが参照するリソースのテーブル管理。Bindless化への移行を見据えた設計。
 /// @see 24-03-resource-table.md
@@ -11,8 +11,7 @@
 #include <queue>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIResource;
     class IRHIBuffer;
@@ -251,4 +250,4 @@ namespace NS::RHI
 
     using RHIResourceCollectionRef = TRefCountPtr<RHIResourceCollection>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

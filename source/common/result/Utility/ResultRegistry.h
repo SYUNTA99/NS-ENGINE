@@ -1,4 +1,4 @@
-/// @file ResultRegistry.h
+﻿/// @file ResultRegistry.h
 /// @brief エラー型レジストリ
 #pragma once
 
@@ -14,8 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// エラー型情報
     struct ResultTypeInfo
@@ -109,7 +108,7 @@ namespace NS::result
         }
     };
 
-} // namespace NS::result
+}} // namespace NS::result
 
 /// 自動登録マクロ
 #define NS_REGISTER_RESULT(ResultType, message)                                                                        \

@@ -1,4 +1,4 @@
-/// @file RHIRaytracingAS.h
+﻿/// @file RHIRaytracingAS.h
 /// @brief レイトレーシング加速構造
 /// @details BLAS/TLAS構築・更新用の列挙型、記述子、インターフェースを提供。DXR 1.1準拠。
 /// @see 19-01-raytracing-as.md
@@ -10,8 +10,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIRaytracingGeometryType (19-01)
     //=========================================================================
@@ -364,4 +363,4 @@ namespace NS::RHI
         uint64 scratchBufferAddress = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

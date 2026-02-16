@@ -1,10 +1,9 @@
-/// @file ModuleId.h
+﻿/// @file ModuleId.h
 /// @brief モジュールID定義
 #pragma once
 
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// モジュールID定義
     /// 範囲: 1-511 (9bit, 0は成功用に予約)
@@ -42,4 +41,4 @@ namespace NS::result
     /// モジュール名取得
     [[nodiscard]] const char* GetModuleName(int moduleId) noexcept;
 
-} // namespace NS::result
+}} // namespace NS::result

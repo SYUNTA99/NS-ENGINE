@@ -1,4 +1,4 @@
-/// @file RHIPipelineState.h
+﻿/// @file RHIPipelineState.h
 /// @brief パイプラインステート記述型
 /// @details ブレンド、ラスタライザー、デプスステンシル、入力レイアウトの記述構造体を提供。
 /// @see 07-01-blend-state.md, 07-02-rasterizer-state.md, 07-03-depth-stencil-state.md, 07-04-input-layout.md
@@ -9,8 +9,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     struct RHIShaderBytecode;
 
@@ -966,4 +965,4 @@ namespace NS::RHI
 
     using RHIInputLayoutRef = TRefCountPtr<IRHIInputLayout>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

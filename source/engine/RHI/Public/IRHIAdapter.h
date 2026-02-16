@@ -1,4 +1,4 @@
-/// @file IRHIAdapter.h
+﻿/// @file IRHIAdapter.h
 /// @brief GPUアダプターインターフェース
 /// @details 物理GPU（グラフィックスカード）を抽象化。機能クエリ、制限値、メモリ情報を提供。
 /// @see 01-19-adapter-interface.md
@@ -9,8 +9,7 @@
 #include "RHIFwd.h"
 #include "RHIPixelFormat.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     /// 前方宣言
     enum class ERHIFeature : uint32;
     class IRHIPipelineStateCache;
@@ -159,4 +158,4 @@ namespace NS::RHI
                                                struct RHIHDROutputCapabilities& outCapabilities) const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

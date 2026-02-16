@@ -1,4 +1,4 @@
-/// @file RHIResourceState.h
+﻿/// @file RHIResourceState.h
 /// @brief リソース状態定義・遷移管理・サブリソース状態追跡
 /// @details D3D12のD3D12_RESOURCE_STATESに対応するリソース状態列挙型、
 ///          遷移ヘルパー、サブリソース状態マップ、初期状態ヘルパーを提供。
@@ -9,8 +9,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // 全サブリソース定数
     //=========================================================================
@@ -299,4 +298,4 @@ namespace NS::RHI
         }
     } // namespace RHIInitialResourceState
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

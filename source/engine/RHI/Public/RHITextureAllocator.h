@@ -1,4 +1,4 @@
-/// @file RHITextureAllocator.h
+﻿/// @file RHITextureAllocator.h
 /// @brief テクスチャメモリアロケーター
 /// @details テクスチャプール、トランジェントアロケーター、レンダーターゲットプール、アトラスを提供。
 /// @see 11-03-texture-allocator.md
@@ -8,8 +8,7 @@
 #include "RHIMacros.h"
 #include "RHIMemoryTypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     class IRHIDevice;
     class IRHICommandContext;
 
@@ -341,4 +340,4 @@ namespace NS::RHI
         uint32 m_height = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

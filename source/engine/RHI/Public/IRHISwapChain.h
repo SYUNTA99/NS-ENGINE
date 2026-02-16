@@ -1,4 +1,4 @@
-/// @file IRHISwapChain.h
+﻿/// @file IRHISwapChain.h
 /// @brief スワップチェーンインターフェース
 /// @details スワップチェーン記述、バックバッファ管理、Present操作、フルスクリーン、イベントを提供。
 /// @see 12-01-swapchain-desc.md, 12-02-swapchain-interface.md, 12-03-present.md
@@ -11,8 +11,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     class IRHIDevice;
     class IRHIQueue;
     class IRHITexture;
@@ -471,4 +470,4 @@ namespace NS::RHI
         uint32 m_swapChainCapacity = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

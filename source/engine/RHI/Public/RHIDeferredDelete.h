@@ -1,4 +1,4 @@
-/// @file RHIDeferredDelete.h
+﻿/// @file RHIDeferredDelete.h
 /// @brief 遅延削除キュー
 /// @details GPU使用完了を待ってからリソースを削除する遅延削除キューを定義。
 /// @see 01-14-deferred-delete.md
@@ -11,8 +11,7 @@
 #include <mutex>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // メモリプレッシャー
     //=========================================================================
@@ -128,4 +127,4 @@ namespace NS::RHI
         uint32 m_pressureThreshold = 256;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

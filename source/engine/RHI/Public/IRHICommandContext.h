@@ -1,4 +1,4 @@
-/// @file IRHICommandContext.h
+﻿/// @file IRHICommandContext.h
 /// @brief グラフィックスコマンドコンテキストインターフェース
 /// @details グラフィックス+コンピュート機能を持つフルコンテキスト。描画、レンダーターゲット、ビューポート等を提供。
 /// @see 02-03-graphics-context.md
@@ -10,8 +10,7 @@
 #include "RHIVariableRateShading.h"
 #include "RHIWorkGraphTypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIVertexBufferView / RHIIndexBufferView
     //=========================================================================
@@ -476,4 +475,4 @@ namespace NS::RHI
         }
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

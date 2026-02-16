@@ -1,4 +1,4 @@
-/// @file RHIPSOCacheStats.h
+﻿/// @file RHIPSOCacheStats.h
 /// @brief PSOキャッシュ統計・ウォームアップマネージャー
 /// @details PSO使用状況の追跡、キャッシュヒット率・コンパイル時間・メモリ使用量の可視化。
 /// @see 25-03-pso-cache-stats.md
@@ -11,8 +11,7 @@
 #include <functional>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIDevice;
     struct RHIGraphicsPipelineStateDesc;
@@ -199,4 +198,4 @@ namespace NS::RHI
     /// PSOコンパイル時間グラフ
     RHI_API void RHIDrawPSOCompilationGraph(IRHIPSOCacheTracker* tracker);
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file RHITransientBuffer.h
+﻿/// @file RHITransientBuffer.h
 /// @brief Transientバッファプール・ヘルパー
 /// @details フレーム内一時バッファの再利用プールと便利な生成ヘルパーを提供。
 /// @see 23-02-transient-buffer.md
@@ -11,8 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIDevice;
 
@@ -175,4 +174,4 @@ namespace NS::RHI
         }
     } // namespace RHITransientBuffers
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

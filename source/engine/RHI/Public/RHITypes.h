@@ -1,4 +1,4 @@
-/// @file RHITypes.h
+﻿/// @file RHITypes.h
 /// @brief GPU識別型・リソース識別型
 /// @details マルチGPU識別、リソース追跡、ディスクリプタインデックス、メモリサイズ型を定義。
 /// @see 01-02-types-gpu.md
@@ -7,8 +7,7 @@
 #include "Common/Utility/Types.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // GPUMask: マルチGPU識別
     //=========================================================================
@@ -548,4 +547,4 @@ namespace NS::RHI
     /// デフォルトバックバッファ数
     constexpr uint32 kDefaultBackBufferCount = 2;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

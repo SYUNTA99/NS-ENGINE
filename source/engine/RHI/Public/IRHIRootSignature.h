@@ -1,4 +1,4 @@
-/// @file IRHIRootSignature.h
+﻿/// @file IRHIRootSignature.h
 /// @brief ルートシグネチャインターフェース
 /// @details ルートパラメータ、ディスクリプタレンジ、静的サンプラー、ルートシグネチャを定義。
 /// @see 08-01-root-parameter.md, 08-02-descriptor-range.md, 08-03-root-signature.md
@@ -10,8 +10,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIRootParameterType (08-01)
     //=========================================================================
@@ -872,4 +871,4 @@ namespace NS::RHI
         ERHIRootSignatureFlags m_flags = ERHIRootSignatureFlags::AllowInputAssemblerInputLayout;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file RHICommandListStats.h
+﻿/// @file RHICommandListStats.h
 /// @brief コマンドリスト統計・フレーム統計・デバッグ出力
 /// @details 描画コール数、状態変更回数、リソースバインディング等を追跡しパフォーマンス最適化に活用。
 /// @see 25-01-command-list-stats.md
@@ -10,8 +10,7 @@
 #include <array>
 #include <string>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class RHIFrameStatsTracker;
 
@@ -240,4 +239,4 @@ namespace NS::RHI
     /// ImGui統計ウィンドウ描画
     RHI_API void RHIDrawStatsImGui(const RHIFrameStatsTracker& tracker);
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

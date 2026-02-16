@@ -1,4 +1,4 @@
-/// @file ErrorInfo.h
+﻿/// @file ErrorInfo.h
 /// @brief エラー情報取得ユーティリティ
 #pragma once
 
@@ -8,8 +8,7 @@
 
 #include <string_view>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// エラー情報
     struct ErrorInfo
@@ -37,4 +36,4 @@ namespace NS::result
         return info;
     }
 
-} // namespace NS::result
+}} // namespace NS::result

@@ -1,4 +1,4 @@
-/// @file Result.h
+﻿/// @file Result.h
 /// @brief 処理結果を表す型
 #pragma once
 
@@ -14,11 +14,10 @@ namespace NS
 
 } // namespace NS
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
     class InternalAccessor;
     [[noreturn]] void OnUnhandledResult(::NS::Result result) noexcept;
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail
 
 namespace NS
 {

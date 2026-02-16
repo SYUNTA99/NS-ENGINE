@@ -1,4 +1,4 @@
-/// @file RHIMeshPipelineState.h
+﻿/// @file RHIMeshPipelineState.h
 /// @brief メッシュシェーダーパイプラインステートオブジェクト
 /// @details メッシュPSO記述子、インターフェース、ビルダー、標準プリセットを提供。
 /// @see 22-03-mesh-pso.md
@@ -13,8 +13,7 @@
 
 #include <algorithm>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
 
     //=========================================================================
     // RHIMeshPipelineStateDesc (22-03)
@@ -195,4 +194,4 @@ namespace NS::RHI
                                                               IRHIRootSignature* rootSig);
     } // namespace RHIMeshletPipelinePresets
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

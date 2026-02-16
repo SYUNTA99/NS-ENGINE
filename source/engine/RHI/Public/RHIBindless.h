@@ -1,4 +1,4 @@
-/// @file RHIBindless.h
+﻿/// @file RHIBindless.h
 /// @brief Bindlessディスクリプタ管理
 /// @details Bindlessディスクリプタヒープ、サンプラーヒープ、リソースマネージャー、
 ///          ルートシグネチャプリセット、シェーダーマクロを提供。
@@ -8,8 +8,7 @@
 #include "IRHIRootSignature.h"
 #include "RHIDescriptorHeap.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIBindlessDescriptorHeap (10-04)
     //=========================================================================
@@ -306,4 +305,4 @@ namespace NS::RHI
     g_BindlessBuffers[index].Load(offset)
 )";
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

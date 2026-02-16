@@ -1,4 +1,4 @@
-/// @file SourceLocation.h
+﻿/// @file SourceLocation.h
 /// @brief エラー発生箇所情報
 #pragma once
 
@@ -7,8 +7,7 @@
 #include <source_location>
 #include <string_view>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// エラー発生箇所情報
     struct SourceLocation
@@ -42,4 +41,4 @@ namespace NS::result
 /// 現在位置を取得するマクロ
 #define NS_CURRENT_SOURCE_LOCATION() ::NS::result::SourceLocation::FromStd(std::source_location::current())
 
-} // namespace NS::result
+}} // namespace NS::result

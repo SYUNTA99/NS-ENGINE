@@ -1,4 +1,4 @@
-/// @file IDynamicRHIModule.h
+﻿/// @file IDynamicRHIModule.h
 /// @brief RHIバックエンドモジュールインターフェース
 /// @details バックエンド発見・選択・インスタンス化を担うモジュールインターフェース。
 /// @see 01-15b-dynamic-rhi-module.md
@@ -8,8 +8,7 @@
 #include "RHIEnums.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // IDynamicRHIModule
     //=========================================================================
@@ -73,4 +72,4 @@ namespace NS::RHI
     /// 結果は g_dynamicRHI に設定される
     RHI_API bool PlatformCreateDynamicRHI();
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

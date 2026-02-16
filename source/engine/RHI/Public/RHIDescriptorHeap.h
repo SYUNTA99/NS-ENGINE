@@ -1,4 +1,4 @@
-/// @file RHIDescriptorHeap.h
+﻿/// @file RHIDescriptorHeap.h
 /// @brief ディスクリプタヒープインターフェースとアロケーター
 /// @details ディスクリプタヒープの作成、管理、割り当て/解放を提供。
 /// @see 10-01-descriptor-heap.md
@@ -10,8 +10,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIDescriptorHeapFlags (10-01)
     //=========================================================================
@@ -244,4 +243,4 @@ namespace NS::RHI
         uint32 m_freeCount = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

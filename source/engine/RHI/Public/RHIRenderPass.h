@@ -1,4 +1,4 @@
-/// @file RHIRenderPass.h
+﻿/// @file RHIRenderPass.h
 /// @brief レンダーパス記述・ロードストアアクション・スコープレンダーパス
 /// @details レンダーパスの記述構造、ロードストアアクション列挙型、
 ///          サブパス、統計、スコープレンダーパスRAIIクラスを提供。
@@ -11,8 +11,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHILoadAction (13-02)
     //=========================================================================
@@ -490,7 +489,7 @@ namespace NS::RHI
         IRHICommandContext* m_context;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI
 
 /// スコープレンダーパスマクロ
 #define RHI_SCOPED_RENDER_PASS(context, desc)                                                                          \

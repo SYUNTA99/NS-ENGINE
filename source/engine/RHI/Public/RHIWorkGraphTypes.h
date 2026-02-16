@@ -1,4 +1,4 @@
-/// @file RHIWorkGraphTypes.h
+﻿/// @file RHIWorkGraphTypes.h
 /// @brief ワークグラフ型定義
 /// @details ワークグラフシステムの列挙型、記述子、メモリ要件を定義。
 /// @see 02-06-work-graph.md
@@ -8,8 +8,7 @@
 #include "RHIFwd.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIWorkGraphNodeType
     //=========================================================================
@@ -138,4 +137,4 @@ namespace NS::RHI
         RHIWorkGraphInputRecord inputRecords; ///< 入力レコード
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

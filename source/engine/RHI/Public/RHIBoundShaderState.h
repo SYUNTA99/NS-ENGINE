@@ -1,4 +1,4 @@
-/// @file RHIBoundShaderState.h
+﻿/// @file RHIBoundShaderState.h
 /// @brief バウンドシェーダーステート・キャッシュ・ビルダー
 /// @details シェーダーの組み合わせとバインディングレイアウトを管理。PSO作成の前段階としてシェーダーセットをキャッシュ。
 /// @see 24-04-bound-shader-state.md
@@ -12,8 +12,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIShader;
     struct RHIInputLayoutDesc;
@@ -222,4 +221,4 @@ namespace NS::RHI
         RHIBoundShaderStateDesc m_desc;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

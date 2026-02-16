@@ -1,4 +1,4 @@
-/// @file IRHIComputeContext.h
+﻿/// @file IRHIComputeContext.h
 /// @brief コンピュートコンテキストインターフェース
 /// @details
 /// コンピュートシェーダー実行専用のコンテキスト。ディスパッチ、リソースバインディング、UAVクリア、クエリを提供。
@@ -7,8 +7,7 @@
 
 #include "IRHICommandContextBase.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // IRHIComputeContext
     //=========================================================================
@@ -164,4 +163,4 @@ namespace NS::RHI
         void Dispatch2D(uint32 groupCountX, uint32 groupCountY) { Dispatch(groupCountX, groupCountY, 1); }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

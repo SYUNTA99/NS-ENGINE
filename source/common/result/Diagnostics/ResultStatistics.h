@@ -1,4 +1,4 @@
-/// @file ResultStatistics.h
+﻿/// @file ResultStatistics.h
 /// @brief エラー統計収集
 #pragma once
 
@@ -13,8 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// エラー発生記録
     struct ErrorRecord
@@ -166,4 +165,4 @@ namespace NS::result
 
 #endif
 
-} // namespace NS::result
+}} // namespace NS::result

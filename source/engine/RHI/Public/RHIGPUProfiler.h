@@ -1,4 +1,4 @@
-/// @file RHIGPUProfiler.h
+﻿/// @file RHIGPUProfiler.h
 /// @brief GPUプロファイリングシステム
 /// @details GPU実行時間の計測とプロファイリング機能を提供。
 /// @see 05-06-gpu-profiler.md
@@ -9,8 +9,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHICommandContext;
 
@@ -199,7 +198,7 @@ namespace NS::RHI
         uint32 m_scopeId;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI
 
 //=============================================================================
 // プロファイルスコープマクロ (05-06)
@@ -224,8 +223,7 @@ namespace NS::RHI
 #define RHI_GPU_PROFILE_SCOPE_TYPE(Profiler, Context, Name, Type)
 #endif
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIFrameProfileData (05-06)
     //=========================================================================
@@ -287,4 +285,4 @@ namespace NS::RHI
         std::vector<RHIFrameProfileData> m_history;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

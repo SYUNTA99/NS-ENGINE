@@ -1,4 +1,4 @@
-/// @file RHIMeshShader.h
+﻿/// @file RHIMeshShader.h
 /// @brief メッシュシェーダー機能検出・メッシュレット構造体
 /// @details メッシュシェーダーのケイパビリティ情報とメッシュレットデータ構造を提供。
 /// @see 22-01-mesh-shader.md
@@ -9,8 +9,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
 
     //=========================================================================
     // RHIMeshShaderCapabilities (22-01)
@@ -73,4 +72,4 @@ namespace NS::RHI
         uint32 GetMeshletCount() const { return static_cast<uint32>(meshlets.size()); }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,12 +1,11 @@
-/// @file Result.cpp
+﻿/// @file Result.cpp
 /// @brief Result型の実装
 #include "common/result/Core/Result.h"
 #include "common/result/Core/InternalAccessor.h"
 #include <cstdio>
 #include <cstdlib>
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     [[noreturn]] void OnUnhandledResult(::NS::Result result) noexcept
     {
@@ -20,4 +19,4 @@ namespace NS::result::detail
         std::abort();
     }
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail

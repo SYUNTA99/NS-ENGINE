@@ -1,4 +1,4 @@
-/// @file RHIMeshDispatch.h
+﻿/// @file RHIMeshDispatch.h
 /// @brief メッシュシェーダーディスパッチヘルパー
 /// @details メッシュディスパッチ引数、制限、バッチ管理、パフォーマンス最適化を提供。
 /// @see 22-04-mesh-dispatch.md
@@ -12,8 +12,7 @@
 #include <functional>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIDevice;
     class IRHICommandContext;
@@ -144,4 +143,4 @@ namespace NS::RHI
         }
     } // namespace RHIMeshShaderOptimization
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

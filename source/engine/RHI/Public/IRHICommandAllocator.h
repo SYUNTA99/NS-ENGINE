@@ -1,4 +1,4 @@
-/// @file IRHICommandAllocator.h
+﻿/// @file IRHICommandAllocator.h
 /// @brief コマンドアロケーターインターフェース
 /// @details コマンドリストのメモリ管理。ライフサイクル、メモリ情報、待機フェンス、プール管理を提供。
 /// @see 02-04-command-allocator.md
@@ -8,8 +8,7 @@
 #include "RHIEnums.h"
 #include "RHIResourceType.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // IRHICommandAllocator
     //=========================================================================
@@ -116,4 +115,4 @@ namespace NS::RHI
         virtual uint32 GetInUseCount(ERHIQueueType queueType) const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

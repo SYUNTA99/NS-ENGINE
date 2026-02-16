@@ -1,4 +1,4 @@
-/// @file RHIPixelFormat.h
+﻿/// @file RHIPixelFormat.h
 /// @brief ピクセルフォーマット列挙型・ヘルパー
 /// @details テクスチャ/レンダーターゲットのフォーマット定義、カテゴリ分類、sRGB変換を提供。
 /// @see 15-01-pixel-format-enum.md
@@ -6,8 +6,7 @@
 
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIPixelFormat: ピクセルフォーマット
     //=========================================================================
@@ -409,4 +408,4 @@ namespace NS::RHI
         }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

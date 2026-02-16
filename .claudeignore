@@ -51,3 +51,15 @@ tools/
 
 # Gemini CLI設定
 GEMINI.md
+
+# NuGetパッケージ・設定
+packages/
+NuGet.config
+packages.config
+
+# premakeモジュール
+premake/
+
+# バイナリ
+*.dll
+*.exp

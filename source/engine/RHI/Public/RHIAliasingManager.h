@@ -1,4 +1,4 @@
-/// @file RHIAliasingManager.h
+﻿/// @file RHIAliasingManager.h
 /// @brief エイリアシンググループ・マネージャー
 /// @details 同じ物理メモリを共有するリソース間の遷移を管理し、Transientリソースの再利用を可能にする。
 /// @see 23-04-aliasing-barrier.md
@@ -10,8 +10,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIResource;
 
@@ -152,4 +151,4 @@ namespace NS::RHI
         uint64 m_memorySaved = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

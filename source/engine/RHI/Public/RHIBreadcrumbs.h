@@ -1,4 +1,4 @@
-/// @file RHIBreadcrumbs.h
+﻿/// @file RHIBreadcrumbs.h
 /// @brief GPU Breadcrumbsシステム
 /// @details GPUコマンド実行履歴追跡、クラッシュ診断用の
 ///          Breadcrumbデータ、ノード、アロケーター、状態管理、RAIIスコープを提供。
@@ -33,8 +33,7 @@
 /// ソース位置情報
 #define NS_RHI_BREADCRUMBS_EMIT_LOCATION (NS_RHI_BREADCRUMBS_FULL)
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIBreadcrumbData (17-04)
     //=========================================================================
@@ -169,7 +168,7 @@ namespace NS::RHI
         RHIBreadcrumbNode* m_node = nullptr;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI
 
 //=============================================================================
 // Breadcrumbマクロ (17-04)

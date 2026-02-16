@@ -1,4 +1,4 @@
-/// @file IRHISampler.h
+﻿/// @file IRHISampler.h
 /// @brief サンプラー記述・インターフェース・キャッシュ・マネージャー
 /// @details テクスチャサンプラーの記述構造、IRHISamplerインターフェース、
 ///          サンプラーキャッシュ、グローバルマネージャーを提供。
@@ -11,8 +11,7 @@
 #include "RHIResourceType.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // サンプラー列挙型 (18-01)
     //=========================================================================
@@ -639,4 +638,4 @@ namespace NS::RHI
         }
     } // namespace RHISamplerConversion
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

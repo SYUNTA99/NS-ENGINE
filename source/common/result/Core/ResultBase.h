@@ -1,12 +1,11 @@
-/// @file ResultBase.h
+﻿/// @file ResultBase.h
 /// @brief Result型のCRTP基底クラス
 #pragma once
 
 
 #include "common/result/Core/ResultTraits.h"
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     /// CRTP基底クラス - GetModule/GetDescriptionを共有
     template <typename Self> class ResultBase
@@ -37,4 +36,4 @@ namespace NS::result::detail
         ResultBase& operator=(const ResultBase&) noexcept = default;
     };
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail

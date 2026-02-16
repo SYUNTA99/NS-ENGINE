@@ -1,4 +1,4 @@
-/// @file RHIQuery.h
+﻿/// @file RHIQuery.h
 /// @brief GPUクエリタイプ・ヒープ・アロケーター
 /// @details クエリタイプ列挙型、ヒープ記述、結果構造体、クエリヒープインターフェース、
 ///          フレームベースのクエリアロケーターを提供。
@@ -12,8 +12,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIQueryType (14-01)
     //=========================================================================
@@ -275,4 +274,4 @@ namespace NS::RHI
         uint32 m_queriesPerFrame = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

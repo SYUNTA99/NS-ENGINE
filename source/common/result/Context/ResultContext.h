@@ -1,4 +1,4 @@
-/// @file ResultContext.h
+﻿/// @file ResultContext.h
 /// @brief コンテキスト付きResult型
 #pragma once
 
@@ -13,8 +13,7 @@
 #include <string_view>
 #include <vector>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// コンテキスト情報
     struct ContextInfo
@@ -166,4 +165,4 @@ namespace NS::result
 
 #endif
 
-} // namespace NS::result
+}} // namespace NS::result

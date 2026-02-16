@@ -1,4 +1,4 @@
-/// @file IRHIShaderLibrary.h
+﻿/// @file IRHIShaderLibrary.h
 /// @brief シェーダーライブラリとパーミュテーション管理
 /// @details 複数シェーダーを含むライブラリ、バリエーション管理、
 ///          シェーダーマネージャー、プリコンパイル機能を提供。
@@ -12,8 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIShaderLibraryDesc (06-04)
     //=========================================================================
@@ -303,4 +302,4 @@ namespace NS::RHI
         ProgressCallback m_progressCallback;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

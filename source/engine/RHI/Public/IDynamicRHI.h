@@ -1,4 +1,4 @@
-/// @file IDynamicRHI.h
+﻿/// @file IDynamicRHI.h
 /// @brief RHI最上位インターフェース
 /// @details プラットフォーム固有RHI（D3D12, Vulkan等）の基底。
 ///          ライフサイクル管理、アダプター/デバイスアクセス、機能クエリを提供。
@@ -10,8 +10,7 @@
 #include "RHITypes.h"
 #include "RHICheck.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIFeature: 機能フラグ
     //=========================================================================
@@ -326,4 +325,4 @@ namespace NS::RHI
     /// デフォルトデバイス取得ショートカット
     inline IRHIDevice* GetRHIDevice() { return GetDynamicRHI()->GetDefaultDevice(); }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

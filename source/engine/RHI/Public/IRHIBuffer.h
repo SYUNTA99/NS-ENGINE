@@ -1,4 +1,4 @@
-/// @file IRHIBuffer.h
+﻿/// @file IRHIBuffer.h
 /// @brief バッファリソースインターフェース
 /// @details バッファ記述、コアインターフェース、Map/Unmap、スコープロック、書き込み/読み取りヘルパーを提供。
 /// @see 03-01-buffer-desc.md, 03-02-buffer-interface.md, 03-03-buffer-lock.md
@@ -13,8 +13,7 @@
 #include "RHITypes.h"
 #include <cstring>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     struct RHIVertexBufferView;
     struct RHIIndexBufferView;
@@ -643,4 +642,4 @@ namespace NS::RHI
         bool m_mapped = false;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

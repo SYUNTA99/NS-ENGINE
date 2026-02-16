@@ -1,4 +1,4 @@
-/// @file IRHIWorkGraph.h
+﻿/// @file IRHIWorkGraph.h
 /// @brief ワークグラフパイプラインインターフェース
 /// @details GPU上で動的にワークを生成・実行するワークグラフシステム。
 /// @see 02-06-work-graph.md
@@ -7,8 +7,7 @@
 #include "IRHIResource.h"
 #include "RHIWorkGraphTypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // IRHIWorkGraphPipeline
     //=========================================================================
@@ -37,4 +36,4 @@ namespace NS::RHI
         virtual uint32 GetEntryPointCount() const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

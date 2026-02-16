@@ -1,4 +1,4 @@
-/// @file RHIBindingLayout.h
+﻿/// @file RHIBindingLayout.h
 /// @brief 高レベルバインディングレイアウト抽象化
 /// @details バインディングスロット、セット、レイアウトの定義とルートシグネチャへの変換を提供。
 /// @see 08-04-binding-layout.md
@@ -6,8 +6,7 @@
 
 #include "IRHIRootSignature.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIBindingSlotType (08-04)
     //=========================================================================
@@ -278,4 +277,4 @@ namespace NS::RHI
         const RHIBindingSetDesc* m_desc = nullptr;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

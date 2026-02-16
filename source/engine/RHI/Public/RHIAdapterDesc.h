@@ -1,4 +1,4 @@
-/// @file RHIAdapterDesc.h
+﻿/// @file RHIAdapterDesc.h
 /// @brief GPUアダプター記述情報
 /// @details GPU識別、メモリ、機能レベル、機能フラグを保持する構造体。
 /// @see 01-18-adapter-desc.md
@@ -9,8 +9,7 @@
 #include "RHIMacros.h"
 #include <string>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ベンダーID定数
     //=========================================================================
@@ -120,4 +119,4 @@ namespace NS::RHI
         uint64 GetTotalVideoMemory() const { return dedicatedVideoMemory + sharedSystemMemory; }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

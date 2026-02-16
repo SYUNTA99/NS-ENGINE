@@ -1,11 +1,10 @@
-/// @file ErrorChain.cpp
+﻿/// @file ErrorChain.cpp
 /// @brief エラーチェーンの実装
 #include "common/result/Context/ErrorChain.h"
 
 #include <chrono>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     namespace
     {
@@ -141,4 +140,4 @@ namespace NS::result
 
     } // namespace detail
 
-} // namespace NS::result
+}} // namespace NS::result

@@ -1,4 +1,4 @@
-/// @file RHIStagingBuffer.h
+﻿/// @file RHIStagingBuffer.h
 /// @brief ステージングバッファ（CPU↔GPU転送用中間バッファ）
 /// @details アップロード/リードバック用ステージングバッファ、
 ///          スコープマップヘルパー、ビルダーを提供。
@@ -11,8 +11,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIStagingUsage (20-01)
     //=========================================================================
@@ -161,4 +160,4 @@ namespace NS::RHI
         RHIStagingBufferDesc m_desc;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

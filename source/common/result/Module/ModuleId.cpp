@@ -1,9 +1,8 @@
-/// @file ModuleId.cpp
+﻿/// @file ModuleId.cpp
 /// @brief モジュール名取得の実装
 #include "common/result/Module/ModuleId.h"
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     const char* GetModuleName(int moduleId) noexcept
     {
@@ -58,4 +57,4 @@ namespace NS::result
         }
     }
 
-} // namespace NS::result
+}} // namespace NS::result

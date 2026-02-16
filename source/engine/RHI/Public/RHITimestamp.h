@@ -1,4 +1,4 @@
-/// @file RHITimestamp.h
+﻿/// @file RHITimestamp.h
 /// @brief GPUタイムスタンプクエリ・タイマー・フレームタイムライン
 /// @details タイムスタンプ結果、GPUタイマー、スコープタイマー、
 ///          フレームタイムラインを提供。
@@ -10,8 +10,7 @@
 #include "RHIQuery.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHITimestampResult (14-03)
     //=========================================================================
@@ -255,7 +254,7 @@ namespace NS::RHI
         uint32 m_currentLevel = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI
 
 /// スコープGPUタイマーマクロ
 #define RHI_SCOPED_GPU_TIMER(timer, context, name)                                                                     \

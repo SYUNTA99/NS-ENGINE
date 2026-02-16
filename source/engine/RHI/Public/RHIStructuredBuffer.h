@@ -1,4 +1,4 @@
-/// @file RHIStructuredBuffer.h
+﻿/// @file RHIStructuredBuffer.h
 /// @brief 構造化バッファ・バイトアドレスバッファ・インダイレクト引数バッファ・定数バッファの高レベルラッパー
 /// @see 03-04-structured-buffer.md
 #pragma once
@@ -6,8 +6,7 @@
 #include "IRHIBuffer.h"
 #include "RHIRefCountPtr.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIStructuredBuffer (03-04)
     //=========================================================================
@@ -276,4 +275,4 @@ namespace NS::RHI
         RHIBufferRef m_buffer;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

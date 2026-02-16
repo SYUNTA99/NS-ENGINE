@@ -1,4 +1,4 @@
-/// @file RHIMemoryTypes.h
+﻿/// @file RHIMemoryTypes.h
 /// @brief GPUメモリヒープ型とインターフェース
 /// @details メモリプール、ヒープフラグ、IRHIHeap、配置リソース、エイリアシングバリアを提供。
 /// @see 11-01-heap-types.md
@@ -9,8 +9,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIMemoryPool (11-01)
     //=========================================================================
@@ -153,4 +152,4 @@ namespace NS::RHI
 
     using RHIHeapRef = TRefCountPtr<IRHIHeap>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

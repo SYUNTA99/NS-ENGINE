@@ -1,4 +1,4 @@
-/// @file RHIOcclusion.h
+﻿/// @file RHIOcclusion.h
 /// @brief オクルージョンクエリ・プレディケーション・条件付きレンダリング・HiZバッファ
 /// @details オクルージョンクエリ結果、マネージャー、プレディケーション操作、
 ///          条件付きレンダリング、HiZバッファを提供。
@@ -12,8 +12,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIOcclusionResult (14-04)
     //=========================================================================
@@ -245,4 +244,4 @@ namespace NS::RHI
         IRHIComputePipelineState* m_hiZGenPSO = nullptr;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

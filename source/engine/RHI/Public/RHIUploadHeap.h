@@ -1,4 +1,4 @@
-/// @file RHIUploadHeap.h
+﻿/// @file RHIUploadHeap.h
 /// @brief CPU→GPUアップロードヒープ管理
 /// @details ステージングバッファ、バッチアップロード、非同期転送、テクスチャローダーを提供。
 /// @see 11-04-upload-heap.md
@@ -7,8 +7,7 @@
 #include "RHIBufferAllocator.h"
 #include "RHISyncPoint.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     class IRHIDevice;
     class IRHICommandContext;
     class IRHIComputePipelineState;
@@ -329,4 +328,4 @@ namespace NS::RHI
         IRHIComputePipelineState* m_mipGenPSO = nullptr;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

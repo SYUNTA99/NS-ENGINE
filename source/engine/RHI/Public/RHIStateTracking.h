@@ -1,4 +1,4 @@
-/// @file RHIStateTracking.h
+﻿/// @file RHIStateTracking.h
 /// @brief 自動リソース状態追跡・グローバル状態管理・バリア自動挿入・状態検証
 /// @details コマンドリスト単位のローカル状態追跡、デバイス全体のグローバル状態管理、
 ///          自動バリア挿入コンテキスト、デバッグ用状態検証を提供。
@@ -7,8 +7,7 @@
 
 #include "RHIBarrier.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIResourceStateTracker (16-03)
     //=========================================================================
@@ -282,4 +281,4 @@ namespace NS::RHI
         char m_lastError[512] = {};
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

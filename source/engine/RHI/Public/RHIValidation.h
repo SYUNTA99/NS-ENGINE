@@ -1,4 +1,4 @@
-/// @file RHIValidation.h
+﻿/// @file RHIValidation.h
 /// @brief RHI検証レイヤー・検証設定・メッセージ・アサートマクロ
 /// @details 検証レベル、カテゴリ、検証メッセージ、検証設定プリセット、
 ///          デバッグ名ヘルパー、RHIアサートマクロを提供。
@@ -12,8 +12,7 @@
 #include <cstdarg>
 #include <cstdio>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIValidationLevel (17-03)
     //=========================================================================
@@ -242,7 +241,7 @@ namespace NS::RHI
         }
     } // namespace RHIDebug
 
-} // namespace NS::RHI
+}} // namespace NS::RHI
 
 //=============================================================================
 // RHIアサートマクロ (17-03)

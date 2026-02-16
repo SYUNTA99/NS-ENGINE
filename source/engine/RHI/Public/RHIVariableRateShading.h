@@ -1,4 +1,4 @@
-/// @file RHIVariableRateShading.h
+﻿/// @file RHIVariableRateShading.h
 /// @brief Variable Rate Shading (VRS) サポート
 /// @details シェーディングレート列挙型、ケイパビリティ情報、VRSイメージ記述を提供。
 /// @see 07-07-variable-rate-shading.md
@@ -8,8 +8,7 @@
 #include "RHIPixelFormat.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIVRSAxisRate (07-07)
     //=========================================================================
@@ -137,4 +136,4 @@ namespace NS::RHI
         outImageHeight = (targetHeight + th - 1) / th;
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

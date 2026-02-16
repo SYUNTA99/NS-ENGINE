@@ -1,4 +1,4 @@
-/// @file RHIShaderReflection.h
+﻿/// @file RHIShaderReflection.h
 /// @brief シェーダーリフレクション
 /// @details シェーダーバイトコードからバインディング情報を取得するリフレクション機能を提供。
 /// @see 06-03-shader-reflection.md
@@ -10,8 +10,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     struct RHIShaderBytecode;
     struct RHIShaderModel;
@@ -287,4 +286,4 @@ namespace NS::RHI
         std::vector<RHIShaderConstantBuffer> m_constantBuffers;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

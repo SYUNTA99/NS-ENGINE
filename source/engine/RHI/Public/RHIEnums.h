@@ -1,4 +1,4 @@
-/// @file RHIEnums.h
+﻿/// @file RHIEnums.h
 /// @brief RHIコア列挙型
 /// @details バックエンド種別、機能レベル、キュータイプ、パイプラインタイプを定義。
 /// @see 01-05-enums-core.md
@@ -7,8 +7,7 @@
 #include "Common/Utility/Types.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIInterfaceType: バックエンド種別
     //=========================================================================
@@ -1199,4 +1198,4 @@ namespace NS::RHI
         NotEqualZero, ///< 値が非ゼロなら描画をスキップ
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

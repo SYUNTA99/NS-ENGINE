@@ -1,4 +1,4 @@
-/// @file RHIIndirectArguments.h
+﻿/// @file RHIIndirectArguments.h
 /// @brief Indirect描画/ディスパッチ引数構造体
 /// @details D3D12/Vulkan/Metal共通のIndirect引数レイアウト、
 ///          ヘルパー関数、コンパイル時レイアウト検証を提供。
@@ -11,8 +11,7 @@
 #include <cstddef>
 #include <cstring>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // Draw Indirect 引数 (21-01)
     //=========================================================================
@@ -173,4 +172,4 @@ namespace NS::RHI
         static_assert(offsetof(RHIDispatchArguments, threadGroupCountZ) == 8);
     } // namespace Private
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,12 +1,11 @@
-/// @file ErrorRange.h
+﻿/// @file ErrorRange.h
 /// @brief エラー範囲を表すテンプレート（階層的マッチング用）
 #pragma once
 
 
 #include "common/result/Core/Result.h"
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     /// エラー範囲を表すテンプレート
     /// @tparam Module_ モジュールID
@@ -50,4 +49,4 @@ namespace NS::result::detail
         }
     };
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail

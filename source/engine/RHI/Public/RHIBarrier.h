@@ -1,4 +1,4 @@
-/// @file RHIBarrier.h
+﻿/// @file RHIBarrier.h
 /// @brief リソースバリア定義・バッチング・スプリットバリア・Enhanced Barriers
 /// @details 遷移/UAV/エイリアシングバリア構造体、バリアバッチング、
 ///          スプリットバリア、D3D12 Enhanced Barriersモデルを提供。
@@ -7,8 +7,7 @@
 
 #include "RHIResourceState.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIBarrierType (16-02)
     //=========================================================================
@@ -388,4 +387,4 @@ namespace NS::RHI
         RHISubresourceRange subresources;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

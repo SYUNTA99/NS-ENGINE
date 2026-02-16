@@ -1,4 +1,4 @@
-/// @file RHIAsyncReadback.h
+﻿/// @file RHIAsyncReadback.h
 /// @brief 非同期リードバック（マルチフレーム遅延対応）
 /// @details リングバッファ方式の非同期リードバック、
 ///          オクルージョンクエリ用リードバックを提供。
@@ -11,8 +11,7 @@
 #include <array>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // TRHIAsyncReadbackRing (20-03)
     //=========================================================================
@@ -111,4 +110,4 @@ namespace NS::RHI
         uint32 m_maxQueries;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

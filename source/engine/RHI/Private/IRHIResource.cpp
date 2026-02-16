@@ -1,9 +1,8 @@
-/// @file IRHIResource.cpp
+﻿/// @file IRHIResource.cpp
 /// @brief IRHIResource 基底クラス実装
 #include "IRHIResource.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ResourceId 生成
     //=========================================================================
@@ -132,4 +131,4 @@ namespace NS::RHI
         delete this;
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

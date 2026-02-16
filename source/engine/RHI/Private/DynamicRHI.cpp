@@ -1,12 +1,11 @@
-/// @file DynamicRHI.cpp
+﻿/// @file DynamicRHI.cpp
 /// @brief IDynamicRHI グローバルインスタンス管理とモジュール登録
 #include "Common/Logging/Logging.h"
 #include "IDynamicRHI.h"
 #include "IDynamicRHIModule.h"
 #include <cstring>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // グローバルRHIインスタンス
     //=========================================================================
@@ -100,4 +99,4 @@ namespace NS::RHI
         return false;
     }
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

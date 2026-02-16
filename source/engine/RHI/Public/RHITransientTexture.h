@@ -1,4 +1,4 @@
-/// @file RHITransientTexture.h
+﻿/// @file RHITransientTexture.h
 /// @brief Transientテクスチャハンドル・ヘルパー
 /// @details フレーム内一時テクスチャのハンドルと便利な生成ヘルパーを提供。
 /// @see 23-03-transient-texture.md
@@ -9,8 +9,7 @@
 #include "RHIPixelFormat.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIShaderResourceView;
     class IRHIRenderTargetView;
@@ -207,4 +206,4 @@ namespace NS::RHI
         }
     } // namespace RHITransientTextures
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

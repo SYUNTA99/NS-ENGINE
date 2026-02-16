@@ -1,4 +1,4 @@
-/// @file IRHIPipelineState.h
+﻿/// @file IRHIPipelineState.h
 /// @brief パイプラインステートオブジェクトインターフェース
 /// @details グラフィックスPSO、コンピュートPSO、PSOキャッシュ、非同期コンピュートヘルパーを提供。
 /// @see 07-05-graphics-pso.md, 07-06-compute-pso.md
@@ -11,8 +11,7 @@
 
 #include <functional>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIPrimitiveTopologyType (07-05)
     //=========================================================================
@@ -458,4 +457,4 @@ namespace NS::RHI
         uint64 m_nextFenceValue = 1;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file RHIFormatConversion.h
+﻿/// @file RHIFormatConversion.h
 /// @brief ピクセルフォーマット変換・互換性・デプスステンシル/HDRヘルパー
 /// @details フォーマット間の変換可能性判定、互換グループ、デプスステンシル変換、
 ///          HDRフォーマット選択、プラットフォーム変換を提供。
@@ -8,8 +8,7 @@
 #include "RHIMacros.h"
 #include "RHIPixelFormat.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIFormatConversionType (15-03)
     //=========================================================================
@@ -195,4 +194,4 @@ namespace NS::RHI
         }
     } // namespace RHIHDRFormat
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

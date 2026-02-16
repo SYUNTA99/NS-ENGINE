@@ -1,4 +1,4 @@
-/// @file IRHIMeshShader.h
+﻿/// @file IRHIMeshShader.h
 /// @brief メッシュシェーダー・増幅シェーダーインターフェース
 /// @details IRHIShaderを継承するメッシュシェーダーと増幅シェーダーのインターフェースを提供。
 /// @see 22-01-mesh-shader.md
@@ -7,8 +7,7 @@
 #include "IRHIShader.h"
 #include "RHIMacros.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
 
     //=========================================================================
     // IRHIMeshShader (22-01)
@@ -70,4 +69,4 @@ namespace NS::RHI
 
     using RHIAmplificationShaderRef = TRefCountPtr<IRHIAmplificationShader>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

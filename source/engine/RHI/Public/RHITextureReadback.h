@@ -1,4 +1,4 @@
-/// @file RHITextureReadback.h
+﻿/// @file RHITextureReadback.h
 /// @brief テクスチャリードバック・スクリーンキャプチャ・デバッグビューア
 /// @details GPUテクスチャデータのCPU読み戻し、スクリーンキャプチャ、
 ///          テクスチャデバッグビューアを提供。
@@ -13,8 +13,7 @@
 #include <functional>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHITextureReadbackDesc (20-04)
     //=========================================================================
@@ -163,4 +162,4 @@ namespace NS::RHI
         IRHITexture* m_targetTexture = nullptr;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

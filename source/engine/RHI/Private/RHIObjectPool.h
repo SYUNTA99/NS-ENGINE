@@ -1,4 +1,4 @@
-/// @file RHIObjectPool.h
+﻿/// @file RHIObjectPool.h
 /// @brief コンテキスト/アロケーター/コマンドリストプール
 /// @details キュータイプごとのプール管理。フェンス値による再利用可能判定を行う。
 /// @see 01-17b-submission-pipeline.md
@@ -11,8 +11,7 @@
 #include <mutex>
 #include <vector>
 
-namespace NS::RHI::Private
-{
+namespace NS { namespace RHI { namespace Private {
     //=========================================================================
     // PooledAllocator
     //=========================================================================
@@ -89,4 +88,4 @@ namespace NS::RHI::Private
         std::vector<IRHICommandContext*> m_availableContexts;
     };
 
-} // namespace NS::RHI::Private
+}}} // namespace NS::RHI::Private

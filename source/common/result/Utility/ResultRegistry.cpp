@@ -1,11 +1,10 @@
-/// @file ResultRegistry.cpp
+﻿/// @file ResultRegistry.cpp
 /// @brief エラー型レジストリの実装
 #include "common/result/Utility/ResultRegistry.h"
 
 #include <algorithm>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     namespace
     {
@@ -125,4 +124,4 @@ namespace NS::result
         m_frozen.store(false, std::memory_order_release);
     }
 
-} // namespace NS::result
+}} // namespace NS::result

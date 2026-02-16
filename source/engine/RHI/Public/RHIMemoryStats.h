@@ -1,4 +1,4 @@
-/// @file RHIMemoryStats.h
+﻿/// @file RHIMemoryStats.h
 /// @brief GPUメモリ統計・トラッカー・監視システム
 /// @details リソースタイプ別、ヒープ別のGPUメモリ使用量を追跡・可視化。
 /// @see 25-02-memory-stats.md
@@ -11,8 +11,7 @@
 #include <functional>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIResource;
     class IRHIMemoryTracker;
@@ -220,4 +219,4 @@ namespace NS::RHI
     /// メモリ使用量グラフ描画
     RHI_API void RHIDrawMemoryGraph(const RHIMemoryStats& stats);
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

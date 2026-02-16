@@ -1,4 +1,4 @@
-/// @file RHIShaderParameterMap.h
+﻿/// @file RHIShaderParameterMap.h
 /// @brief シェーダーパラメータマップ・マテリアルバインディング
 /// @details パラメータ名からバインディング位置へのマッピングと型安全なハンドルを提供。
 /// @see 24-02-shader-parameter-map.md
@@ -11,8 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     // 前方宣言
     class IRHIBuffer;
     class IRHITexture;
@@ -161,4 +160,4 @@ namespace NS::RHI
         std::unordered_map<uint32, std::vector<uint8>> m_rootConstants;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file RHIAmplificationShader.h
+﻿/// @file RHIAmplificationShader.h
 /// @brief 増幅シェーダー記述・ペイロード・パイプラインペア
 /// @details 増幅シェーダーの記述子、ペイロード定義例、メッシュシェーダーとの連携を提供。
 /// @see 22-02-amplification-shader.md
@@ -10,8 +10,7 @@
 
 #include <utility>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
 
     //=========================================================================
     // 定数 (22-02)
@@ -90,4 +89,4 @@ namespace NS::RHI
         RHIMeshShaderRef m_meshShader;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

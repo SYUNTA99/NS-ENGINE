@@ -1,4 +1,4 @@
-/// @file ResultTraits.h
+﻿/// @file ResultTraits.h
 /// @brief Result型の内部表現とビット操作
 #pragma once
 
@@ -7,8 +7,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     /// Result型の内部表現とビット操作
     /// 32bitレイアウト:
@@ -155,4 +154,4 @@ namespace NS::result::detail
                       "Reserved bits subdivision must match");
     };
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail

@@ -1,12 +1,11 @@
-/// @file InternalAccessor.h
+﻿/// @file InternalAccessor.h
 /// @brief Result型の内部アクセス用クラス
 #pragma once
 
 
 #include "common/result/Core/Result.h"
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     /// 内部アクセス用クラス
     /// Resultのprivateコンストラクタにアクセスするためのfriendクラス
@@ -46,7 +45,7 @@ namespace NS::result::detail
         return InternalAccessor::ConstructResult(value);
     }
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail
 
 // ResultSuccess::operator Result の実装
 inline constexpr NS::ResultSuccess::operator NS::Result() const noexcept

@@ -1,4 +1,4 @@
-/// @file IRHIViews.h
+﻿/// @file IRHIViews.h
 /// @brief SRV・UAV・RTV・DSV・CBV ビューインターフェースと記述構造体
 /// @details シェーダーリソースビュー、アンオーダードアクセスビュー、レンダーターゲットビュー、
 ///          デプスステンシルビュー、定数バッファビューの定義と関連ヘルパー。
@@ -16,8 +16,7 @@
 #include <cstring>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     /// 前方宣言
     class IRHIDevice;
     class IRHIBuffer;
@@ -1065,4 +1064,4 @@ namespace NS::RHI
         uint32 m_currentIndex = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file ErrorResultBase.h
+﻿/// @file ErrorResultBase.h
 /// @brief 特定エラーを表すコンパイル時型テンプレート
 #pragma once
 
@@ -6,8 +6,7 @@
 #include "common/result/Core/InternalAccessor.h"
 #include "common/result/Core/ResultBase.h"
 
-namespace NS::result::detail
-{
+namespace NS { namespace result { namespace detail {
 
     /// 特定エラーを表すコンパイル時型
     /// @tparam Module_ モジュールID
@@ -71,4 +70,4 @@ namespace NS::result::detail
         }
     };
 
-} // namespace NS::result::detail
+}}} // namespace NS::result::detail

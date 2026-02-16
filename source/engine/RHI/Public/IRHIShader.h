@@ -1,4 +1,4 @@
-/// @file IRHIShader.h
+﻿/// @file IRHIShader.h
 /// @brief シェーダーリソースインターフェースとバイトコード管理
 /// @details コンパイル済みシェーダーの管理、作成、キャッシュ機能を提供。
 /// @see 06-01-shader-bytecode.md, 06-02-shader-interface.md
@@ -14,8 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIShaderBytecode (06-01)
     //=========================================================================
@@ -519,4 +518,4 @@ namespace NS::RHI
         virtual MemorySize GetCacheSize() const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

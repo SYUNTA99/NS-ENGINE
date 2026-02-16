@@ -1,4 +1,4 @@
-/// @file RHIGPUReadback.h
+﻿/// @file RHIGPUReadback.h
 /// @brief GPUバッファリードバック
 /// @details 非同期バッファリードバック、型安全ヘルパー、配列リードバックを提供。
 /// @see 20-02-gpu-readback.md
@@ -11,8 +11,7 @@
 
 #include <utility>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIReadbackState (20-02)
     //=========================================================================
@@ -192,4 +191,4 @@ namespace NS::RHI
         uint32 m_count = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

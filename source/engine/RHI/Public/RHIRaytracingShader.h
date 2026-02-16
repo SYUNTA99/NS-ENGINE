@@ -1,4 +1,4 @@
-/// @file RHIRaytracingShader.h
+﻿/// @file RHIRaytracingShader.h
 /// @brief レイトレーシングシェーダー・シェーダーバインディングテーブル
 /// @details シェーダー識別子、ヒットグループ、SBT管理のインターフェースを提供。DXR 1.1準拠。
 /// @see 19-02-raytracing-shader.md
@@ -9,8 +9,7 @@
 #include "RHIRefCountPtr.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // 定数 (19-02)
     //=========================================================================
@@ -246,4 +245,4 @@ namespace NS::RHI
         }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

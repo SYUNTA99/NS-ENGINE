@@ -1,4 +1,4 @@
-/// @file RHIDeviceLost.h
+﻿/// @file RHIDeviceLost.h
 /// @brief デバイスロスト検出・通知・回復
 /// @details デバイスロスト理由、詳細情報、コールバックハンドラー、
 ///          デバイス回復マネージャーを提供。
@@ -9,8 +9,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIDeviceLostReason (17-02)
     //=========================================================================
@@ -239,4 +238,4 @@ namespace NS::RHI
         uint32 m_recreateCallbackCount = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

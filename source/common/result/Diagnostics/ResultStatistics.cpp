@@ -1,4 +1,4 @@
-/// @file ResultStatistics.cpp
+﻿/// @file ResultStatistics.cpp
 /// @brief エラー統計収集の実装
 #include "common/result/Diagnostics/ResultStatistics.h"
 
@@ -7,8 +7,7 @@
 #include <algorithm>
 #include <random>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     namespace
     {
@@ -236,4 +235,4 @@ namespace NS::result
         m_samplingRate.store(std::clamp(rate, 0.0, 1.0), std::memory_order_relaxed);
     }
 
-} // namespace NS::result
+}} // namespace NS::result

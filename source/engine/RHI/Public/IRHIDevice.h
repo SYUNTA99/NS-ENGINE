@@ -1,4 +1,4 @@
-/// @file IRHIDevice.h
+﻿/// @file IRHIDevice.h
 /// @brief 論理デバイスインターフェース
 /// @details GPU機能へのアクセスとリソース管理を提供。
 /// @see 01-20-device-core.md
@@ -10,8 +10,7 @@
 #include "RHIPixelFormat.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     /// 前方宣言
     struct RHIDeviceLostInfo;
     struct RHIValidationConfig;
@@ -828,4 +827,4 @@ namespace NS::RHI
         virtual uint32 GetNodeCount() const = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

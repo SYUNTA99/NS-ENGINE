@@ -1,4 +1,4 @@
-/// @file IRHICommandContextBase.h
+﻿/// @file IRHICommandContextBase.h
 /// @brief コマンドコンテキスト基底インターフェース
 /// @details 全コマンドコンテキストに共通するインターフェース。ライフサイクル、バリア、コピー、デバッグ機能を提供。
 /// @see 02-01-command-context-base.md
@@ -10,8 +10,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // IRHICommandContextBase
     //=========================================================================
@@ -208,4 +207,4 @@ namespace NS::RHI
 #define RHI_DEBUG_EVENT(ctx, name)                                                                                     \
     ::NS::RHI::RHIDebugEventScope NS_MACRO_CONCATENATE(_rhiDebugEvent, __LINE__)(ctx, name)
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

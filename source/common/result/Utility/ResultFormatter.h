@@ -1,4 +1,4 @@
-/// @file ResultFormatter.h
+﻿/// @file ResultFormatter.h
 /// @brief Resultのフォーマットユーティリティ
 #pragma once
 
@@ -12,8 +12,7 @@
 #include <string>
 #include <string_view>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// フォーマットオプション
     struct FormatOptions
@@ -67,7 +66,7 @@ namespace NS::result
         FormatOptions m_options;
     };
 
-} // namespace NS::result
+}} // namespace NS::result
 
 // std::format specialization
 template <> struct std::formatter<::NS::Result>

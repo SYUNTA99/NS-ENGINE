@@ -1,4 +1,4 @@
-/// @file RHICommandSignature.h
+﻿/// @file RHICommandSignature.h
 /// @brief コマンドシグネチャ・GPU駆動レンダリング
 /// @details ExecuteIndirect用コマンドシグネチャ、ビルダー、
 ///          GPU駆動描画バッチ、メッシュレットレンダラーを提供。
@@ -12,8 +12,7 @@
 
 #include <vector>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIIndirectArgumentType (21-04)
     //=========================================================================
@@ -290,4 +289,4 @@ namespace NS::RHI
         uint32 m_maxMeshlets;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

@@ -1,4 +1,4 @@
-/// @file ErrorCategory.h
+﻿/// @file ErrorCategory.h
 /// @brief エラーの性質分類（時間的性質、重大度）
 #pragma once
 
@@ -7,8 +7,7 @@
 #include "common/result/Core/ResultTraits.h"
 #include <cstdint>
 
-namespace NS::result
-{
+namespace NS { namespace result {
 
     /// エラーの時間的性質（2bit: Reserved領域 bit22-23に格納）
     enum class ErrorPersistence : std::uint8_t
@@ -74,4 +73,4 @@ namespace NS::result
         return GetErrorCategory(result).IsFatal();
     }
 
-} // namespace NS::result
+}} // namespace NS::result

@@ -1,4 +1,4 @@
-/// @file IRHIQueue.h
+﻿/// @file IRHIQueue.h
 /// @brief コマンドキューインターフェース
 /// @details GPUにコマンドを送信するためのキュー。同期、タイミング、デバッグ機能を含む。
 /// @see 01-25-queue-interface.md
@@ -10,8 +10,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHIQueueStats: キュー統計
     //=========================================================================
@@ -250,4 +249,4 @@ namespace NS::RHI
         }
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

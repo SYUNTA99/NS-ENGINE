@@ -1,4 +1,4 @@
-/// @file RHIResidency.h
+﻿/// @file RHIResidency.h
 /// @brief GPUメモリ常駐管理
 /// @details 常駐状態、優先度、自動退避管理、テクスチャストリーミングを提供。
 /// @see 11-05-residency.md
@@ -7,8 +7,7 @@
 #include "RHIMacros.h"
 #include "RHITypes.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     class IRHIDevice;
     class IRHIFence;
     class IRHIQueue;
@@ -256,4 +255,4 @@ namespace NS::RHI
         uint32 m_entryCapacity = 0;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

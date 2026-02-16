@@ -1,4 +1,4 @@
-/// @file IRHITexture.h
+﻿/// @file IRHITexture.h
 /// @brief テクスチャ記述・インターフェース・サブリソース・データ転送
 /// @details テクスチャ作成記述、IRHITextureインターフェース、サブリソース計算、
 ///          Map/Unmap、アップロード/リードバック/コピーヘルパーを提供。
@@ -16,8 +16,7 @@
 #include <algorithm>
 #include <cstdio>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     /// 前方宣言
     class IRHIDevice;
     class IRHISwapChain;
@@ -1332,4 +1331,4 @@ namespace NS::RHI
         static bool CopyWithFormatConversion(IRHICommandContext* context, const RHITextureCopyDesc& desc);
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

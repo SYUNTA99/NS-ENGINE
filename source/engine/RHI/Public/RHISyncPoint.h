@@ -1,4 +1,4 @@
-/// @file RHISyncPoint.h
+﻿/// @file RHISyncPoint.h
 /// @brief 同期ポイント
 /// @details フレーム同期、パイプライン同期、複数同期ポイント待機、タイムライン同期を提供。
 /// @see 09-02-sync-point.md
@@ -6,8 +6,7 @@
 
 #include "IRHIFence.h"
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // RHISyncPoint (09-02)
     //=========================================================================
@@ -285,4 +284,4 @@ namespace NS::RHI
         uint64 m_nextValue = 1;
     };
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

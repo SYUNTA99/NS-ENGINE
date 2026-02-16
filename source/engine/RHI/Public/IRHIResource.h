@@ -1,4 +1,4 @@
-/// @file IRHIResource.h
+﻿/// @file IRHIResource.h
 /// @brief RHIリソース基底クラス
 /// @details 全RHIリソースの共通インターフェース。参照カウント、デバッグ名、遅延削除を提供。
 /// @see 01-12-resource-base.md
@@ -14,8 +14,7 @@
 #include <mutex>
 #include <string>
 
-namespace NS::RHI
-{
+namespace NS { namespace RHI {
     //=========================================================================
     // ERHIResourceType
     //=========================================================================
@@ -225,4 +224,4 @@ namespace NS::RHI
 
     using RHIResourceRef = TRefCountPtr<IRHIResource>;
 
-} // namespace NS::RHI
+}} // namespace NS::RHI

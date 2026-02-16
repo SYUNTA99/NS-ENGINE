@@ -16,10 +16,11 @@ paths:
 
 ## 名前空間
 
-- ルート: `NS::`
-- モジュール: `NS::ECS::`, `NS::Graphics::`, `NS::Input::`
-- サブ機能: `NS::ECS::Query::`
-- 内部実装: `NS::ECS::Private::`
+**namespace NS::X` (C++17入れ子宣言) は使わない**
+```cpp
+namespace NS { namespace ModuleName {   // 公開API
+namespace NS { namespace Private { namespace ModuleName {  // 内部実装
+```
 
 ### コード記述
 
