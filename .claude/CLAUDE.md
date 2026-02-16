@@ -1,3 +1,5 @@
+**このファイル(.claude/CLAUDE.md)はユーザーが明示的に編集を指示した場合のみ変更すること。自主的な編集禁止。**
+
 # NS-ENGINE
 
 3D三人称視点プラットフォーマー/ジャンプアクションゲーム専用エンジン
@@ -7,12 +9,26 @@
 - 短く、具体的に、Claudeが自分で検証ループを回せる情報を書く
 - 命名規則・禁止事項など「コードと照合できるルール」を書く
 - アーキテクチャ詳細は書かない（コードを読めばわかる、陳腐化する）
-- ビルド・テスト方法は書かない（スキルにある）
+
+---
+# ビルド
+
+```bash
+# ビルド (Debug/Release/Burst)
+powershell -Command "& cmd /c 'tools\@build.cmd Debug'"
+
+# プロジェクト再生成（premake5.lua変更後、ファイル追加/削除後）
+powershell -Command "& cmd /c 'tools\@regen_project.cmd'"
+
+# テスト
+powershell -Command "& cmd /c 'tools\@run_tests.cmd'"
+```
 
 ---
 ## ディレクトリ命名規則
 
 - **フォルダ名: PascalCase**
+- 注: 既存モジュールフォルダ (hal/, core/, ecs/ 等) は lowercase（レガシー）。新規モジュールは PascalCase で作成
 
 # モジュール構造
 
@@ -51,8 +67,9 @@ Source/Engine/
 
 ## namespace
 
-- Public/Internal/Private全て `NS::Module::`
-- 内部専用型: `NS::Module::Private::`
+- Public/Internal/Private全て `NS::`
+- 内部専用型: `NS::Private::ModuleName::`
+- 注: 既存モジュール (HAL等) は全て `namespace NS` を使用
 
 ---
 
