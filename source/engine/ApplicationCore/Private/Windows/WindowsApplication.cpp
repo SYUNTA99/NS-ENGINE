@@ -65,6 +65,9 @@ namespace NS
     {
         // DPI awareness は WindowsPlatformApplicationMisc::SetHighDPIMode() で一元管理
 
+        // AppWndProc をウィンドウクラス登録前に設定
+        WindowsWindow::SetWndProcCallback(WindowsApplication::AppWndProc);
+
         // ウィンドウクラス登録
         WindowsWindow::Initialize(hInstance, hIcon);
 
@@ -89,6 +92,7 @@ namespace NS
         }
 
         // アクセシビリティキーの保存
+        m_savedStickyKeys.cbSize = sizeof(STICKYKEYS);
         ::SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &m_savedStickyKeys, 0);
 
         m_savedToggleKeys.cbSize = sizeof(TOGGLEKEYS);
