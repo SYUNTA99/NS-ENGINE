@@ -51,6 +51,39 @@ current/ は2つのモードで使用される:
 - 実装モードは単独タスクでも、サブ計画の実装でも使用可能
 - サブ計画を実装する場合は「実装中: `<親計画リンク>`」を追記
 
+## サブ計画実装フロー
+
+`/plan-large-scale` で作成したサブ計画（01-xxx.md, 02-xxx.md, ...）を番号順に実装するループ。
+
+### 開始: サブ計画の読み込み
+
+1. サブ計画ファイル（例: `.claude/plans/<feature>/01-xxx.md`）を読む
+2. `current/` を実装用に初期化（既存があれば上書き）
+3. `task_plan.md` の「実装中」にサブ計画へのリンクを記録
+4. サブ計画の TODO を `task_plan.md` の「サブ計画TODO」セクションに転記
+
+### 実装: 通常の planning-with-files フロー
+
+- task_plan.md を読んでゴール確認 → TODO実装 → findings.md/progress.md 更新
+- エラーは task_plan.md に記録、3回失敗でユーザーに相談
+
+### 完了: 結果の記録
+
+1. 検証（ビルド/テスト）を実施
+2. `progress.md` にサブ計画完了を記録
+3. `current/findings.md` の重要な知見を親サブ計画ファイル（01-xxx.md）に転記
+4. `<feature>/README.md` の該当サブ計画の状態を `complete` に更新
+
+### 遷移: 次のサブ計画へ
+
+1. `current/` を初期化（知見は転記済みのためアーカイブ不要）
+2. 次の番号のサブ計画（02-xxx.md）を読み、「開始」ステップに戻る
+3. **番号順を厳守**（01 → 02 → 03 → ...）
+
+### 全完了時
+
+全サブ計画が完了したら `<feature>/README.md` に完了を明記し、ユーザーに報告。
+
 ---
 
 Work like Manus: Use persistent markdown files as your "working memory on disk."

@@ -9,10 +9,16 @@
 <!-- investigation: 調査フェーズ（/plan-large-scale の Phase 0 専用）| implementation: 通常のタスク実行 -->
 implementation
 
-<!-- サブ計画を実装する場合は以下を追記:
 ## 実装中
+<!-- 単独タスクの場合はこのセクションを削除 -->
 .claude/plans/<feature>/XX-subplan.md
--->
+
+## サブ計画TODO
+<!-- 単独タスクの場合はこのセクションを削除 -->
+<!-- サブ計画ファイルの TODO を以下に転記し、実装しながらチェックを付ける -->
+- [ ] (サブ計画から転記)
+- [ ] ...
+- [ ] ...
 
 ## OpenSpec
 <!-- 関連する OpenSpec リソースがあれば記載。なければこのセクションを削除。 -->
@@ -28,14 +34,18 @@ implementation
 [One sentence describing the end state]
 
 ## Current Phase
-<!-- 
-  WHAT: Which phase you're currently working on (e.g., "Phase 1", "Phase 3").
+<!--
+  WHAT: Which phase you're currently working on.
   WHY: Quick reference for where you are in the task. Update this as you progress.
+  サブ計画実装時: 現在のTODO番号を記載 (例: "TODO 2/4")
+  単独タスク時: 現在のPhase番号を記載 (例: "Phase 1")
 -->
 Phase 1
 
 ## Phases
-<!-- 
+<!--
+  サブ計画実装時: このセクション全体を削除する。作業項目は上の「サブ計画TODO」が唯一のタスクリスト。
+  単独タスク時: 以下の汎用フェーズをカスタマイズして使用する。
   WHAT: Break your task into 3-7 logical phases. Each phase should be completable.
   WHY: Breaking work into phases prevents overwhelm and makes progress visible.
   WHEN: Update status after completing each phase: pending → in_progress → complete
