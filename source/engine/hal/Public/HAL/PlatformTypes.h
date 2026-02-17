@@ -72,7 +72,7 @@ namespace NS
 #endif
 
 /// ANSI文字列リテラルマクロ（明示的にANSIを使用）
-#ifndef ANSITEXTF
+#ifndef ANSITEXT
 #define ANSITEXT(x) x
 #endif
 

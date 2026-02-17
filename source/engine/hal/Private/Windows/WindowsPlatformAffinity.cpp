@@ -55,13 +55,93 @@ namespace NS
             }
         }
 
-        // ハイブリッドCPU検出（簡易版）
-        // TODO: GetSystemCpuSetInformation()でP/Eコア検出
+        // ハイブリッドCPU検出（GetSystemCpuSetInformation使用）
         s_topology.isHybridCPU = false;
         s_topology.performanceCoreCount = s_topology.physicalCoreCount;
         s_topology.efficiencyCoreCount = 0;
         s_topology.performanceCoreMask = (1ULL << s_topology.logicalProcessorCount) - 1;
         s_topology.efficiencyCoreMask = 0;
+
+        // GetSystemCpuSetInformation は Windows 10 1607+ で利用可能
+        using GetSystemCpuSetInformationFn = BOOL(WINAPI*)(
+            PSYSTEM_CPU_SET_INFORMATION, ULONG, PULONG, HANDLE, ULONG);
+        HMODULE hKernel32 = ::GetModuleHandleW(L"kernel32.dll");
+        auto pGetSystemCpuSetInfo = hKernel32
+            ? reinterpret_cast<GetSystemCpuSetInformationFn>(
+                  ::GetProcAddress(hKernel32, "GetSystemCpuSetInformation"))
+            : nullptr;
+
+        if (pGetSystemCpuSetInfo)
+        {
+            ULONG cpuSetInfoLength = 0;
+            pGetSystemCpuSetInfo(nullptr, 0, &cpuSetInfoLength, GetCurrentProcess(), 0);
+            if (cpuSetInfoLength > 0)
+            {
+                auto* cpuSetBuffer = static_cast<uint8*>(HeapAlloc(GetProcessHeap(), 0, cpuSetInfoLength));
+                if (cpuSetBuffer &&
+                    pGetSystemCpuSetInfo(reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer),
+                                         cpuSetInfoLength, &cpuSetInfoLength, GetCurrentProcess(), 0))
+                {
+                    uint8 minEfficiency = 0xFF;
+                    uint8 maxEfficiency = 0;
+                    ULONG offset2 = 0;
+                    auto* info = reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer);
+
+                    // まずEfficiencyClassの範囲を調査
+                    while (offset2 < cpuSetInfoLength)
+                    {
+                        info = reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer + offset2);
+                        if (info->Type == CpuSetInformation)
+                        {
+                            uint8 eff = info->CpuSet.EfficiencyClass;
+                            if (eff < minEfficiency) minEfficiency = eff;
+                            if (eff > maxEfficiency) maxEfficiency = eff;
+                        }
+                        offset2 += info->Size;
+                    }
+
+                    // 異なるEfficiencyClassが存在 → ハイブリッドCPU
+                    if (maxEfficiency > minEfficiency)
+                    {
+                        s_topology.isHybridCPU = true;
+                        s_topology.performanceCoreMask = 0;
+                        s_topology.efficiencyCoreMask = 0;
+                        uint32 pCores = 0;
+                        uint32 eCores = 0;
+
+                        offset2 = 0;
+                        while (offset2 < cpuSetInfoLength)
+                        {
+                            info = reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer + offset2);
+                            if (info->Type == CpuSetInformation)
+                            {
+                                uint8 logicalIdx = info->CpuSet.LogicalProcessorIndex;
+                                if (logicalIdx < 64)
+                                {
+                                    if (info->CpuSet.EfficiencyClass == maxEfficiency)
+                                    {
+                                        s_topology.performanceCoreMask |= (1ULL << logicalIdx);
+                                        pCores++;
+                                    }
+                                    else
+                                    {
+                                        s_topology.efficiencyCoreMask |= (1ULL << logicalIdx);
+                                        eCores++;
+                                    }
+                                }
+                            }
+                            offset2 += info->Size;
+                        }
+                        s_topology.performanceCoreCount = pCores;
+                        s_topology.efficiencyCoreCount = eCores;
+                    }
+                }
+                if (cpuSetBuffer)
+                {
+                    HeapFree(GetProcessHeap(), 0, cpuSetBuffer);
+                }
+            }
+        }
 
         s_topologyInitialized = true;
     }

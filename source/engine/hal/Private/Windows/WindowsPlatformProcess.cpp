@@ -1,7 +1,6 @@
 /// @file WindowsPlatformProcess.cpp
-/// @brief Windows固有のプロセス管理実装
+/// @brief Windows platform process implementation
 
-// windows.hを先にインクルード
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -11,6 +10,8 @@
 #include <windows.h>
 
 #include "Windows/WindowsPlatformProcess.h"
+#include <cmath>
+#include <string>
 
 namespace NS
 {
@@ -21,6 +22,19 @@ namespace NS
 
     void WindowsPlatformProcess::SleepNoStats(float seconds)
     {
+        if (!std::isfinite(seconds) || seconds <= 0.0f)
+        {
+            ::Sleep(0);
+            return;
+        }
+
+        constexpr float MaxSleepSeconds = static_cast<float>(MAXDWORD) / 1000.0f;
+        if (seconds >= MaxSleepSeconds)
+        {
+            ::Sleep(MAXDWORD);
+            return;
+        }
+
         ::Sleep(static_cast<DWORD>(seconds * 1000.0f));
     }
 
@@ -49,10 +63,26 @@ namespace NS
 
     void* WindowsPlatformProcess::GetDllExport(void* dllHandle, const TCHAR* procName)
     {
-        // GetProcAddressはANSI文字列を要求
-        char procNameAnsi[256];
-        WideCharToMultiByte(CP_ACP, 0, procName, -1, procNameAnsi, sizeof(procNameAnsi), nullptr, nullptr);
-        return reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(dllHandle), procNameAnsi));
+        if (!dllHandle || !procName || *procName == L'\0')
+        {
+            return nullptr;
+        }
+
+        const int requiredSize = ::WideCharToMultiByte(CP_ACP, 0, procName, -1, nullptr, 0, nullptr, nullptr);
+        if (requiredSize <= 0)
+        {
+            return nullptr;
+        }
+
+        std::string procNameAnsi(static_cast<size_t>(requiredSize), '\0');
+        const int convertedSize =
+            ::WideCharToMultiByte(CP_ACP, 0, procName, -1, procNameAnsi.data(), requiredSize, nullptr, nullptr);
+        if (convertedSize <= 0)
+        {
+            return nullptr;
+        }
+
+        return reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(dllHandle), procNameAnsi.c_str()));
     }
 
     uint32 WindowsPlatformProcess::GetCurrentProcessId()

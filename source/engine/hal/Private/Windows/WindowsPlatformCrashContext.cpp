@@ -60,10 +60,10 @@ namespace NS
 
     void WindowsPlatformCrashContext::CaptureContext()
     {
-        // TODO: Windows固有のコンテキスト収集
-        // - レジスタ状態
-        // - スタックトレース
-        // - ロードされたモジュール一覧
+        // スタックバックトレースをキャプチャ（CaptureContext自身 + 呼び出し元を2フレームスキップ）
+        m_stackDepth = static_cast<int32>(
+            ::RtlCaptureStackBackTrace(2, kCrashMaxStackDepth,
+                                        reinterpret_cast<void**>(m_stackTrace), nullptr));
     }
 
     void WindowsPlatformCrashContext::SetUnhandledExceptionFilter()
@@ -99,12 +99,13 @@ namespace NS
         {
             switch (ep->ExceptionRecord->ExceptionCode)
             {
+            case STATUS_HEAP_CORRUPTION:
+                type = CrashContextType::OutOfMemory;
+                break;
             case EXCEPTION_ACCESS_VIOLATION:
             case EXCEPTION_STACK_OVERFLOW:
             case EXCEPTION_ILLEGAL_INSTRUCTION:
             case EXCEPTION_INT_DIVIDE_BY_ZERO:
-                type = CrashContextType::Crash;
-                break;
             default:
                 type = CrashContextType::Crash;
                 break;
@@ -112,6 +113,14 @@ namespace NS
         }
 
         WindowsPlatformCrashContext context(type);
+
+        // 例外情報を保存
+        if (ep->ExceptionRecord)
+        {
+            context.m_exceptionCode = ep->ExceptionRecord->ExceptionCode;
+            context.m_exceptionAddress = reinterpret_cast<uint64>(ep->ExceptionRecord->ExceptionAddress);
+        }
+
         context.CaptureContext();
     }
 } // namespace NS

@@ -86,4 +86,10 @@ C:\Users\nanat\file.txt                    # ✗ エスケープと解釈され�
 "bash \"C:/Users/nanat/Desktop/NS-ENGINE/.claude/hooks/hook.sh\""  # ✓ 絶対パス
 "bash \"$PROJECT_ROOT/.claude/hooks/hook.sh\""                     # ✗ 環境変数は展開されない
 ```
- PowerShellでUTF-8ファイル（日本語含む）を操作する際は、必ず-Encoding UTF8を指定する必要があります。
+
+**ファイル削除は `rm` ではなくゴミ箱送り**（bash からシングルクォートで渡す）:
+```bash
+powershell -Command 'Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile("C:\full\path\file.txt","OnlyErrorDialogs","SendToRecycleBin")'
+```
+
+PowerShellでUTF-8ファイル（日本語含む）を操作する際は、必ず-Encoding UTF8を指定する必要があります。

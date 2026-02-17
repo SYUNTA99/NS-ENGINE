@@ -137,6 +137,9 @@ private:                                                                        
     NS_DISALLOW_COPY(TypeName);                                                                                        \
     NS_DISALLOW_MOVE(TypeName)
 
+/// 未使用変数の警告抑制
+#define NS_UNUSED(x) (void)(x)
+
 /// ビットサイズ取得
 #define NS_BITSIZEOF(T) (sizeof(T) * 8)
 

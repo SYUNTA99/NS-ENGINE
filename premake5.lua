@@ -245,6 +245,8 @@ project "engine"
         "source",
         "source/engine",
         "source/engine/hal/Public",
+        "source/engine/ApplicationCore/Public",
+        "source/engine/RHI/Public",
         "external/DirectXTex/DirectXTex",
         "external/DirectXTK/Inc",
         -- NuGetパッケージ
