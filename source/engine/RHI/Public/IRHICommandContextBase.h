@@ -1,4 +1,4 @@
-﻿/// @file IRHICommandContextBase.h
+/// @file IRHICommandContextBase.h
 /// @brief コマンドコンテキスト基底インターフェース
 /// @details 全コマンドコンテキストに共通するインターフェース。ライフサイクル、バリア、コピー、デバッグ機能を提供。
 /// @see 02-01-command-context-base.md
@@ -9,6 +9,7 @@
 #include "RHIFwd.h"
 #include "RHIMacros.h"
 #include "RHITypes.h"
+#include "RHIDispatchTable.h"
 
 namespace NS { namespace RHI {
     //=========================================================================
@@ -64,91 +65,177 @@ namespace NS { namespace RHI {
         /// @param resource 対象リソース
         /// @param stateBefore 遷移前の状態
         /// @param stateAfter 遷移後の状態
-        virtual void TransitionResource(IRHIResource* resource, ERHIAccess stateBefore, ERHIAccess stateAfter) = 0;
+        void TransitionResource(IRHIResource* resource, ERHIAccess stateBefore, ERHIAccess stateAfter)
+        {
+            NS_RHI_DISPATCH(TransitionResource, this, resource, stateBefore, stateAfter);
+        }
 
         /// UAVバリア
         /// @param resource 対象リソース（nullptrで全UAV）
-        virtual void UAVBarrier(IRHIResource* resource = nullptr) = 0;
+        void UAVBarrier(IRHIResource* resource = nullptr)
+        {
+            NS_RHI_DISPATCH(UAVBarrier, this, resource);
+        }
 
         /// エイリアシングバリア
         /// @param resourceBefore 使用終了リソース
         /// @param resourceAfter 使用開始リソース
-        virtual void AliasingBarrier(IRHIResource* resourceBefore, IRHIResource* resourceAfter) = 0;
+        void AliasingBarrier(IRHIResource* resourceBefore, IRHIResource* resourceAfter)
+        {
+            NS_RHI_DISPATCH(AliasingBarrier, this, resourceBefore, resourceAfter);
+        }
 
         /// バリアをフラッシュ（遅延バリアの場合）
-        virtual void FlushBarriers() = 0;
+        void FlushBarriers()
+        {
+            NS_RHI_DISPATCH(FlushBarriers, this);
+        }
 
         //=====================================================================
         // バッファコピー
         //=====================================================================
 
         /// バッファ全体コピー
-        virtual void CopyBuffer(IRHIBuffer* dst, IRHIBuffer* src) = 0;
+        void CopyBuffer(IRHIBuffer* dst, IRHIBuffer* src)
+        {
+            NS_RHI_DISPATCH(CopyBuffer, this, dst, src);
+        }
 
         /// バッファ部分コピー
-        virtual void CopyBufferRegion(
-            IRHIBuffer* dst, uint64 dstOffset, IRHIBuffer* src, uint64 srcOffset, uint64 size) = 0;
+        void CopyBufferRegion(
+            IRHIBuffer* dst, uint64 dstOffset, IRHIBuffer* src, uint64 srcOffset, uint64 size)
+        {
+            NS_RHI_DISPATCH(CopyBufferRegion, this, dst, dstOffset, src, srcOffset, size);
+        }
 
         //=====================================================================
         // テクスチャコピー
         //=====================================================================
 
         /// テクスチャ全体コピー
-        virtual void CopyTexture(IRHITexture* dst, IRHITexture* src) = 0;
+        void CopyTexture(IRHITexture* dst, IRHITexture* src)
+        {
+            NS_RHI_DISPATCH(CopyTexture, this, dst, src);
+        }
 
         /// テクスチャ部分コピー
-        virtual void CopyTextureRegion(IRHITexture* dst,
-                                       uint32 dstMip,
-                                       uint32 dstSlice,
-                                       Offset3D dstOffset,
-                                       IRHITexture* src,
-                                       uint32 srcMip,
-                                       uint32 srcSlice,
-                                       const RHIBox* srcBox = nullptr) = 0;
+        void CopyTextureRegion(IRHITexture* dst,
+                               uint32 dstMip,
+                               uint32 dstSlice,
+                               Offset3D dstOffset,
+                               IRHITexture* src,
+                               uint32 srcMip,
+                               uint32 srcSlice,
+                               const RHIBox* srcBox = nullptr)
+        {
+            NS_RHI_DISPATCH(CopyTextureRegion, this, dst, dstMip, dstSlice, dstOffset, src, srcMip, srcSlice, srcBox);
+        }
 
         //=====================================================================
         // バッファ ↔ テクスチャ
         //=====================================================================
 
         /// バッファからテクスチャへコピー
-        virtual void CopyBufferToTexture(IRHITexture* dst,
-                                         uint32 dstMip,
-                                         uint32 dstSlice,
-                                         Offset3D dstOffset,
-                                         IRHIBuffer* src,
-                                         uint64 srcOffset,
-                                         uint32 srcRowPitch,
-                                         uint32 srcDepthPitch) = 0;
+        void CopyBufferToTexture(IRHITexture* dst,
+                                 uint32 dstMip,
+                                 uint32 dstSlice,
+                                 Offset3D dstOffset,
+                                 IRHIBuffer* src,
+                                 uint64 srcOffset,
+                                 uint32 srcRowPitch,
+                                 uint32 srcDepthPitch)
+        {
+            NS_RHI_DISPATCH(CopyBufferToTexture, this, dst, dstMip, dstSlice, dstOffset, src, srcOffset, srcRowPitch, srcDepthPitch);
+        }
 
         /// テクスチャからバッファへコピー
-        virtual void CopyTextureToBuffer(IRHIBuffer* dst,
-                                         uint64 dstOffset,
-                                         uint32 dstRowPitch,
-                                         uint32 dstDepthPitch,
-                                         IRHITexture* src,
-                                         uint32 srcMip,
-                                         uint32 srcSlice,
-                                         const RHIBox* srcBox = nullptr) = 0;
+        void CopyTextureToBuffer(IRHIBuffer* dst,
+                                 uint64 dstOffset,
+                                 uint32 dstRowPitch,
+                                 uint32 dstDepthPitch,
+                                 IRHITexture* src,
+                                 uint32 srcMip,
+                                 uint32 srcSlice,
+                                 const RHIBox* srcBox = nullptr)
+        {
+            NS_RHI_DISPATCH(CopyTextureToBuffer, this, dst, dstOffset, dstRowPitch, dstDepthPitch, src, srcMip, srcSlice, srcBox);
+        }
+
+        //=====================================================================
+        // ステージングコピー
+        //=====================================================================
+
+        /// ステージングバッファへコピー
+        /// @param dst ステージングバッファ
+        /// @param dstOffset ステージングバッファ内オフセット
+        /// @param src コピー元リソース
+        /// @param srcOffset コピー元オフセット
+        /// @param size コピーサイズ
+        void CopyToStagingBuffer(IRHIStagingBuffer* dst, uint64 dstOffset, IRHIResource* src, uint64 srcOffset, uint64 size)
+        {
+            NS_RHI_DISPATCH(CopyToStagingBuffer, this, dst, dstOffset, src, srcOffset, size);
+        }
+
+        //=====================================================================
+        // MSAA解決
+        //=====================================================================
+
+        /// テクスチャ全体のMSAA解決
+        /// @param dst 解決先テクスチャ（非MSAA）
+        /// @param src 解決元テクスチャ（MSAA）
+        void ResolveTexture(IRHITexture* dst, IRHITexture* src)
+        {
+            NS_RHI_DISPATCH(ResolveTexture, this, dst, src);
+        }
+
+        /// テクスチャ部分MSAA解決
+        /// @param dst 解決先テクスチャ
+        /// @param dstMip 解決先Mipレベル
+        /// @param dstSlice 解決先配列スライス
+        /// @param src 解決元テクスチャ
+        /// @param srcMip 解決元Mipレベル
+        /// @param srcSlice 解決元配列スライス
+        void ResolveTextureRegion(IRHITexture* dst,
+                                  uint32 dstMip,
+                                  uint32 dstSlice,
+                                  IRHITexture* src,
+                                  uint32 srcMip,
+                                  uint32 srcSlice)
+        {
+            NS_RHI_DISPATCH(ResolveTextureRegion, this, dst, dstMip, dstSlice, src, srcMip, srcSlice);
+        }
 
         //=====================================================================
         // デバッグ
         //=====================================================================
 
         /// デバッグイベント開始
-        virtual void BeginDebugEvent(const char* name, uint32 color = 0) = 0;
+        void BeginDebugEvent(const char* name, uint32 color = 0)
+        {
+            NS_RHI_DISPATCH(BeginDebugEvent, this, name, color);
+        }
 
         /// デバッグイベント終了
-        virtual void EndDebugEvent() = 0;
+        void EndDebugEvent()
+        {
+            NS_RHI_DISPATCH(EndDebugEvent, this);
+        }
 
         /// デバッグマーカー挿入
-        virtual void InsertDebugMarker(const char* name, uint32 color = 0) = 0;
+        void InsertDebugMarker(const char* name, uint32 color = 0)
+        {
+            NS_RHI_DISPATCH(InsertDebugMarker, this, name, color);
+        }
 
         //=====================================================================
         // ブレッドクラム (09-03)
         //=====================================================================
 
         /// ブレッドクラム挿入（GPUクラッシュ診断用）
-        virtual void InsertBreadcrumb(uint32 id, const char* message = nullptr) = 0;
+        void InsertBreadcrumb(uint32 id, const char* message = nullptr)
+        {
+            NS_RHI_DISPATCH(InsertBreadcrumb, this, id, message);
+        }
     };
 
     //=========================================================================

@@ -173,13 +173,13 @@ namespace NS { namespace RHI {
         virtual IRHIDevice* GetDevice() const = 0;
 
         /// CPUディスクリプタハンドル取得
-        virtual RHICPUDescriptorHandle GetCPUHandle() const = 0;
+        RHICPUDescriptorHandle GetCPUHandle() const { return m_cpuHandle; }
 
         /// GPUディスクリプタハンドル取得（オンラインヒープの場合）
-        virtual RHIGPUDescriptorHandle GetGPUHandle() const = 0;
+        RHIGPUDescriptorHandle GetGPUHandle() const { return m_gpuHandle; }
 
         /// Bindlessインデックス取得
-        virtual BindlessIndex GetBindlessIndex() const = 0;
+        BindlessIndex GetBindlessIndex() const { return m_bindlessIndex; }
 
         /// ソースリソース取得
         virtual IRHIResource* GetResource() const = 0;
@@ -195,6 +195,11 @@ namespace NS { namespace RHI {
 
         /// ソーステクスチャ取得（テクスチャビューの場合）
         IRHITexture* GetTexture() const;
+
+    protected:
+        RHICPUDescriptorHandle m_cpuHandle{};
+        RHIGPUDescriptorHandle m_gpuHandle{};
+        BindlessIndex m_bindlessIndex{};
     };
 
     using RHIShaderResourceViewRef = TRefCountPtr<IRHIShaderResourceView>;
@@ -393,13 +398,13 @@ namespace NS { namespace RHI {
         virtual IRHIDevice* GetDevice() const = 0;
 
         /// CPUディスクリプタハンドル取得
-        virtual RHICPUDescriptorHandle GetCPUHandle() const = 0;
+        RHICPUDescriptorHandle GetCPUHandle() const { return m_cpuHandle; }
 
         /// GPUディスクリプタハンドル取得
-        virtual RHIGPUDescriptorHandle GetGPUHandle() const = 0;
+        RHIGPUDescriptorHandle GetGPUHandle() const { return m_gpuHandle; }
 
         /// Bindlessインデックス取得
-        virtual BindlessIndex GetBindlessIndex() const = 0;
+        BindlessIndex GetBindlessIndex() const { return m_bindlessIndex; }
 
         /// ソースリソース取得
         virtual IRHIResource* GetResource() const = 0;
@@ -424,6 +429,11 @@ namespace NS { namespace RHI {
 
         /// カウンターオフセット取得
         virtual uint64 GetCounterOffset() const = 0;
+
+    protected:
+        RHICPUDescriptorHandle m_cpuHandle{};
+        RHIGPUDescriptorHandle m_gpuHandle{};
+        BindlessIndex m_bindlessIndex{};
     };
 
     using RHIUnorderedAccessViewRef = TRefCountPtr<IRHIUnorderedAccessView>;
@@ -585,7 +595,7 @@ namespace NS { namespace RHI {
         virtual IRHIDevice* GetDevice() const = 0;
 
         /// CPUディスクリプタハンドル取得
-        virtual RHICPUDescriptorHandle GetCPUHandle() const = 0;
+        RHICPUDescriptorHandle GetCPUHandle() const { return m_cpuHandle; }
 
         /// ソーステクスチャ取得
         virtual IRHITexture* GetTexture() const = 0;
@@ -616,6 +626,9 @@ namespace NS { namespace RHI {
 
         /// マルチサンプルか
         bool IsMultisampled() const { return NS::RHI::IsMultisampled(GetSampleCount()); }
+
+    protected:
+        RHICPUDescriptorHandle m_cpuHandle{};
     };
 
     using RHIRenderTargetViewRef = TRefCountPtr<IRHIRenderTargetView>;
@@ -804,7 +817,7 @@ namespace NS { namespace RHI {
         virtual IRHIDevice* GetDevice() const = 0;
 
         /// CPUディスクリプタハンドル取得
-        virtual RHICPUDescriptorHandle GetCPUHandle() const = 0;
+        RHICPUDescriptorHandle GetCPUHandle() const { return m_cpuHandle; }
 
         /// ソーステクスチャ取得
         virtual IRHITexture* GetTexture() const = 0;
@@ -849,6 +862,9 @@ namespace NS { namespace RHI {
 
         /// ステンシルフォーマットを持つか
         bool HasStencil() const { return IsStencilFormat(GetFormat()); }
+
+    protected:
+        RHICPUDescriptorHandle m_cpuHandle{};
     };
 
     using RHIDepthStencilViewRef = TRefCountPtr<IRHIDepthStencilView>;
@@ -967,19 +983,19 @@ namespace NS { namespace RHI {
         virtual IRHIDevice* GetDevice() const = 0;
 
         /// CPUディスクリプタハンドル取得
-        virtual RHICPUDescriptorHandle GetCPUHandle() const = 0;
+        RHICPUDescriptorHandle GetCPUHandle() const { return m_cpuHandle; }
 
         /// GPUディスクリプタハンドル取得
-        virtual RHIGPUDescriptorHandle GetGPUHandle() const = 0;
+        RHIGPUDescriptorHandle GetGPUHandle() const { return m_gpuHandle; }
 
         /// Bindlessインデックス取得
-        virtual BindlessIndex GetBindlessIndex() const = 0;
+        BindlessIndex GetBindlessIndex() const { return m_bindlessIndex; }
 
         /// ソースバッファ取得（nullの場合あり）
         virtual IRHIBuffer* GetBuffer() const = 0;
 
         /// GPUアドレス取得
-        virtual uint64 GetGPUVirtualAddress() const = 0;
+        uint64 GetGPUVirtualAddress() const { return m_gpuVirtualAddress; }
 
         /// オフセット取得
         virtual MemoryOffset GetOffset() const = 0;
@@ -992,6 +1008,12 @@ namespace NS { namespace RHI {
 
         /// 型付きデータを更新
         template <typename T> bool Update(const T& value) { return UpdateData(&value, sizeof(T)); }
+
+    protected:
+        RHICPUDescriptorHandle m_cpuHandle{};
+        RHIGPUDescriptorHandle m_gpuHandle{};
+        BindlessIndex m_bindlessIndex{};
+        uint64 m_gpuVirtualAddress = 0;
     };
 
     using RHIConstantBufferViewRef = TRefCountPtr<IRHIConstantBufferView>;

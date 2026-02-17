@@ -323,6 +323,12 @@ template <typename T, std::size_t N> constexpr std::size_t NsArraySizeImpl(const
 #define NS_BUILD_RELEASE 0
 #endif
 
+#if defined(NS_SHIPPING)
+#define NS_BUILD_SHIPPING 1
+#else
+#define NS_BUILD_SHIPPING 0
+#endif
+
 // =============================================================================
 // 10. DLL エクスポート/インポート
 // =============================================================================

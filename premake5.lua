@@ -8,7 +8,7 @@ require "premake/modules/export-compile-commands/export-compile-commands"
 
 -- ワークスペース設定
 workspace "NS-ENGINE"
-    configurations { "Debug", "Release", "Burst" }
+    configurations { "Debug", "Release", "Burst", "Shipping" }
     platforms { "x64" }
     location "build"
 
@@ -50,6 +50,17 @@ workspace "NS-ENGINE"
             "/Ot",            -- 速度優先
             "/Ob3",           -- 積極的インライン
             "/GF"             -- 文字列プーリング
+        }
+
+    -- Shipping: 最終出荷ビルド（virtual→direct call, LTO最大最適化）
+    filter "configurations:Shipping"
+        defines { "NDEBUG", "NS_SHIPPING" }
+        symbols "Off"
+        optimize "Full"
+        runtime "Release"
+        flags {
+            "LinkTimeOptimization",
+            "MultiProcessorCompile"
         }
 
     filter "platforms:x64"
@@ -135,7 +146,7 @@ project "hal"
         defines { "NS_DEBUG=1", "NS_DEVELOPMENT=1" }
         symbols "On"
 
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         defines { "NS_RELEASE=1" }
         optimize "Full"
 
@@ -247,7 +258,7 @@ project "engine"
             "external/lib/Debug",
             assimp_lib_debug
         }
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         libdirs {
             "external/lib/Release",
             assimp_lib_release
@@ -264,7 +275,7 @@ project "engine"
     -- Assimp 6.0.2 動的リンク（Debug/Releaseで異なるlib）
     filter "configurations:Debug"
         links { "assimp-vc143-mtd" }
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         links { "assimp-vc143-mt" }
     filter {}
 
@@ -351,7 +362,7 @@ project "tests"
             "external/lib/Debug",
             assimp_lib_debug
         }
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         libdirs {
             "external/lib/Release",
             assimp_lib_release
@@ -374,7 +385,7 @@ project "tests"
     -- Assimp 6.0.2 動的リンク
     filter "configurations:Debug"
         links { "assimp-vc143-mtd" }
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         links { "assimp-vc143-mt" }
     filter {}
 
@@ -393,7 +404,7 @@ project "tests"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_debug .. '/assimp-vc143-mtd.dll" "%{cfg.targetdir}"'
         }
-    filter "configurations:Release or Burst"
+    filter "configurations:Release or Burst or Shipping"
         postbuildcommands {
             '{COPY} "%{wks.location}/../' .. assimp_bin_release .. '/assimp-vc143-mt.dll" "%{cfg.targetdir}"'
         }

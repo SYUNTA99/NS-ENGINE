@@ -1,0 +1,20 @@
+条件コンパイル + コマンドリストでゼロ抽象化について
+• 結論は 「現状はほぼできていません」 です。
+  「条件付きで理論上は可能」な設計はありますが、実効状態はゼロ抽象化ではないです。     
+
+  - NS_RHI_DISPATCH は通常経路だと関数ポインタテーブル呼び出しです（= 間接呼び出し）。 
+    source/engine/RHI/Public/RHIDispatchTable.h:877
+  - ゼロ抽象化寄りの静的経路は NS_BUILD_SHIPPING && NS_RHI_STATIC_BACKEND のときだけ有 
+    効です。
+    source/engine/RHI/Public/RHIDispatchTable.h:849
+  - ただし、このリポジトリ内に NS_RHI_STATIC_BACKEND の定義は見当たりませんでした（未有
+    効）。
+  - コマンドリスト実行も switch ベースの解釈実行です。
+    source/engine/RHI/Internal/RHICommandBuffer.h:283
+  - 各コマンドの Execute でも最終的に NS_RHI_DISPATCH を呼ぶため、通常経路では関数ポイ 
+    ンタ間接呼び出しが残ります。
+    source/engine/RHI/Public/RHICommands.h:185
+  - 「Bypassモード」記述はありますが、実装で切り替えるコードは見当たりません。
+    source/engine/RHI/Internal/RHICommandBuffer.h:4
+
+  要するに、今の実装は「ゼロ抽象化を狙えるフックはあるが、現状構成では未達」です。

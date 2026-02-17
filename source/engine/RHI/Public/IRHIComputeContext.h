@@ -1,4 +1,4 @@
-﻿/// @file IRHIComputeContext.h
+/// @file IRHIComputeContext.h
 /// @brief コンピュートコンテキストインターフェース
 /// @details
 /// コンピュートシェーダー実行専用のコンテキスト。ディスパッチ、リソースバインディング、UAVクリア、クエリを提供。
@@ -24,33 +24,51 @@ namespace NS { namespace RHI {
         //=====================================================================
 
         /// コンピュートパイプラインステート設定
-        virtual void SetComputePipelineState(IRHIComputePipelineState* pso) = 0;
+        void SetComputePipelineState(IRHIComputePipelineState* pso)
+        {
+            NS_RHI_DISPATCH(SetComputePipelineState, this, pso);
+        }
 
         /// ルートシグネチャ設定
-        virtual void SetComputeRootSignature(IRHIRootSignature* rootSignature) = 0;
+        void SetComputeRootSignature(IRHIRootSignature* rootSignature)
+        {
+            NS_RHI_DISPATCH(SetComputeRootSignature, this, rootSignature);
+        }
 
         //=====================================================================
         // 定数バッファ
         //=====================================================================
 
         /// ルート定数設定（32bit値）
-        virtual void SetComputeRoot32BitConstants(uint32 rootParameterIndex,
-                                                  uint32 num32BitValues,
-                                                  const void* data,
-                                                  uint32 destOffset = 0) = 0;
+        void SetComputeRoot32BitConstants(uint32 rootParameterIndex,
+                                          uint32 num32BitValues,
+                                          const void* data,
+                                          uint32 destOffset = 0)
+        {
+            NS_RHI_DISPATCH(SetComputeRoot32BitConstants, this, rootParameterIndex, num32BitValues, data, destOffset);
+        }
 
         /// ルートCBV設定（GPUアドレス）
-        virtual void SetComputeRootConstantBufferView(uint32 rootParameterIndex, uint64 bufferAddress) = 0;
+        void SetComputeRootConstantBufferView(uint32 rootParameterIndex, uint64 bufferAddress)
+        {
+            NS_RHI_DISPATCH(SetComputeRootCBV, this, rootParameterIndex, bufferAddress);
+        }
 
         //=====================================================================
         // SRV / UAV
         //=====================================================================
 
         /// ルートSRV設定（GPUアドレス）
-        virtual void SetComputeRootShaderResourceView(uint32 rootParameterIndex, uint64 bufferAddress) = 0;
+        void SetComputeRootShaderResourceView(uint32 rootParameterIndex, uint64 bufferAddress)
+        {
+            NS_RHI_DISPATCH(SetComputeRootSRV, this, rootParameterIndex, bufferAddress);
+        }
 
         /// ルートUAV設定（GPUアドレス）
-        virtual void SetComputeRootUnorderedAccessView(uint32 rootParameterIndex, uint64 bufferAddress) = 0;
+        void SetComputeRootUnorderedAccessView(uint32 rootParameterIndex, uint64 bufferAddress)
+        {
+            NS_RHI_DISPATCH(SetComputeRootUAV, this, rootParameterIndex, bufferAddress);
+        }
 
         //=====================================================================
         // ディスクリプタヒープ (10-02)
@@ -58,8 +76,11 @@ namespace NS { namespace RHI {
 
         /// ディスクリプタヒープ設定
         /// CBV/SRV/UAVとSamplerの2つまで同時設定可能
-        virtual void SetDescriptorHeaps(IRHIDescriptorHeap* cbvSrvUavHeap,
-                                         IRHIDescriptorHeap* samplerHeap = nullptr) = 0;
+        void SetDescriptorHeaps(IRHIDescriptorHeap* cbvSrvUavHeap,
+                                 IRHIDescriptorHeap* samplerHeap = nullptr)
+        {
+            NS_RHI_DISPATCH(SetDescriptorHeaps, this, cbvSrvUavHeap, samplerHeap);
+        }
 
         /// 現在のCBV/SRV/UAVディスクリプタヒープ取得
         virtual IRHIDescriptorHeap* GetCBVSRVUAVHeap() const = 0;
@@ -72,8 +93,11 @@ namespace NS { namespace RHI {
         //=====================================================================
 
         /// ディスクリプタテーブル設定
-        virtual void SetComputeRootDescriptorTable(uint32 rootParameterIndex,
-                                                   RHIGPUDescriptorHandle baseDescriptor) = 0;
+        void SetComputeRootDescriptorTable(uint32 rootParameterIndex,
+                                           RHIGPUDescriptorHandle baseDescriptor)
+        {
+            NS_RHI_DISPATCH(SetComputeRootDescriptorTable, this, rootParameterIndex, baseDescriptor);
+        }
 
         //=====================================================================
         // ディスパッチ
@@ -83,22 +107,31 @@ namespace NS { namespace RHI {
         /// @param threadGroupCountX X方向スレッドグループ数
         /// @param threadGroupCountY Y方向スレッドグループ数
         /// @param threadGroupCountZ Z方向スレッドグループ数
-        virtual void Dispatch(uint32 threadGroupCountX, uint32 threadGroupCountY, uint32 threadGroupCountZ) = 0;
+        void Dispatch(uint32 threadGroupCountX, uint32 threadGroupCountY, uint32 threadGroupCountZ)
+        {
+            NS_RHI_DISPATCH(Dispatch, this, threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+        }
 
         /// 間接ディスパッチ
         /// @param argsBuffer 引数バッファ
         /// @param argsOffset バッファ内のオフセット
-        virtual void DispatchIndirect(IRHIBuffer* argsBuffer, uint64 argsOffset = 0) = 0;
+        void DispatchIndirect(IRHIBuffer* argsBuffer, uint64 argsOffset = 0)
+        {
+            NS_RHI_DISPATCH(DispatchIndirect, this, argsBuffer, argsOffset);
+        }
 
         /// 複数回間接ディスパッチ (21-03)
         /// @param argsBuffer 引数バッファ
         /// @param argsOffset バッファ内のオフセット
         /// @param dispatchCount ディスパッチ回数
         /// @param stride 引数間のストライド（0=sizeof(RHIDispatchArguments)）
-        virtual void DispatchIndirectMulti(IRHIBuffer* argsBuffer,
-                                           uint64 argsOffset,
-                                           uint32 dispatchCount,
-                                           uint32 stride = 0) = 0;
+        void DispatchIndirectMulti(IRHIBuffer* argsBuffer,
+                                   uint64 argsOffset,
+                                   uint32 dispatchCount,
+                                   uint32 stride = 0)
+        {
+            NS_RHI_DISPATCH(DispatchIndirectMulti, this, argsBuffer, argsOffset, dispatchCount, stride);
+        }
 
         //=====================================================================
         // UAVクリア
@@ -107,12 +140,18 @@ namespace NS { namespace RHI {
         /// UAVをuint値でクリア
         /// @param uav クリア対象UAV
         /// @param values 4つのuint値
-        virtual void ClearUnorderedAccessViewUint(IRHIUnorderedAccessView* uav, const uint32 values[4]) = 0;
+        void ClearUnorderedAccessViewUint(IRHIUnorderedAccessView* uav, const uint32 values[4])
+        {
+            NS_RHI_DISPATCH(ClearUnorderedAccessViewUint, this, uav, values);
+        }
 
         /// UAVをfloat値でクリア
         /// @param uav クリア対象UAV
         /// @param values 4つのfloat値
-        virtual void ClearUnorderedAccessViewFloat(IRHIUnorderedAccessView* uav, const float values[4]) = 0;
+        void ClearUnorderedAccessViewFloat(IRHIUnorderedAccessView* uav, const float values[4])
+        {
+            NS_RHI_DISPATCH(ClearUnorderedAccessViewFloat, this, uav, values);
+        }
 
         //=====================================================================
         // タイムスタンプ
@@ -121,24 +160,36 @@ namespace NS { namespace RHI {
         /// タイムスタンプ書き込み
         /// @param queryHeap クエリプール
         /// @param queryIndex クエリインデックス
-        virtual void WriteTimestamp(IRHIQueryHeap* queryHeap, uint32 queryIndex) = 0;
+        void WriteTimestamp(IRHIQueryHeap* queryHeap, uint32 queryIndex)
+        {
+            NS_RHI_DISPATCH(WriteTimestamp, this, queryHeap, queryIndex);
+        }
 
         //=====================================================================
         // パイプライン統計
         //=====================================================================
 
         /// クエリ開始
-        virtual void BeginQuery(IRHIQueryHeap* queryHeap, uint32 queryIndex) = 0;
+        void BeginQuery(IRHIQueryHeap* queryHeap, uint32 queryIndex)
+        {
+            NS_RHI_DISPATCH(BeginQuery, this, queryHeap, queryIndex);
+        }
 
         /// クエリ終了
-        virtual void EndQuery(IRHIQueryHeap* queryHeap, uint32 queryIndex) = 0;
+        void EndQuery(IRHIQueryHeap* queryHeap, uint32 queryIndex)
+        {
+            NS_RHI_DISPATCH(EndQuery, this, queryHeap, queryIndex);
+        }
 
         /// クエリ結果をバッファに書き込み
-        virtual void ResolveQueryData(IRHIQueryHeap* queryHeap,
-                                      uint32 startIndex,
-                                      uint32 numQueries,
-                                      IRHIBuffer* destinationBuffer,
-                                      uint64 destinationOffset) = 0;
+        void ResolveQueryData(IRHIQueryHeap* queryHeap,
+                              uint32 startIndex,
+                              uint32 numQueries,
+                              IRHIBuffer* destinationBuffer,
+                              uint64 destinationOffset)
+        {
+            NS_RHI_DISPATCH(ResolveQueryData, this, queryHeap, startIndex, numQueries, destinationBuffer, destinationOffset);
+        }
 
         //=====================================================================
         // ルート定数便利関数 (05-05)
