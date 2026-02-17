@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -89,6 +90,7 @@ namespace NS
 
         Handle Add(Callback Fn)
         {
+            std::lock_guard<std::mutex> lock(m_mutex);
             Handle id = m_nextId++;
             m_listeners.push_back({id, std::move(Fn)});
             return id;
@@ -96,6 +98,7 @@ namespace NS
 
         void Remove(Handle InHandle)
         {
+            std::lock_guard<std::mutex> lock(m_mutex);
             m_listeners.erase(std::remove_if(m_listeners.begin(),
                                              m_listeners.end(),
                                              [InHandle](const Entry& e) { return e.Id == InHandle; }),
@@ -104,15 +107,22 @@ namespace NS
 
         void Broadcast(Args... InArgs) const
         {
-            // スナップショットで反復（Broadcast中の Add/Remove に対して安全）
-            auto snapshot = m_listeners;
+            std::vector<Entry> snapshot;
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                snapshot = m_listeners;
+            }
             for (const auto& entry : snapshot)
             {
                 entry.Fn(InArgs...);
             }
         }
 
-        bool IsBound() const { return !m_listeners.empty(); }
+        bool IsBound() const
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return !m_listeners.empty();
+        }
 
     private:
         struct Entry
@@ -122,6 +132,7 @@ namespace NS
         };
         std::vector<Entry> m_listeners;
         Handle m_nextId = 1;
+        mutable std::mutex m_mutex;
     };
 
     // =========================================================================

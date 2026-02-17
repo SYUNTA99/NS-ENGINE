@@ -59,17 +59,16 @@ namespace NS
         s_topology.isHybridCPU = false;
         s_topology.performanceCoreCount = s_topology.physicalCoreCount;
         s_topology.efficiencyCoreCount = 0;
-        s_topology.performanceCoreMask = (1ULL << s_topology.logicalProcessorCount) - 1;
+        s_topology.performanceCoreMask =
+            (s_topology.logicalProcessorCount >= 64) ? UINT64_MAX : ((1ULL << s_topology.logicalProcessorCount) - 1);
         s_topology.efficiencyCoreMask = 0;
 
         // GetSystemCpuSetInformation は Windows 10 1607+ で利用可能
-        using GetSystemCpuSetInformationFn = BOOL(WINAPI*)(
-            PSYSTEM_CPU_SET_INFORMATION, ULONG, PULONG, HANDLE, ULONG);
+        using GetSystemCpuSetInformationFn = BOOL(WINAPI*)(PSYSTEM_CPU_SET_INFORMATION, ULONG, PULONG, HANDLE, ULONG);
         HMODULE hKernel32 = ::GetModuleHandleW(L"kernel32.dll");
-        auto pGetSystemCpuSetInfo = hKernel32
-            ? reinterpret_cast<GetSystemCpuSetInformationFn>(
-                  ::GetProcAddress(hKernel32, "GetSystemCpuSetInformation"))
-            : nullptr;
+        auto pGetSystemCpuSetInfo = hKernel32 ? reinterpret_cast<GetSystemCpuSetInformationFn>(
+                                                    ::GetProcAddress(hKernel32, "GetSystemCpuSetInformation"))
+                                              : nullptr;
 
         if (pGetSystemCpuSetInfo)
         {
@@ -78,9 +77,11 @@ namespace NS
             if (cpuSetInfoLength > 0)
             {
                 auto* cpuSetBuffer = static_cast<uint8*>(HeapAlloc(GetProcessHeap(), 0, cpuSetInfoLength));
-                if (cpuSetBuffer &&
-                    pGetSystemCpuSetInfo(reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer),
-                                         cpuSetInfoLength, &cpuSetInfoLength, GetCurrentProcess(), 0))
+                if (cpuSetBuffer && pGetSystemCpuSetInfo(reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer),
+                                                         cpuSetInfoLength,
+                                                         &cpuSetInfoLength,
+                                                         GetCurrentProcess(),
+                                                         0))
                 {
                     uint8 minEfficiency = 0xFF;
                     uint8 maxEfficiency = 0;
@@ -94,8 +95,10 @@ namespace NS
                         if (info->Type == CpuSetInformation)
                         {
                             uint8 eff = info->CpuSet.EfficiencyClass;
-                            if (eff < minEfficiency) minEfficiency = eff;
-                            if (eff > maxEfficiency) maxEfficiency = eff;
+                            if (eff < minEfficiency)
+                                minEfficiency = eff;
+                            if (eff > maxEfficiency)
+                                maxEfficiency = eff;
                         }
                         offset2 += info->Size;
                     }
@@ -150,7 +153,7 @@ namespace NS
     {
         InitializeTopology();
 
-        const uint64 allCores = (1ULL << s_topology.logicalProcessorCount) - 1;
+        const uint64 allCores = (s_topology.logicalProcessorCount >= 64) ? UINT64_MAX : ((1ULL << s_topology.logicalProcessorCount) - 1);
 
         // ハイブリッドCPU対応
         if (s_topology.isHybridCPU)
