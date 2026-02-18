@@ -461,6 +461,8 @@ namespace NS
             bool IsBuffer() const override { return true; }
 
         protected:
+            IRHIBuffer() : IRHIResource(ERHIResourceType::Buffer) {}
+
             uint64 m_gpuVirtualAddress = 0;
             MemorySize m_size = 0;
             uint32 m_stride = 0;

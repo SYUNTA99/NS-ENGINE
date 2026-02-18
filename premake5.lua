@@ -238,9 +238,10 @@ project "engine"
         "source/engine/**.cpp"
     }
 
-    -- halプロジェクトのファイルは除外（別プロジェクトでビルド）
+    -- 別プロジェクトでビルドするモジュールを除外
     removefiles {
-        "source/engine/hal/**"
+        "source/engine/hal/**",
+        "source/engine/D3D12RHI/**"
     }
 
     -- RHI Private/Internalは未完成のため一時的に除外（ヘッダーのみ使用）
@@ -304,6 +305,59 @@ project "engine"
     buildoptions { "/utf-8", "/permissive-", "/FS" }
 
     -- リンカー警告を無視 (stb_imageシンボル重複: tinygltf/Assimpが両方使用)
+    linkoptions { "/ignore:4006" }
+
+--============================================================================
+-- D3D12RHI バックエンド
+--============================================================================
+project "D3D12RHI"
+    kind "StaticLib"
+    location "build/D3D12RHI"
+
+    targetdir (bindir .. "/%{prj.name}")
+    objdir (objdir_base .. "/%{prj.name}")
+
+    files {
+        "source/engine/D3D12RHI/Public/**.h",
+        "source/engine/D3D12RHI/Internal/**.h",
+        "source/engine/D3D12RHI/Private/**.h",
+        "source/engine/D3D12RHI/Private/**.cpp"
+    }
+
+    includedirs {
+        "source",
+        "source/engine",
+        "source/engine/hal/Public",
+        "source/engine/D3D12RHI/Private"
+    }
+
+    links {
+        "d3d12",
+        "dxgi",
+        "dxguid"
+    }
+
+    -- Shipping構成: 静的バックエンド選択（ゼロオーバーヘッド）
+    filter "configurations:Shipping"
+        defines { "NS_RHI_STATIC_BACKEND=D3D12" }
+
+    -- ビルド構成別定義
+    filter "configurations:Debug"
+        defines { "NS_DEBUG=1", "NS_DEVELOPMENT=1" }
+        symbols "On"
+
+    filter "configurations:Release or Burst or Shipping"
+        defines { "NS_RELEASE=1" }
+        optimize "Full"
+
+    filter {}
+
+    warnings "Extra"
+    flags { "FatalWarnings" }
+    disablewarnings { "4251" }  -- std::string in RHI_API struct (StaticLibでは無害)
+    buildoptions { "/utf-8", "/permissive-", "/FS" }
+
+    -- リンカー警告を無視 (Windows SDK重複定義)
     linkoptions { "/ignore:4006" }
 
 --============================================================================

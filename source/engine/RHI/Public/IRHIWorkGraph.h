@@ -18,6 +18,13 @@ namespace NS { namespace RHI {
     public:
         virtual ~IRHIWorkGraphPipeline() = default;
 
+    protected:
+        IRHIWorkGraphPipeline()
+            : IRHIResource(ERHIResourceType::Unknown)
+        {
+        }
+
+    public:
         /// プログラム識別子取得
         virtual uint64 GetProgramIdentifier() const = 0;
 

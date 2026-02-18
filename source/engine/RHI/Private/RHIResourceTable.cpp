@@ -1,5 +1,5 @@
 /// @file RHIResourceTable.cpp
-/// @brief リソースチE�Eブル・BindlessリソースチE�Eブル実裁E
+/// @brief リソースチE�Eブル・BindlessリソースチE�Eブル実裁E
 #include "RHIResourceTable.h"
 #include "IRHICommandContext.h"
 #include "IRHIComputeContext.h"
@@ -77,8 +77,8 @@ namespace NS::RHI
 
     void RHIResourceTable::Bind(IRHICommandContext* context, EShaderFrequency stage)
     {
-        // リソースチE�Eブルのバインド�Eバックエンド依孁E
-        // 吁E��ントリのタイプに応じてSetGraphicsRootDescriptorTable等を呼ぶ
+        // リソースチE�Eブルのバインド�Eバックエンド依孁E
+        // 吁E��ントリのタイプに応じてSetGraphicsRootDescriptorTable等を呼ぶ
         (void)context;
         (void)stage;
     }
@@ -94,7 +94,11 @@ namespace NS::RHI
 
     RHIBindlessResourceTable::RHIBindlessResourceTable(IRHIDevice* device) : m_device(device)
     {
-        // Bindlessヒ�Eプ�E取得�Eバックエンド依孁E
+        if (device)
+        {
+            m_srvUavHeap = device->GetBindlessSRVUAVHeap();
+            m_samplerHeap = device->GetBindlessSamplerHeap();
+        }
     }
 
     uint32 RHIBindlessResourceTable::RegisterTexture(IRHITexture* texture)

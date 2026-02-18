@@ -122,7 +122,7 @@ namespace NS { namespace RHI {
         void Shutdown();
 
         /// GPUバッファ取得
-        IRHIBuffer* GetBuffer() const { return m_buffer; }
+        IRHIBuffer* GetBuffer() const { return m_buffer.Get(); }
 
         /// エントリ読み取り（GPUクラッシュ後に呼び出す）
         bool ReadEntries(RHIBreadcrumbEntry* outEntries, uint32& outCount);

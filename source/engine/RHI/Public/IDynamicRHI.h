@@ -12,53 +12,6 @@
 
 namespace NS { namespace RHI {
     //=========================================================================
-    // ERHIFeature: 機能フラグ
-    //=========================================================================
-
-    /// 機能フラグ
-    enum class ERHIFeature : uint32
-    {
-        // シェーダー機能
-        WaveOperations,
-        RayTracing,
-        MeshShaders,
-        VariableRateShading,
-        AmplificationShaders,
-        ShaderModel6_6,
-        ShaderModel6_7,
-
-        // テクスチャ機能
-        TextureCompressionBC,
-        TextureCompressionASTC,
-        Texture3D,
-        MSAA_16X,
-        SamplerFeedback,
-
-        // バッファ機能
-        StructuredBuffer,
-        ByteAddressBuffer,
-        TypedBuffer,
-
-        // レンダリング機能
-        Bindless,
-        ConservativeRasterization,
-        MultiDrawIndirect,
-        DrawIndirectCount,
-        RenderPass,
-        DepthBoundsTest,
-
-        // 高度な機能
-        WorkGraphs,
-        EnhancedBarriers,
-        GPUUploadHeaps,
-        ExecuteIndirect,
-        AtomicInt64,
-        Residency,
-
-        Count
-    };
-
-    //=========================================================================
     // IDynamicRHI
     //=========================================================================
 

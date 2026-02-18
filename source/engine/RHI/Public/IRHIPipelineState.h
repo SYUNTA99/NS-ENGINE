@@ -11,450 +11,460 @@
 
 #include <functional>
 
-namespace NS { namespace RHI {
-    //=========================================================================
-    // ERHIPrimitiveTopologyType (07-05)
-    //=========================================================================
-
-    /// プリミティブトポロジータイプ（パイプライン用）
-    enum class ERHIPrimitiveTopologyType : uint8
+namespace NS
+{
+    namespace RHI
     {
-        Undefined,
-        Point,
-        Line,
-        Triangle,
-        Patch,
-    };
+        //=========================================================================
+        // ERHIPrimitiveTopologyType (07-05)
+        //=========================================================================
 
-    /// トポロジーからタイプを取得
-    inline ERHIPrimitiveTopologyType GetTopologyType(ERHIPrimitiveTopology topology)
-    {
-        switch (topology)
+        /// プリミティブトポロジータイプ（パイプライン用）
+        enum class ERHIPrimitiveTopologyType : uint8
         {
-        case ERHIPrimitiveTopology::PointList:
-            return ERHIPrimitiveTopologyType::Point;
-        case ERHIPrimitiveTopology::LineList:
-        case ERHIPrimitiveTopology::LineStrip:
-        case ERHIPrimitiveTopology::LineListAdj:
-        case ERHIPrimitiveTopology::LineStripAdj:
-            return ERHIPrimitiveTopologyType::Line;
-        case ERHIPrimitiveTopology::TriangleList:
-        case ERHIPrimitiveTopology::TriangleStrip:
-        case ERHIPrimitiveTopology::TriangleListAdj:
-        case ERHIPrimitiveTopology::TriangleStripAdj:
-            return ERHIPrimitiveTopologyType::Triangle;
-        case ERHIPrimitiveTopology::PatchList:
-            return ERHIPrimitiveTopologyType::Patch;
-        default:
-            return ERHIPrimitiveTopologyType::Undefined;
-        }
-    }
+            Undefined,
+            Point,
+            Line,
+            Triangle,
+            Patch,
+        };
 
-    //=========================================================================
-    // RHIRenderTargetFormats (07-05)
-    //=========================================================================
-
-    /// レンダーターゲットフォーマット記述
-    struct RHI_API RHIRenderTargetFormats
-    {
-        ERHIPixelFormat formats[kMaxRenderTargets] = {};
-        uint32 count = 0;
-        ERHIPixelFormat depthStencilFormat = ERHIPixelFormat::Unknown;
-        ERHISampleCount sampleCount = ERHISampleCount::Count1;
-        uint32 sampleQuality = 0;
-
-        //=====================================================================
-        // ビルダー
-        //=====================================================================
-
-        RHIRenderTargetFormats& SetRT(uint32 index, ERHIPixelFormat format)
+        /// トポロジーからタイプを取得
+        inline ERHIPrimitiveTopologyType GetTopologyType(ERHIPrimitiveTopology topology)
         {
-            if (index < kMaxRenderTargets)
+            switch (topology)
             {
-                formats[index] = format;
-                if (index >= count)
-                    count = index + 1;
+            case ERHIPrimitiveTopology::PointList:
+                return ERHIPrimitiveTopologyType::Point;
+            case ERHIPrimitiveTopology::LineList:
+            case ERHIPrimitiveTopology::LineStrip:
+            case ERHIPrimitiveTopology::LineListAdj:
+            case ERHIPrimitiveTopology::LineStripAdj:
+                return ERHIPrimitiveTopologyType::Line;
+            case ERHIPrimitiveTopology::TriangleList:
+            case ERHIPrimitiveTopology::TriangleStrip:
+            case ERHIPrimitiveTopology::TriangleListAdj:
+            case ERHIPrimitiveTopology::TriangleStripAdj:
+                return ERHIPrimitiveTopologyType::Triangle;
+            case ERHIPrimitiveTopology::PatchList:
+                return ERHIPrimitiveTopologyType::Patch;
+            default:
+                return ERHIPrimitiveTopologyType::Undefined;
             }
-            return *this;
         }
 
-        RHIRenderTargetFormats& SetDepthStencil(ERHIPixelFormat format)
+        //=========================================================================
+        // RHIRenderTargetFormats (07-05)
+        //=========================================================================
+
+        /// レンダーターゲットフォーマット記述
+        struct RHI_API RHIRenderTargetFormats
         {
-            depthStencilFormat = format;
-            return *this;
-        }
+            ERHIPixelFormat formats[kMaxRenderTargets] = {};
+            uint32 count = 0;
+            ERHIPixelFormat depthStencilFormat = ERHIPixelFormat::Unknown;
+            ERHISampleCount sampleCount = ERHISampleCount::Count1;
+            uint32 sampleQuality = 0;
 
-        RHIRenderTargetFormats& SetSampleCount(ERHISampleCount sc, uint32 quality = 0)
-        {
-            sampleCount = sc;
-            sampleQuality = quality;
-            return *this;
-        }
+            //=====================================================================
+            // ビルダー
+            //=====================================================================
 
-        //=====================================================================
-        // プリセット
-        //=====================================================================
+            RHIRenderTargetFormats& SetRT(uint32 index, ERHIPixelFormat format)
+            {
+                if (index < kMaxRenderTargets)
+                {
+                    formats[index] = format;
+                    if (index >= count)
+                        count = index + 1;
+                }
+                return *this;
+            }
 
-        static RHIRenderTargetFormats SingleRTWithDepth(ERHIPixelFormat rtFormat,
-                                                        ERHIPixelFormat dsFormat = ERHIPixelFormat::D32_Float)
-        {
-            RHIRenderTargetFormats fmt;
-            fmt.SetRT(0, rtFormat);
-            fmt.SetDepthStencil(dsFormat);
-            return fmt;
-        }
+            RHIRenderTargetFormats& SetDepthStencil(ERHIPixelFormat format)
+            {
+                depthStencilFormat = format;
+                return *this;
+            }
 
-        static RHIRenderTargetFormats DepthOnly(ERHIPixelFormat dsFormat = ERHIPixelFormat::D32_Float)
-        {
-            RHIRenderTargetFormats fmt;
-            fmt.SetDepthStencil(dsFormat);
-            return fmt;
-        }
-    };
+            RHIRenderTargetFormats& SetSampleCount(ERHISampleCount sc, uint32 quality = 0)
+            {
+                sampleCount = sc;
+                sampleQuality = quality;
+                return *this;
+            }
 
-    //=========================================================================
-    // RHIGraphicsPipelineStateDesc (07-05)
-    //=========================================================================
+            //=====================================================================
+            // プリセット
+            //=====================================================================
 
-    /// グラフィックスパイプラインステート記述
-    struct RHI_API RHIGraphicsPipelineStateDesc
-    {
-        //=====================================================================
-        // シェーダー
-        //=====================================================================
+            static RHIRenderTargetFormats SingleRTWithDepth(ERHIPixelFormat rtFormat,
+                                                            ERHIPixelFormat dsFormat = ERHIPixelFormat::D32_FLOAT)
+            {
+                RHIRenderTargetFormats fmt;
+                fmt.SetRT(0, rtFormat);
+                fmt.SetDepthStencil(dsFormat);
+                return fmt;
+            }
 
-        IRHIShader* vertexShader = nullptr;
-        IRHIShader* pixelShader = nullptr;
-        IRHIShader* geometryShader = nullptr;
-        IRHIShader* hullShader = nullptr;
-        IRHIShader* domainShader = nullptr;
-
-        //=====================================================================
-        // ルートシグネチャ
-        //=====================================================================
-
-        IRHIRootSignature* rootSignature = nullptr;
-
-        //=====================================================================
-        // 入力アセンブラー
-        //=====================================================================
-
-        RHIInputLayoutDesc inputLayout;
-        ERHIPrimitiveTopologyType primitiveTopologyType = ERHIPrimitiveTopologyType::Triangle;
-
-        enum class IndexBufferStripCutValue : uint8
-        {
-            Disabled,
-            MaxUInt16,
-            MaxUInt32,
+            static RHIRenderTargetFormats DepthOnly(ERHIPixelFormat dsFormat = ERHIPixelFormat::D32_FLOAT)
+            {
+                RHIRenderTargetFormats fmt;
+                fmt.SetDepthStencil(dsFormat);
+                return fmt;
+            }
         };
-        IndexBufferStripCutValue stripCutValue = IndexBufferStripCutValue::Disabled;
 
-        //=====================================================================
-        // レンダーステート
-        //=====================================================================
+        //=========================================================================
+        // RHIGraphicsPipelineStateDesc (07-05)
+        //=========================================================================
 
-        RHIRasterizerStateDesc rasterizerState;
-        RHIBlendStateDesc blendState;
-        RHIDepthStencilStateDesc depthStencilState;
-        uint32 sampleMask = 0xFFFFFFFF;
-
-        //=====================================================================
-        // 出力
-        //=====================================================================
-
-        RHIRenderTargetFormats renderTargetFormats;
-
-        //=====================================================================
-        // その他
-        //=====================================================================
-
-        uint32 nodeMask = 0;
-
-        enum class Flags : uint32
+        /// グラフィックスパイプラインステート記述
+        struct RHI_API RHIGraphicsPipelineStateDesc
         {
-            None = 0,
-            ToolDebug = 1 << 0,
+            //=====================================================================
+            // シェーダー
+            //=====================================================================
+
+            IRHIShader* vertexShader = nullptr;
+            IRHIShader* pixelShader = nullptr;
+            IRHIShader* geometryShader = nullptr;
+            IRHIShader* hullShader = nullptr;
+            IRHIShader* domainShader = nullptr;
+
+            //=====================================================================
+            // ルートシグネチャ
+            //=====================================================================
+
+            IRHIRootSignature* rootSignature = nullptr;
+
+            //=====================================================================
+            // 入力アセンブラー
+            //=====================================================================
+
+            RHIInputLayoutDesc inputLayout;
+            ERHIPrimitiveTopologyType primitiveTopologyType = ERHIPrimitiveTopologyType::Triangle;
+
+            enum class IndexBufferStripCutValue : uint8
+            {
+                Disabled,
+                MaxUInt16,
+                MaxUInt32,
+            };
+            IndexBufferStripCutValue stripCutValue = IndexBufferStripCutValue::Disabled;
+
+            //=====================================================================
+            // レンダーステート
+            //=====================================================================
+
+            RHIRasterizerStateDesc rasterizerState;
+            RHIBlendStateDesc blendState;
+            RHIDepthStencilStateDesc depthStencilState;
+            uint32 sampleMask = 0xFFFFFFFF;
+
+            //=====================================================================
+            // 出力
+            //=====================================================================
+
+            RHIRenderTargetFormats renderTargetFormats;
+
+            //=====================================================================
+            // その他
+            //=====================================================================
+
+            uint32 nodeMask = 0;
+
+            enum class Flags : uint32
+            {
+                None = 0,
+                ToolDebug = 1 << 0,
+            };
+            Flags flags = Flags::None;
+
+            //=====================================================================
+            // ビルダー
+            //=====================================================================
+
+            RHIGraphicsPipelineStateDesc& SetVS(IRHIShader* vs)
+            {
+                vertexShader = vs;
+                return *this;
+            }
+            RHIGraphicsPipelineStateDesc& SetPS(IRHIShader* ps)
+            {
+                pixelShader = ps;
+                return *this;
+            }
+            RHIGraphicsPipelineStateDesc& SetGS(IRHIShader* gs)
+            {
+                geometryShader = gs;
+                return *this;
+            }
+            RHIGraphicsPipelineStateDesc& SetHS(IRHIShader* hs)
+            {
+                hullShader = hs;
+                return *this;
+            }
+            RHIGraphicsPipelineStateDesc& SetDS(IRHIShader* ds)
+            {
+                domainShader = ds;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetRootSignature(IRHIRootSignature* rs)
+            {
+                rootSignature = rs;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetInputLayout(const RHIInputLayoutDesc& il)
+            {
+                inputLayout = il;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetTopologyType(ERHIPrimitiveTopologyType type)
+            {
+                primitiveTopologyType = type;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetRasterizerState(const RHIRasterizerStateDesc& rs)
+            {
+                rasterizerState = rs;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetBlendState(const RHIBlendStateDesc& bs)
+            {
+                blendState = bs;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetDepthStencilState(const RHIDepthStencilStateDesc& dss)
+            {
+                depthStencilState = dss;
+                return *this;
+            }
+
+            RHIGraphicsPipelineStateDesc& SetRenderTargetFormats(const RHIRenderTargetFormats& rtf)
+            {
+                renderTargetFormats = rtf;
+                return *this;
+            }
         };
-        Flags flags = Flags::None;
+        RHI_ENUM_CLASS_FLAGS(RHIGraphicsPipelineStateDesc::Flags)
 
-        //=====================================================================
-        // ビルダー
-        //=====================================================================
+        //=========================================================================
+        // IRHIGraphicsPipelineState (07-05)
+        //=========================================================================
 
-        RHIGraphicsPipelineStateDesc& SetVS(IRHIShader* vs)
+        /// グラフィックスパイプラインステート
+        class RHI_API IRHIGraphicsPipelineState : public IRHIResource
         {
-            vertexShader = vs;
-            return *this;
-        }
-        RHIGraphicsPipelineStateDesc& SetPS(IRHIShader* ps)
-        {
-            pixelShader = ps;
-            return *this;
-        }
-        RHIGraphicsPipelineStateDesc& SetGS(IRHIShader* gs)
-        {
-            geometryShader = gs;
-            return *this;
-        }
-        RHIGraphicsPipelineStateDesc& SetHS(IRHIShader* hs)
-        {
-            hullShader = hs;
-            return *this;
-        }
-        RHIGraphicsPipelineStateDesc& SetDS(IRHIShader* ds)
-        {
-            domainShader = ds;
-            return *this;
-        }
+        protected:
+            IRHIGraphicsPipelineState() : IRHIResource(ERHIResourceType::GraphicsPipelineState) {}
 
-        RHIGraphicsPipelineStateDesc& SetRootSignature(IRHIRootSignature* rs)
-        {
-            rootSignature = rs;
-            return *this;
-        }
+        public:
+            DECLARE_RHI_RESOURCE_TYPE(GraphicsPipelineState)
 
-        RHIGraphicsPipelineStateDesc& SetInputLayout(const RHIInputLayoutDesc& il)
-        {
-            inputLayout = il;
-            return *this;
-        }
+            virtual ~IRHIGraphicsPipelineState() = default;
 
-        RHIGraphicsPipelineStateDesc& SetTopologyType(ERHIPrimitiveTopologyType type)
-        {
-            primitiveTopologyType = type;
-            return *this;
-        }
+            virtual IRHIDevice* GetDevice() const = 0;
+            virtual IRHIRootSignature* GetRootSignature() const = 0;
+            virtual ERHIPrimitiveTopologyType GetPrimitiveTopologyType() const = 0;
 
-        RHIGraphicsPipelineStateDesc& SetRasterizerState(const RHIRasterizerStateDesc& rs)
-        {
-            rasterizerState = rs;
-            return *this;
-        }
+            virtual IRHIShader* GetVertexShader() const = 0;
+            virtual IRHIShader* GetPixelShader() const = 0;
 
-        RHIGraphicsPipelineStateDesc& SetBlendState(const RHIBlendStateDesc& bs)
-        {
-            blendState = bs;
-            return *this;
-        }
+            bool UsesTessellation() const { return GetPrimitiveTopologyType() == ERHIPrimitiveTopologyType::Patch; }
 
-        RHIGraphicsPipelineStateDesc& SetDepthStencilState(const RHIDepthStencilStateDesc& dss)
-        {
-            depthStencilState = dss;
-            return *this;
-        }
-
-        RHIGraphicsPipelineStateDesc& SetRenderTargetFormats(const RHIRenderTargetFormats& rtf)
-        {
-            renderTargetFormats = rtf;
-            return *this;
-        }
-    };
-    RHI_ENUM_CLASS_FLAGS(RHIGraphicsPipelineStateDesc::Flags)
-
-    //=========================================================================
-    // IRHIGraphicsPipelineState (07-05)
-    //=========================================================================
-
-    /// グラフィックスパイプラインステート
-    class RHI_API IRHIGraphicsPipelineState : public IRHIResource
-    {
-    public:
-        DECLARE_RHI_RESOURCE_TYPE(GraphicsPipelineState)
-
-        virtual ~IRHIGraphicsPipelineState() = default;
-
-        virtual IRHIDevice* GetDevice() const = 0;
-        virtual IRHIRootSignature* GetRootSignature() const = 0;
-        virtual ERHIPrimitiveTopologyType GetPrimitiveTopologyType() const = 0;
-
-        virtual IRHIShader* GetVertexShader() const = 0;
-        virtual IRHIShader* GetPixelShader() const = 0;
-
-        bool UsesTessellation() const { return GetPrimitiveTopologyType() == ERHIPrimitiveTopologyType::Patch; }
-
-        /// キャッシュ済みバイナリ取得
-        virtual RHIShaderBytecode GetCachedBlob() const = 0;
-    };
-
-    using RHIGraphicsPipelineStateRef = TRefCountPtr<IRHIGraphicsPipelineState>;
-
-    //=========================================================================
-    // IRHIPipelineStateCache (07-05)
-    //=========================================================================
-
-    /// PSOキャッシュ
-    /// スレッド安全性:
-    /// - FindPipelineState(): 複数スレッドから同時呼び出し可能（読み取りロック）
-    /// - AddPipelineState(): 単一スレッドまたは排他ロック下で呼び出すこと
-    class RHI_API IRHIPipelineStateCache
-    {
-    public:
-        virtual ~IRHIPipelineStateCache() = default;
-
-        virtual void AddPipelineState(const void* descHash, size_t hashSize, IRHIGraphicsPipelineState* pso) = 0;
-
-        virtual IRHIGraphicsPipelineState* FindPipelineState(const void* descHash, size_t hashSize) = 0;
-
-        virtual bool SaveToFile(const char* path) = 0;
-        virtual bool LoadFromFile(const char* path) = 0;
-        virtual void Clear() = 0;
-        virtual uint32 GetEntryCount() const = 0;
-    };
-
-    //=========================================================================
-    // RHIComputePipelineStateDesc (07-06)
-    //=========================================================================
-
-    /// コンピュートパイプラインステート記述
-    struct RHI_API RHIComputePipelineStateDesc
-    {
-        IRHIShader* computeShader = nullptr;
-        IRHIRootSignature* rootSignature = nullptr;
-        uint32 nodeMask = 0;
-
-        enum class Flags : uint32
-        {
-            None = 0,
-            ToolDebug = 1 << 0,
+            /// キャッシュ済みバイナリ取得
+            virtual RHIShaderBytecode GetCachedBlob() const = 0;
         };
-        Flags flags = Flags::None;
 
-        //=====================================================================
-        // ビルダー
-        //=====================================================================
+        using RHIGraphicsPipelineStateRef = TRefCountPtr<IRHIGraphicsPipelineState>;
 
-        RHIComputePipelineStateDesc& SetCS(IRHIShader* cs)
+        //=========================================================================
+        // IRHIPipelineStateCache (07-05)
+        //=========================================================================
+
+        /// PSOキャッシュ
+        /// スレッド安全性:
+        /// - FindPipelineState(): 複数スレッドから同時呼び出し可能（読み取りロック）
+        /// - AddPipelineState(): 単一スレッドまたは排他ロック下で呼び出すこと
+        class RHI_API IRHIPipelineStateCache
         {
-            computeShader = cs;
-            return *this;
-        }
+        public:
+            virtual ~IRHIPipelineStateCache() = default;
 
-        RHIComputePipelineStateDesc& SetRootSignature(IRHIRootSignature* rs)
+            virtual void AddPipelineState(const void* descHash, size_t hashSize, IRHIGraphicsPipelineState* pso) = 0;
+
+            virtual IRHIGraphicsPipelineState* FindPipelineState(const void* descHash, size_t hashSize) = 0;
+
+            virtual bool SaveToFile(const char* path) = 0;
+            virtual bool LoadFromFile(const char* path) = 0;
+            virtual void Clear() = 0;
+            virtual uint32 GetEntryCount() const = 0;
+        };
+
+        //=========================================================================
+        // RHIComputePipelineStateDesc (07-06)
+        //=========================================================================
+
+        /// コンピュートパイプラインステート記述
+        struct RHI_API RHIComputePipelineStateDesc
         {
-            rootSignature = rs;
-            return *this;
-        }
+            IRHIShader* computeShader = nullptr;
+            IRHIRootSignature* rootSignature = nullptr;
+            uint32 nodeMask = 0;
 
-        RHIComputePipelineStateDesc& SetNodeMask(uint32 mask)
+            enum class Flags : uint32
+            {
+                None = 0,
+                ToolDebug = 1 << 0,
+            };
+            Flags flags = Flags::None;
+
+            //=====================================================================
+            // ビルダー
+            //=====================================================================
+
+            RHIComputePipelineStateDesc& SetCS(IRHIShader* cs)
+            {
+                computeShader = cs;
+                return *this;
+            }
+
+            RHIComputePipelineStateDesc& SetRootSignature(IRHIRootSignature* rs)
+            {
+                rootSignature = rs;
+                return *this;
+            }
+
+            RHIComputePipelineStateDesc& SetNodeMask(uint32 mask)
+            {
+                nodeMask = mask;
+                return *this;
+            }
+
+            static RHIComputePipelineStateDesc Create(IRHIShader* cs, IRHIRootSignature* rs = nullptr)
+            {
+                RHIComputePipelineStateDesc desc;
+                desc.computeShader = cs;
+                desc.rootSignature = rs;
+                return desc;
+            }
+        };
+        RHI_ENUM_CLASS_FLAGS(RHIComputePipelineStateDesc::Flags)
+
+        //=========================================================================
+        // IRHIComputePipelineState (07-06)
+        //=========================================================================
+
+        /// コンピュートパイプラインステート
+        class RHI_API IRHIComputePipelineState : public IRHIResource
         {
-            nodeMask = mask;
-            return *this;
-        }
+        protected:
+            IRHIComputePipelineState() : IRHIResource(ERHIResourceType::ComputePipelineState) {}
 
-        static RHIComputePipelineStateDesc Create(IRHIShader* cs, IRHIRootSignature* rs = nullptr)
+        public:
+            DECLARE_RHI_RESOURCE_TYPE(ComputePipelineState)
+
+            virtual ~IRHIComputePipelineState() = default;
+
+            virtual IRHIDevice* GetDevice() const = 0;
+            virtual IRHIRootSignature* GetRootSignature() const = 0;
+            virtual IRHIShader* GetComputeShader() const = 0;
+
+            //=====================================================================
+            // スレッドグループ情報
+            //=====================================================================
+
+            virtual void GetThreadGroupSize(uint32& outX, uint32& outY, uint32& outZ) const = 0;
+
+            uint32 GetTotalThreadsPerGroup() const
+            {
+                uint32 x, y, z;
+                GetThreadGroupSize(x, y, z);
+                return x * y * z;
+            }
+
+            //=====================================================================
+            // ディスパッチ計算ヘルパー
+            //=====================================================================
+
+            void CalculateDispatchGroups(uint32 totalX,
+                                         uint32 totalY,
+                                         uint32 totalZ,
+                                         uint32& outGroupsX,
+                                         uint32& outGroupsY,
+                                         uint32& outGroupsZ) const
+            {
+                uint32 threadX, threadY, threadZ;
+                GetThreadGroupSize(threadX, threadY, threadZ);
+                outGroupsX = (totalX + threadX - 1) / threadX;
+                outGroupsY = (totalY + threadY - 1) / threadY;
+                outGroupsZ = (totalZ + threadZ - 1) / threadZ;
+            }
+
+            uint32 CalculateDispatchGroups1D(uint32 total) const
+            {
+                uint32 gx, gy, gz;
+                CalculateDispatchGroups(total, 1, 1, gx, gy, gz);
+                return gx;
+            }
+
+            Extent2D CalculateDispatchGroups2D(uint32 width, uint32 height) const
+            {
+                uint32 gx, gy, gz;
+                CalculateDispatchGroups(width, height, 1, gx, gy, gz);
+                return Extent2D{gx, gy};
+            }
+
+            /// キャッシュ済みバイナリ取得
+            virtual RHIShaderBytecode GetCachedBlob() const = 0;
+        };
+
+        using RHIComputePipelineStateRef = TRefCountPtr<IRHIComputePipelineState>;
+
+        //=========================================================================
+        // RHIAsyncComputeHelper (07-06)
+        //=========================================================================
+
+        /// 非同期コンピュートヘルパー
+        class RHI_API RHIAsyncComputeHelper
         {
-            RHIComputePipelineStateDesc desc;
-            desc.computeShader = cs;
-            desc.rootSignature = rs;
-            return desc;
-        }
-    };
-    RHI_ENUM_CLASS_FLAGS(RHIComputePipelineStateDesc::Flags)
+        public:
+            RHIAsyncComputeHelper() = default;
 
-    //=========================================================================
-    // IRHIComputePipelineState (07-06)
-    //=========================================================================
+            bool Initialize(IRHIDevice* device);
+            void Shutdown();
 
-    /// コンピュートパイプラインステート
-    class RHI_API IRHIComputePipelineState : public IRHIResource
-    {
-    public:
-        DECLARE_RHI_RESOURCE_TYPE(ComputePipelineState)
+            IRHIQueue* GetComputeQueue() const { return m_computeQueue; }
 
-        virtual ~IRHIComputePipelineState() = default;
+            //=====================================================================
+            // 同期
+            //=====================================================================
 
-        virtual IRHIDevice* GetDevice() const = 0;
-        virtual IRHIRootSignature* GetRootSignature() const = 0;
-        virtual IRHIShader* GetComputeShader() const = 0;
+            uint64 InsertGraphicsToComputeSync(IRHICommandContext* graphicsContext);
+            uint64 InsertComputeToGraphicsSync(IRHIComputeContext* computeContext);
+            void WaitForComputeOnGraphics(IRHICommandContext* graphicsContext, uint64 computeFenceValue);
+            void WaitForGraphicsOnCompute(IRHIComputeContext* computeContext, uint64 graphicsFenceValue);
 
-        //=====================================================================
-        // スレッドグループ情報
-        //=====================================================================
+            //=====================================================================
+            // 便利メソッド
+            //=====================================================================
 
-        virtual void GetThreadGroupSize(uint32& outX, uint32& outY, uint32& outZ) const = 0;
+            using ComputeSetupFunc = std::function<void(IRHIComputeContext*)>;
+            uint64 ExecuteAsync(ComputeSetupFunc setupFunc);
 
-        uint32 GetTotalThreadsPerGroup() const
-        {
-            uint32 x, y, z;
-            GetThreadGroupSize(x, y, z);
-            return x * y * z;
-        }
+        private:
+            IRHIDevice* m_device = nullptr;
+            IRHIQueue* m_computeQueue = nullptr;
+            TRefCountPtr<IRHIFence> m_computeFence;
+            uint64 m_nextFenceValue = 1;
+        };
 
-        //=====================================================================
-        // ディスパッチ計算ヘルパー
-        //=====================================================================
-
-        void CalculateDispatchGroups(uint32 totalX,
-                                     uint32 totalY,
-                                     uint32 totalZ,
-                                     uint32& outGroupsX,
-                                     uint32& outGroupsY,
-                                     uint32& outGroupsZ) const
-        {
-            uint32 threadX, threadY, threadZ;
-            GetThreadGroupSize(threadX, threadY, threadZ);
-            outGroupsX = (totalX + threadX - 1) / threadX;
-            outGroupsY = (totalY + threadY - 1) / threadY;
-            outGroupsZ = (totalZ + threadZ - 1) / threadZ;
-        }
-
-        uint32 CalculateDispatchGroups1D(uint32 total) const
-        {
-            uint32 gx, gy, gz;
-            CalculateDispatchGroups(total, 1, 1, gx, gy, gz);
-            return gx;
-        }
-
-        Extent2D CalculateDispatchGroups2D(uint32 width, uint32 height) const
-        {
-            uint32 gx, gy, gz;
-            CalculateDispatchGroups(width, height, 1, gx, gy, gz);
-            return Extent2D{gx, gy};
-        }
-
-        /// キャッシュ済みバイナリ取得
-        virtual RHIShaderBytecode GetCachedBlob() const = 0;
-    };
-
-    using RHIComputePipelineStateRef = TRefCountPtr<IRHIComputePipelineState>;
-
-    //=========================================================================
-    // RHIAsyncComputeHelper (07-06)
-    //=========================================================================
-
-    /// 非同期コンピュートヘルパー
-    class RHI_API RHIAsyncComputeHelper
-    {
-    public:
-        RHIAsyncComputeHelper() = default;
-
-        bool Initialize(IRHIDevice* device);
-        void Shutdown();
-
-        IRHIQueue* GetComputeQueue() const { return m_computeQueue; }
-
-        //=====================================================================
-        // 同期
-        //=====================================================================
-
-        uint64 InsertGraphicsToComputeSync(IRHICommandContext* graphicsContext);
-        uint64 InsertComputeToGraphicsSync(IRHIComputeContext* computeContext);
-        void WaitForComputeOnGraphics(IRHICommandContext* graphicsContext, uint64 computeFenceValue);
-        void WaitForGraphicsOnCompute(IRHIComputeContext* computeContext, uint64 graphicsFenceValue);
-
-        //=====================================================================
-        // 便利メソッド
-        //=====================================================================
-
-        using ComputeSetupFunc = std::function<void(IRHIComputeContext*)>;
-        uint64 ExecuteAsync(ComputeSetupFunc setupFunc);
-
-    private:
-        IRHIDevice* m_device = nullptr;
-        IRHIQueue* m_computeQueue = nullptr;
-        TRefCountPtr<IRHIFence> m_computeFence;
-        uint64 m_nextFenceValue = 1;
-    };
-
-}} // namespace NS::RHI
+    } // namespace RHI
+} // namespace NS

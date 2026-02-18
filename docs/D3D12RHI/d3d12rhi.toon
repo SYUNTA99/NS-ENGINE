@@ -1,0 +1,4319 @@
+file: "Engine/Source/Runtime/D3D12RHI/Internal/D3D12RayTracingResources.h"
+impl_summary:
+  lines: 41
+  complexity: LOW
+  topics: bindless, ray-tracing
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 2
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12_GPU_VIRTUAL_ADDRESS,uint64,true,12
+
+FD3D12HitGroupSystemParameters:
+  kind: struct
+  fields: 1
+  nested_types:
+    (anonymous union at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Internal/D3D12RayTracingResources.h:21:2):
+      kind: union
+      nested_types[2]: (anonymous struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Internal/D3D12RayTracingResources.h:23:3), (anonymous struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Internal/D3D12RayTracingResources.h:28:3)
+FD3D12RayTracingOfflineBvhHeader:
+  kind: struct
+  fields: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Access.h"
+impl_summary:
+  lines: 81
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 4
+
+ED3D12Access:
+  kind: enum class
+  type: D3D12AccessUnderlyingType
+  values[36]: Unknown, CPURead, Present, IndirectArgs, VertexOrIndexBuffer, SRVCompute, SRVGraphicsPixel, SRVGraphicsNonPixel, CopySrc, ResolveSrc, DSVRead, UAVCompute, UAVGraphics, RTV, CopyDest, ResolveDst, DSVWrite, BVHRead, BVHWrite, Discard, ShadingRateSource, RHIAccessLast, Common, GenericRead, Last, ... +11 more
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  D3D12AccessUnderlyingType,std::underlying_type_t<ERHIAccess>,true,12
+
+macros[1]{name,macro_type,line}:
+  ED3D12Access,ENUM_FLAGS,62
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Adapter.cpp"
+impl_summary:
+  lines: 2220
+  complexity: HIGH
+  topics: validation, profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions
+  sync: 11
+  assertions: 18
+  logging: 55
+  conditionals: 92
+  platform_apis: Win32
+  globals: GAllowAsyncCompute, GDebugLayerMinimumSeverity, GEnableResidencyManagement, GMaxRHIFeatureLevel, GMaxRHIShaderPlatform, GNumExplicitGPUsForRendering, GRHIDeviceId, GRHIGlobals, GRHIMaximumWaveSize, GRHIMinimumWaveSize
+  notes[2]:
+    "// TODO: Remove this when the debug layers work for executions which are guarded by a fence"
+    "// TODO: accurately account for partially-resident resources"
+
+includes: 17
+
+ED3D12DredMode:
+  kind: enum class
+  type: int
+  conditions: PLATFORM_WINDOWS
+  values[3]: Disabled, Lightweight, Full
+
+MessageFilter:
+  kind: struct
+  conditions: D3D12_SUPPORTS_INFO_QUEUE
+  fields: 2
+  pub_methods: 1
+
+cvars[13]{cvar_name,type,default,help_summary}:
+  D3D12.ResidencyManagement,TAutoConsoleVariable,1,Controls whether D3D12 resource residency management is active (default = on).
+  r.D3D12.EnableD3DDebug,TAutoConsoleVariable,0,0 to disable d3ddebug layer (default) 1 to enable error logging (-d3ddebug) 2 to enable error & warning logging (-d3dlog
+  r.D3D12.DRED,TAutoConsoleVariable,0,Enable DRED GPU Crash debugging mode to track the current GPU state and logs information what operations the GPU execute
+  r.D3D12.LightweightDRED,TAutoConsoleVariable,0,Enable Lightweight DRED GPU Crash debugging mode to track the current GPU state and logs information what operations the
+  D3D12.TrackedReleasedAllocationFrameRetention,FAutoConsoleVariableRef,GTrackedReleasedAllocationFrameRetention,Amount of frames for which we keep freed allocation data around when resource tracking is enabled
+  r.D3D12.AllowAsyncCompute,FAutoConsoleVariableRef,GAllowAsyncCompute,Allow usage of async compute
+  r.D3D12.PreferredBarrierImplementation,FAutoConsoleVariableRef,GPreferredBarrierImplementation,The preferred barrier implementation to use 0 Default 1 Legacy Barriers 2 Enhanced Barriers All other values treated as 
+  D3D12.TrackAllAllocations,FAutoConsoleVariableRef,GD3D12TrackAllAllocations,Controls whether D3D12 RHI should track all allocation information (default = off).
+  D3D12.EvictAllResidentResourcesInBackground,FAutoConsoleVariableRef,GD3D12EvictAllResidentResourcesInBackground,Force D3D12 resource residency manager to evict all tracked unused resources when the application is not focused
+  D3D12.DumpTrackedAllocations,FAutoConsoleCommandWithOutputDevice,,Dump all tracked d3d12 resource allocations.
+  D3D12.DumpTrackedAllocationCallstacks,FAutoConsoleCommandWithOutputDevice,,Dump all tracked d3d12 resource allocation callstacks.
+  D3D12.DumpTrackedResidentAllocations,FAutoConsoleCommandWithOutputDevice,,Dump all tracked resisdent d3d12 resource allocations.
+  D3D12.DumpTrackedResidentAllocationCallstacks,FAutoConsoleCommandWithOutputDevice,,Dump all tracked resident d3d12 resource allocation callstacks.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Adapter.h"
+impl_summary:
+  lines: 680
+  complexity: HIGH
+  topics: shaders, multi-gpu, resource-transitions
+  sync: 2
+  assertions: 2
+  logging: 0
+  conditionals: 46
+  globals: GNumExplicitGPUsForRendering
+
+includes: 4
+
+FD3D12DeviceBasicInfo:
+  kind: struct
+  fields: 9
+FD3D12AdapterDesc:
+  kind: struct
+  fields: 12
+  pub_methods: 5
+FD3D12MemoryInfo:
+  kind: struct
+  fields: 5
+  pub_methods: 1
+FTransientUniformBufferAllocator:
+  kind: class
+  bases: FD3D12FastConstantAllocator, TThreadSingleton<FTransientUniformBufferAllocator>
+  fields: 1
+  pub_methods: 3
+  virtual_api: ~FTransientUniformBufferAllocator
+FD3D12Adapter:
+  kind: class
+  bases: FNoncopyable
+  fields: 60
+  pub_methods: 101
+  virtual_api: ~FD3D12Adapter
+  protected_methods: 4
+  private_methods: 1
+  nested_types:
+    FAllocatedResourceResult:
+      kind: struct
+      fields: 2
+    FReleasedAllocationData:
+      kind: struct
+      fields: 9
+    FTrackedAllocationData:
+      kind: struct
+      fields: 5
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Allocation.cpp"
+impl_summary:
+  lines: 2686
+  complexity: HIGH
+  topics: validation, profiling, async, shaders, resource-transitions, ray-tracing
+  sync: 22
+  assertions: 54
+  logging: 5
+  conditionals: 41
+  globals: GNumExplicitGPUsForRendering, GRHIGlobals
+  notes[5]:
+    "//TODO"
+    "//TODO:"
+    "// TODO: Can we do better than READ + WRITE all the time?"
+    "// TODO: check if this is different on Xbox?"
+    "// TODO:  AFR has been removed, but I don't understand the comment, so I'm leaving it.  What did this code have to do with AFR?"
+
+includes: 8
+
+Type:
+  kind: enum
+  type: int
+  values[4]: DefaultBufferAllocator, DynamicHeapAllocator, TextureAllocator, DefaultBufferAllocatorFullResources
+
+FStat_STAT_D3D12AllocatorUnusedLLM:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12AllocatorWastedLLM:
+  kind: struct
+  pub_methods: 7
+
+cvars[19]{cvar_name,type,default,help_summary}:
+  d3d12.AllowPoolAllocateIndirectArgBuffers,FAutoConsoleVariableRef,GD3D12AllowPoolAllocateIndirectArgBuffers,Allow indirect args to be pool allocated (otherwise they will be committed resources) (default: 0)
+  d3d12.ReadOnlyTextureAllocator.MinPoolSize,FAutoConsoleVariableRef,GD3D12ReadOnlyTextureAllocatorMinPoolSize,Minimum allocation granularity (in bytes) of each size list
+  d3d12.ReadOnlyTextureAllocator.MinNumToPool,FAutoConsoleVariableRef,GD3D12ReadOnlyTextureAllocatorMinNumToPool,Texture pool of each size list must be large enough to store thismany textures unless constrained by maximum allocation 
+  d3d12.ReadOnlyTextureAllocator.MaxPoolSize,FAutoConsoleVariableRef,GD3D12ReadOnlyTextureAllocatorMaxPoolSize,Maximum allocation granularity (in bytes) of each size list
+  d3d12.VRAMBufferPoolDefrag,FAutoConsoleVariableRef,GD3D12VRAMBufferPoolDefrag,Defrag the VRAM buffer pool
+  d3d12.VRAMBufferPoolDefrag.MaxCopySizePerFrame,FAutoConsoleVariableRef,GD3D12VRAMBufferPoolDefragMaxCopySizePerFrame,Max amount of data to copy during defragmentation in a single frame (default 32MB)
+  d3d12.PoolAllocator.ReadOnlyTextureVRAMPoolSize,FAutoConsoleVariableRef,GD3D12PoolAllocatorReadOnlyTextureVRAMPoolSize,Pool size of a single VRAM ReadOnly Texture memory pool (default 64MB)
+  d3d12.PoolAllocator.ReadOnlyTextureMaxAllocationSize,FAutoConsoleVariableRef,GD3D12PoolAllocatorReadOnlyTextureVRAMMaxAllocationSize,Maximum size of a single allocation in the VRAM ReadOnly Texture pool allocator (default 64MB)
+  d3d12.PoolAllocator.RTUAVTextureVRAMPoolSize,FAutoConsoleVariableRef,GD3D12PoolAllocatorRTUAVTextureVRAMPoolSize,Pool size of a single VRAM RTUAV Texture memory pool (default 0MB - disabled)
+  d3d12.PoolAllocator.RTUAVTextureMaxAllocationSize,FAutoConsoleVariableRef,GD3D12PoolAllocatorRTUAVTextureVRAMMaxAllocationSize,Maximum size of a single allocation in the VRAM RTUAV Texture pool allocator (default 0MB - disabled)
+  d3d12.VRAMTexturePoolDefrag,FAutoConsoleVariableRef,GD3D12VRAMTexturePoolDefrag,Defrag the VRAM Texture pool (enabled by default)
+  d3d12.VRAMTexturePoolDefrag.MaxCopySizePerFrame,FAutoConsoleVariableRef,GD3D12VRAMTexturePoolDefragMaxCopySizePerFrame,Max amount of data to copy during defragmentation in a single frame (default 32MB)
+  d3d12.UploadHeap.SmallBlock.MaxAllocationSize,FAutoConsoleVariableRef,GD3D12UploadHeapSmallBlockMaxAllocationSize,Maximum allocation size on the small block allocator for upload memory
+  d3d12.UploadHeap.SmallBlock.PoolSize,FAutoConsoleVariableRef,GD3D12UploadHeapSmallBlockPoolSize,Pool size for the upload memory small block allocator
+  d3d12.UploadHeap.BigBlock.MaxAllocationSize,FAutoConsoleVariableRef,GD3D12UploadHeapBigBlockMaxAllocationSize,Maximum allocation size on the big block allocator for upload memory
+  d3d12.UploadHeap.BigBlock.PoolSize,FAutoConsoleVariableRef,GD3D12UploadHeapBigBlockPoolSize,Pool size for the upload memory big block allocator
+  d3d12.FastConstantAllocatorPageSize,FAutoConsoleVariableRef,GD3D12FastConstantAllocatorPageSize,Page size for the fast constant allocator
+  d3d12.SegListTrackLeaks,FAutoConsoleVariableRef,GD3D12SegListTrackLeaks,1: Enable leak tracking in d3d12 seglist's
+  d3d12.FastAllocator.MinPagesToRetain,FAutoConsoleVariableRef,GD3D12FastAllocatorMinPagesToRetain,Minimum number of pages to retain. Pages below this limit will never be released. Pages above can be released after bein
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Allocation.h"
+impl_summary:
+  lines: 1037
+  complexity: HIGH
+  topics: async
+  sync: 16
+  assertions: 25
+  logging: 0
+  conditionals: 16
+  notes[1]:
+    "// TODO:"
+
+includes: 3
+
+typedefs[1]{name,aliased_type,is_using,conditions,line}:
+  FD3D12BufferPool,FD3D12PoolAllocator,false,USE_BUFFER_POOL_ALLOCATOR,432
+
+FD3D12SegListAllocatorLeakTrack:
+  kind: struct
+  fields: 5
+  pub_methods: 1
+FD3D12ResourceAllocator:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 10
+  pub_methods: 4
+FD3D12BuddyAllocator:
+  kind: class
+  bases: FD3D12ResourceAllocator
+  fields: 12
+  pub_methods: 16
+  private_methods: 9
+  nested_types:
+    RetiredBlock:
+      kind: struct
+      fields: 4
+FD3D12MultiBuddyAllocator:
+  kind: class
+  bases: FD3D12ResourceAllocator
+  fields: 5
+  pub_methods: 12
+  protected_methods: 1
+FD3D12BucketAllocator:
+  kind: class
+  bases: FD3D12ResourceAllocator
+  fields: 7
+  pub_methods: 10
+  private_methods: 2
+FD3D12UploadHeapAllocator:
+  kind: class
+  bases: FD3D12AdapterChild, FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 5
+  pub_methods: 7
+FD3D12DefaultBufferPool:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 1
+  pub_methods: 8
+FD3D12DefaultBufferAllocator:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 3
+  pub_methods: 8
+  private_methods: 1
+FD3D12FastAllocatorPage:
+  kind: struct
+  fields: 5
+  pub_methods: 5
+FD3D12FastAllocatorPagePool:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 3
+  pub_methods: 9
+FD3D12FastAllocator:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 3
+  pub_methods: 5
+FD3D12FastConstantAllocator:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 3
+  pub_methods: 3
+FD3D12SegHeap:
+  kind: class
+  bases: FD3D12Heap
+  fields: 4
+  private_methods: 10
+FD3D12SegList:
+  kind: class
+  fields: 5
+  private_methods: 9
+FD3D12SegListAllocator:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 14
+  pub_methods: 11
+  private_methods: 8
+  nested_types:
+    FRetiredBlock:
+      kind: struct
+      fields: 3
+      pub_methods: 1
+FD3D12TextureAllocatorPool:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  conditions: USE_TEXTURE_POOL_ALLOCATOR
+  fields: 2
+  pub_methods: 6
+  nested_enums:
+    EPoolType:
+      kind: enum class
+      type: int
+      values[5]: ReadOnly4K, ReadOnly, RenderTarget, UAV, Count
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12AmdExtensions.h"
+impl_summary:
+  lines: 14
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 4
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12BarriersFactory.h"
+impl_summary:
+  lines: 266
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 3
+
+ED3D12BarrierImplementationType:
+  kind: enum class
+  type: int
+  values[3]: Legacy, Enhanced, Invalid
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FNullD3D12BarriersFactoryEntry,"TD3D12BarriersFactoryEntry<ED3D12BarrierImplementationType::Invalid, nullptr_t, nullptr_t>",true,55
+
+TD3D12BarriersFactoryEntry:
+  kind: class
+  template: ED3D12BarrierImplementationType InImplType, TAdapterImpl, TContextImpl
+  fields: 1
+TD3D12BarriersFactoryEntry:
+  kind: struct
+TIsInstanceOfD3D12BarriersFactoryTemplate:
+  kind: class
+  template: typename
+  bases: std::false_type
+TD3D12BarriersFactory:
+  kind: class
+  template: TFactoryEntries
+  fields: 1
+  pub_methods: 2
+  private_methods: 3
+  nested_enums:
+    EComponentType:
+      kind: enum class
+      type: int
+      values[2]: Adapter, Context
+  nested_types:
+    TGetFirstTypeInPack:
+      kind: class
+      template: TFirst, typename
+    CreateBarriersInternalReturnType:
+      kind: class
+      template: EComponentType InCompType
+    CreateBarriersInternalReturnType:
+      kind: struct
+    CreateBarriersInternalReturnType:
+      kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12BindlessDescriptors.cpp"
+impl_summary:
+  lines: 929
+  complexity: HIGH
+  topics: profiling, caching, multi-gpu, bindless, ray-tracing
+  sync: 8
+  assertions: 18
+  logging: 3
+  conditionals: 6
+  globals: GMaxRHIShaderPlatform
+  notes[1]:
+    "// NOTE: copying over duplicate descriptor entries is faster then adding them to set for reduction"
+
+includes: 3
+
+cvars[3]{cvar_name,type,default,help_summary}:
+  D3D12.Bindless.ResourceDescriptorHeapSize,FAutoConsoleVariableRef,GBindlessResourceDescriptorHeapSize,Bindless resource descriptor heap size
+  D3D12.Bindless.GarbageCollectLatency,FAutoConsoleVariableRef,GBindlessResourceDescriptorGarbageCollectLatency,Amount of update cycles before heap is freed
+  D3D12.Bindless.SamplerDescriptorHeapSize,FAutoConsoleVariableRef,GBindlessSamplerDescriptorHeapSize,Bindless sampler descriptor heap size
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12BindlessDescriptors.h"
+impl_summary:
+  lines: 327
+  complexity: MEDIUM
+  topics: multi-gpu, bindless
+  sync: 3
+  assertions: 1
+  logging: 0
+  conditionals: 6
+  notes[1]:
+    "// Called from FD3D12Adapter::AllocateBindlessResourceHandle"
+
+includes: 5
+
+FD3D12BindlessDescriptorAllocator:
+  kind: class
+  bases: FD3D12AdapterChild
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 6
+  pub_methods: 14
+  private_methods: 1
+FD3D12BindlessSamplerManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 2
+  pub_methods: 11
+FD3D12ContextBindlessState:
+  kind: struct
+  conditions: !D3D12RHI_CUSTOM_BINDLESS_RESOURCE_MANAGER && PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 2
+  pub_methods: 3
+FMovingWindowMax:
+  kind: class
+  template: T, int32 ArraySize
+  conditions: !D3D12RHI_CUSTOM_BINDLESS_RESOURCE_MANAGER && PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 3
+  pub_methods: 3
+FD3D12BindlessResourceManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  conditions: !D3D12RHI_CUSTOM_BINDLESS_RESOURCE_MANAGER && PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 13
+  pub_methods: 17
+  private_methods: 7
+  nested_types:
+    FGpuHeapData:
+      kind: struct
+      fields: 4
+FD3D12DescriptorHeapPair:
+  kind: struct
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 2
+FD3D12BindlessDescriptorManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 4
+  pub_methods: 21
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Buffer.cpp"
+impl_summary:
+  lines: 999
+  complexity: HIGH
+  topics: profiling, async, multi-gpu, resource-transitions
+  sync: 0
+  assertions: 40
+  logging: 1
+  conditionals: 11
+  platform_apis: POSIX
+  globals: GNumExplicitGPUsForRendering, GRHIGlobals
+  notes[2]:
+    "// TODO: the UploadLocation logic is too complex to \"just\" write a different code path for each initializer type, so we will ju"
+    "// TODO: write a custom Initializer method that enqueues zeroing on the upload context."
+
+includes: 5
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.cpp"
+impl_summary:
+  lines: 1188
+  complexity: HIGH
+  topics: validation, profiling, caching, async, multi-gpu, gpu-crash-debug, resource-transitions, bindless
+  sync: 0
+  assertions: 32
+  logging: 1
+  conditionals: 24
+  platform_apis: POSIX
+
+includes: 4
+
+cvars[3]{cvar_name,type,default,help_summary}:
+  D3D12.MaxCommandsPerCommandList,FAutoConsoleVariableRef,GD3D12MaxCommandsPerCommandList,"Flush command list to GPU after certain amount of enqueued commands (draw, dispatch, copy, ...) (default value 10000)"
+  D3D12.EmitRgpFrameMarkers,FAutoConsoleVariableRef,GEmitRgpFrameMarkers,Enables/Disables frame markers for AMD's RGP tool.
+  D3D12.UnsafeCrossGPUTransfers,FAutoConsoleVariableRef,GD3D12UnsafeCrossGPUTransfers,"Disables cross GPU synchronization correctness, for a gain in performance (Default: true)."
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h"
+impl_summary:
+  lines: 1214
+  complexity: HIGH
+  topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions
+  sync: 0
+  assertions: 8
+  logging: 0
+  conditionals: 37
+  platform_apis: Win32, POSIX
+
+includes: 17
+
+ED3D12PipelineType:
+  kind: enum class
+  type: uint8
+ED3D12Units:
+  kind: enum class
+  type: int
+  values[2]: Raw, Microseconds
+ED3D12FlushFlags:
+  kind: enum class
+  type: int
+  values[3]: None, WaitForSubmission, WaitForCompletion
+
+FD3D12DeferredDeleteObject:
+  kind: struct
+  fields: 1
+  pub_methods: 10
+  nested_enums:
+    EType:
+      kind: enum class
+      type: int
+      values[11]: RHIObject, D3DObject, Heap, DescriptorHeap, BindlessDescriptor, BindlessDescriptorHeap, CPUAllocation, DescriptorBlock, VirtualAllocation, Func, TextureStagingBuffer
+  nested_types:
+    (anonymous union at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:67:2):
+      kind: union
+      fields: 10
+      nested_types[4]: (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:76:3), (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:84:3), (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:90:3), (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:98:3)
+FD3D12ContextCommon:
+  kind: class
+  fields: 14
+  pub_methods: 46
+  virtual_api: ~FD3D12ContextCommon, ClearState, ConditionalClearShaderResource, Finalize
+  protected_methods: 6
+  nested_enums:
+    EClearStateMode:
+      kind: enum class
+      type: int
+      values[2]: TransientOnly, All
+    EMarkerType:
+      kind: enum class
+      type: int
+      values[2]: In, Out
+    EPhase:
+      kind: enum class
+      type: int
+      values[4]: Wait, UpdateReservedResources, Execute, Signal
+  nested_types:
+    (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h:279:2):
+      kind: struct
+      fields: 2
+FD3D12ContextCopy:
+  kind: class
+  bases: FD3D12ContextCommon
+  pub_methods: 1
+FD3D12CopyScope:
+  kind: class
+  fields: 4
+  pub_methods: 3
+FD3D12CommandContextBase:
+  kind: class
+  bases: IRHICommandContext, FD3D12AdapterChild
+  fields: 2
+  pub_methods: 9
+  virtual_api: RHIEndDrawingViewport, RHISetAsyncComputeBudget, AsRedirector, GetSingleDeviceContext
+FD3D12CommandContext:
+  kind: class
+  bases: FD3D12ContextCommon, FD3D12CommandContextBase, FD3D12DeviceChild
+  fields: 16
+  pub_methods: 102
+  protected_methods: 1
+  private_methods: 8
+FD3D12CommandContextRedirector:
+  kind: class
+  bases: FD3D12CommandContextBase
+  fields: 3
+  pub_methods: 64
+FD3D12ContextArray:
+  kind: class
+  bases: TRHIPipelineArray<FD3D12CommandContextBase *>
+  pub_methods: 2
+
+macros[1]{name,macro_type,line}:
+  ED3D12FlushFlags,ENUM_FLAGS,192
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandList.cpp"
+impl_summary:
+  lines: 428
+  complexity: HIGH
+  topics: profiling, async, resource-transitions
+  sync: 0
+  assertions: 14
+  logging: 0
+  conditionals: 29
+  platform_apis: POSIX
+
+includes: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandList.h"
+impl_summary:
+  lines: 321
+  complexity: HIGH
+  topics: profiling, resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 31
+
+includes: 6
+
+ED3D12QueueType:
+  kind: enum class
+  type: int
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12ResidencySet,D3DX12Residency::ResidencySet,false,29
+
+FD3D12CommandAllocator:
+  kind: class
+  fields: 3
+  pub_methods: 3
+  private_methods: 3
+FD3D12CommandList:
+  kind: class
+  fields: 5
+  pub_methods: 29
+  private_methods: 7
+  nested_types:
+    FInterfaces:
+      kind: struct
+      fields: 16
+    TRValuePtr:
+      kind: class
+      template: T
+      fields: 2
+      pub_methods: 10
+      private_methods: 1
+    FState:
+      kind: struct
+      fields: 14
+      pub_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Commands.cpp"
+impl_summary:
+  lines: 1574
+  complexity: HIGH
+  topics: validation, profiling, caching, shaders, resource-transitions, ray-tracing
+  sync: 0
+  assertions: 41
+  logging: 6
+  conditionals: 30
+  globals: GRHISupportsAttachmentVariableRateShading, GRHISupportsPipelineVariableRateShading
+  notes[2]:
+    "// TODO: Buffer in D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE needs CopyRaytracingAccelerationStructure"
+    "// TODO: [PSO API] Every thing inside this scope is only necessary to keep the PSO shadow in sync while we convert the high lev"
+
+includes: 7
+
+FD3D12ResourceBinder:
+  kind: struct
+  fields: 6
+  pub_methods: 7
+FRTVDesc:
+  kind: struct
+  fields: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ConstantBuffer.cpp"
+impl_summary:
+  lines: 63
+  complexity: LOW
+  sync: 0
+  assertions: 1
+  logging: 0
+  conditionals: 3
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ConstantBuffer.h"
+impl_summary:
+  lines: 77
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 3
+
+includes: 2
+
+FD3D12ConstantBuffer:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 5
+  pub_methods: 5
+  virtual_api: ~FD3D12ConstantBuffer
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12DescriptorCache.cpp"
+impl_summary:
+  lines: 1327
+  complexity: HIGH
+  topics: caching, shaders, resource-transitions, bindless
+  sync: 2
+  assertions: 52
+  logging: 9
+  conditionals: 22
+  notes[1]:
+    "// NOTE: For this function, setting zero render targets might not be a no-op, since this is also used"
+
+includes: 6
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12DescriptorCache.h"
+impl_summary:
+  lines: 449
+  complexity: LOW
+  topics: caching, bindless
+  sync: 1
+  assertions: 2
+  logging: 0
+  conditionals: 3
+
+includes: 6
+
+ED3D12SetDescriptorHeapsFlags:
+  kind: enum class
+  type: int
+  values[3]: None, ForceChanged, Bindless
+
+typedefs[3]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,32
+  FD3D12SamplerMap,"FD3D12ConservativeMap<FD3D12SamplerArrayDesc, D3D12_GPU_DESCRIPTOR_HANDLE>",false,126
+  FD3D12SamplerSet,"TSet<FD3D12UniqueSamplerTable, FD3D12UniqueSamplerTableKeyFuncs>",false,174
+
+FD3D12ConservativeMap:
+  kind: class
+  template: KeyType, ValueType
+  fields: 1
+  pub_methods: 4
+  private_methods: 1
+  nested_types:
+    Entry:
+      kind: struct
+      fields: 3
+FD3D12SamplerArrayDesc:
+  kind: struct
+  fields: 2
+  pub_methods: 1
+FD3D12UniqueSamplerTable:
+  kind: struct
+  fields: 3
+  pub_methods: 2
+FD3D12UniqueSamplerTableKeyFuncs:
+  kind: struct
+  bases: BaseKeyFuncs<FD3D12UniqueSamplerTable, FD3D12UniqueSamplerTable, false>
+  pub_methods: 3
+FD3D12OnlineHeap:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 4
+  pub_methods: 14
+  virtual_api: ~FD3D12OnlineHeap, RollOver, HeapLoopedAround, OpenCommandList, CloseCommandList, GetTotalSize
+FD3D12GlobalOnlineSamplerHeap:
+  kind: class
+  bases: FD3D12OnlineHeap
+  fields: 2
+  pub_methods: 5
+  virtual_api: RollOver
+FD3D12SubAllocatedOnlineHeap:
+  kind: class
+  bases: FD3D12OnlineHeap
+  fields: 3
+  pub_methods: 4
+  virtual_api: RollOver, OpenCommandList, GetTotalSize
+  private_methods: 1
+FD3D12LocalOnlineHeap:
+  kind: class
+  bases: FD3D12OnlineHeap
+  fields: 5
+  pub_methods: 6
+  virtual_api: RollOver, HeapLoopedAround, OpenCommandList, CloseCommandList
+  private_methods: 1
+  nested_types:
+    FSyncPointEntry:
+      kind: struct
+      fields: 2
+    FPoolEntry:
+      kind: struct
+      fields: 2
+FD3D12DescriptorCache:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12SingleNodeGPUObject
+  fields: 23
+  pub_methods: 37
+
+macros[1]{name,macro_type,line}:
+  ED3D12SetDescriptorHeapsFlags,ENUM_FLAGS,309
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Descriptors.cpp"
+impl_summary:
+  lines: 629
+  complexity: HIGH
+  topics: profiling
+  sync: 6
+  assertions: 9
+  logging: 0
+  conditionals: 5
+  notes[1]:
+    "// TODO: handle running out of space"
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Descriptors.h"
+impl_summary:
+  lines: 337
+  complexity: MEDIUM
+  topics: multi-gpu
+  sync: 3
+  assertions: 2
+  logging: 0
+  conditionals: 0
+
+includes: 8
+
+ED3D12DescriptorHeapFlags:
+  kind: enum class
+  type: uint8
+  values[3]: None, GpuVisible, Poolable
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12DescriptorHeapPtr,TRefCountPtr<FD3D12DescriptorHeap>,true,153
+
+FD3D12DescriptorHeap:
+  kind: struct
+  bases: FD3D12DeviceChild, FThreadSafeRefCountedObject
+  fields: 10
+  pub_methods: 17
+  virtual_api: ~FD3D12DescriptorHeap
+FD3D12DescriptorManager:
+  kind: class
+  bases: FD3D12DeviceChild, FRHIHeapDescriptorAllocator
+  fields: 1
+  pub_methods: 8
+FD3D12OnlineDescriptorBlock:
+  kind: struct
+  fields: 3
+  pub_methods: 2
+FD3D12OnlineDescriptorManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 3
+  pub_methods: 11
+FD3D12OfflineHeapFreeRange:
+  kind: struct
+  fields: 2
+FD3D12OfflineHeapEntry:
+  kind: struct
+  fields: 2
+  pub_methods: 1
+FD3D12OfflineDescriptor:
+  kind: struct
+  bases: D3D12_CPU_DESCRIPTOR_HANDLE
+  fields: 2
+  pub_methods: 4
+FD3D12OfflineDescriptorManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 6
+  pub_methods: 7
+  private_methods: 1
+FD3D12DescriptorHeapManager:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 3
+  pub_methods: 9
+  private_methods: 1
+  nested_types:
+    FPooledHeap:
+      kind: struct
+      fields: 4
+      pub_methods: 1
+
+macros[1]{name,macro_type,line}:
+  ED3D12DescriptorHeapFlags,ENUM_FLAGS,69
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Device.cpp"
+impl_summary:
+  lines: 851
+  complexity: HIGH
+  topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug
+  sync: 0
+  assertions: 28
+  logging: 2
+  conditionals: 20
+  platform_apis: Win32
+  globals: GRHISupportsArrayIndexFromAnyShader, GRHISupportsStencilRefFromPixelShader
+  notes[1]:
+    "// TODO: Sort out DXC shader database SM6.0 usage. DX12 supports this feature, but need to improve DXC support."
+
+includes: 5
+
+typedefs[1]{name,aliased_type,is_using,conditions,line}:
+  FDXGIGetDebugInterface1,"HRESULT (*)(UINT, const IID &, void **) __attribute__((stdcall))",false,D3D12_SUPPORTS_DXGI_DEBUG,211
+
+cvars[2]{cvar_name,type,default,help_summary}:
+  r.D3D12.GPUTimeout,TAutoConsoleVariable,1,0: Disable GPU Timeout; use with care as it could freeze your PC! 1: Enable GPU Timeout; operation taking long on the GP
+  r.D3D12.DiagnosticBufferExtraMemory,TAutoConsoleVariable,0,Extra allocated memory for diagnostic buffer
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Device.h"
+impl_summary:
+  lines: 379
+  complexity: MEDIUM
+  topics: profiling, caching, async, gpu-crash-debug, ray-tracing
+  sync: 1
+  assertions: 1
+  logging: 0
+  conditionals: 13
+  globals: GRHISupportsAsyncTextureCreation
+
+includes: 13
+
+FD3D12DiagnosticBuffer:
+  kind: class
+  bases: FRHIDiagnosticBuffer
+  fields: 3
+  pub_methods: 8
+  private_methods: 1
+FD3D12Timing:
+  kind: class
+  fields: 7
+  pub_methods: 1
+FD3D12Queue:
+  kind: class
+  fields: 19
+  pub_methods: 6
+  nested_types:
+    (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Device.h:130:2):
+      kind: struct
+      fields: 3
+FD3D12Device:
+  kind: class
+  bases: FD3D12SingleNodeGPUObject, FNoncopyable, FD3D12AdapterChild
+  fields: 25
+  pub_methods: 53
+  private_methods: 4
+  nested_types:
+    FResidencyManager:
+      kind: struct
+      bases: FD3D12ResidencyManager
+      pub_methods: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12DirectCommandListManager.cpp"
+impl_summary:
+  lines: 202
+  complexity: LOW
+  sync: 0
+  assertions: 7
+  logging: 0
+  conditionals: 1
+
+includes: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12DirectCommandListManager.h"
+impl_summary:
+  lines: 52
+  complexity: LOW
+  topics: multi-gpu
+  sync: 1
+  assertions: 0
+  logging: 0
+  conditionals: 0
+  platform_apis: POSIX
+
+includes: 3
+
+FD3D12ManualFence:
+  kind: class
+  fields: 5
+  pub_methods: 6
+  private_methods: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12DiskCache.h"
+impl_summary:
+  lines: 8
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12EnhancedBarriers.cpp"
+impl_summary:
+  lines: 3207
+  complexity: HIGH
+  topics: validation, profiling, async, multi-gpu, resource-transitions, ray-tracing
+  sync: 0
+  assertions: 66
+  logging: 3
+  conditionals: 16
+  platform_apis: POSIX
+  globals: GRHIGlobals
+
+includes: 15
+
+FD3D12EnhancedBarriersTransitionData:
+  kind: struct
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 5
+FD3D12BarrierValues:
+  kind: struct
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 3
+  pub_methods: 1
+TNumAndArray:
+  kind: class
+  template: TArray
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 2
+FD3D12EnhancedBarriersBatcher:
+  kind: class
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 4
+  pub_methods: 6
+  private_methods: 1
+  nested_types:
+    FD3D12BarrierGroup:
+      kind: struct
+      bases: D3D12_BARRIER_GROUP
+      pub_methods: 4
+VARangeCollection:
+  kind: class
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 1
+  pub_methods: 2
+  private_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12EnhancedBarriers.h"
+impl_summary:
+  lines: 187
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 2
+
+ERHIPipeline:
+  kind: enum class
+  type: uint8
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+
+FD3D12EnhancedBarriersForAdapter:
+  kind: class
+  bases: ID3D12BarriersForAdapter
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  pub_methods: 10
+  virtual_api: ~FD3D12EnhancedBarriersForAdapter, ConfigureDevice, GetTransitionDataSizeBytes, GetTransitionDataAlignmentBytes, CreateTransition, ReleaseTransition, CreateCommittedResource, CreateReservedResource, CreatePlacedResource, GetImplementationName
+FD3D12EnhancedBarriersForContext:
+  kind: class
+  bases: ID3D12BarriersForContext
+  conditions: D3D12RHI_SUPPORTS_ENHANCED_BARRIERS
+  fields: 1
+  pub_methods: 8
+  virtual_api: ~FD3D12EnhancedBarriersForContext, BeginTransitions, EndTransitions, AddGlobalBarrier, AddBarrier, FlushIntoCommandList, GetNumPendingBarriers
+  private_methods: 3
+  nested_enums:
+    EProcessEarlyTransitions:
+      kind: enum class
+      type: bool
+      values[2]: No, Yes
+    EBarrierPhase:
+      kind: enum class
+      type: bool
+      values[2]: Begin, End
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ExplicitDescriptorCache.cpp"
+impl_summary:
+  lines: 447
+  complexity: HIGH
+  topics: validation, caching, shaders
+  sync: 4
+  assertions: 9
+  logging: 3
+  conditionals: 5
+  globals: GMaxNumUsedSamplerDescriptors
+  notes[2]:
+    "// Thread-safe (uses atomic linear allocation)."
+    "// NOTE: GD3D12RayTracingViewDescriptorHeapOverflowReported is set atomically because multiple"
+
+includes: 10
+
+cvars[2]{cvar_name,type,default,help_summary}:
+  r.D3D12.ExplicitDescriptorHeap.DeduplicateSamplers,FAutoConsoleVariableRef,GD3D12ExplicitDeduplicateSamplers,Use an exhaustive search to deduplicate sampler descriptors when generating shader binding tables. Reduces sampler heap 
+  r.D3D12.ExplicitDescriptorHeap.ViewDescriptorHeapSize,FAutoConsoleVariableRef,GD3D12ExplicitViewDescriptorHeapSize,"Maximum number of descriptors per explicit view descriptor heap. (default = 250k, ~8MB per heap) Typical measured descri"
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ExplicitDescriptorCache.h"
+impl_summary:
+  lines: 198
+  complexity: LOW
+  topics: caching
+  sync: 1
+  assertions: 1
+  logging: 0
+  conditionals: 1
+  notes[1]:
+    "// Thread-safe (uses atomic linear allocation)."
+
+includes: 2
+
+FD3D12ExplicitDescriptorHeapCache:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 3
+  pub_methods: 9
+  private_methods: 2
+  nested_types:
+    FEntry:
+      kind: struct
+      fields: 5
+FD3D12ExplicitDescriptorHeap:
+  kind: struct
+  bases: FD3D12DeviceChild
+  fields: 12
+  pub_methods: 12
+FD3D12ExplicitDescriptorCache:
+  kind: class
+  bases: FD3D12DeviceChild
+  fields: 5
+  pub_methods: 9
+  nested_types:
+    TIdentityHash:
+      kind: class
+      template: KeyType
+      pub_methods: 2
+    FDescriptorSlotRange:
+      kind: struct
+      fields: 3
+      pub_methods: 3
+    FWorkerThreadData:
+      kind: struct
+      fields: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12GPUProfiler.cpp"
+impl_summary:
+  lines: 327
+  complexity: MEDIUM
+  topics: profiling, multi-gpu
+  sync: 0
+  assertions: 5
+  logging: 14
+  conditionals: 1
+  globals: GIsSupported
+
+includes: 5
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  D3D12.StablePowerState,FAutoConsoleVariableRef,GD3D12RHIStablePowerState,Enable stable power state. This increases GPU timing measurement accuracy but may decrease overall GPU clock rate. 0 (de
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12GPUProfiler.h"
+impl_summary:
+  lines: 129
+  complexity: LOW
+  topics: profiling
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+  platform_apis: Win32
+
+includes: 2
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,9
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12IntelExtensions.cpp"
+impl_summary:
+  lines: 106
+  complexity: LOW
+  topics: gpu-crash-debug
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 7
+
+includes: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12IntelExtensions.h"
+impl_summary:
+  lines: 62
+  complexity: LOW
+  topics: gpu-crash-debug
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 4
+
+includes: 5
+
+INTCSupportedVersion:
+  kind: struct
+  conditions: INTEL_EXTENSIONS
+  fields: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12LegacyBarriers.cpp"
+impl_summary:
+  lines: 1716
+  complexity: HIGH
+  topics: validation, profiling, async, multi-gpu, resource-transitions, ray-tracing
+  sync: 0
+  assertions: 30
+  logging: 5
+  conditionals: 23
+  platform_apis: POSIX
+  globals: GNumExplicitGPUsForRendering, GRHIGlobals, GRHISupportsAttachmentVariableRateShading
+
+includes: 6
+
+FD3D12LegacyBarriersTransitionData:
+  kind: struct
+  conditions: D3D12RHI_SUPPORTS_LEGACY_BARRIERS
+  fields: 9
+FD3D12LegacyBarriersBatcher:
+  kind: class
+  conditions: D3D12RHI_SUPPORTS_LEGACY_BARRIERS
+  fields: 2
+  pub_methods: 5
+  nested_types:
+    FD3D12ResourceBarrier:
+      kind: struct
+      bases: D3D12_RESOURCE_BARRIER
+      pub_methods: 4
+FD3D12DiscardResource:
+  kind: struct
+  conditions: D3D12RHI_SUPPORTS_LEGACY_BARRIERS
+  fields: 3
+  pub_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12LegacyBarriers.h"
+impl_summary:
+  lines: 186
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 2
+
+FD3D12LegacyBarriersForAdapter:
+  kind: class
+  bases: ID3D12BarriersForAdapter
+  conditions: D3D12RHI_SUPPORTS_LEGACY_BARRIERS
+  pub_methods: 10
+  virtual_api: ~FD3D12LegacyBarriersForAdapter, ConfigureDevice, GetTransitionDataSizeBytes, GetTransitionDataAlignmentBytes, CreateTransition, ReleaseTransition, CreateCommittedResource, CreateReservedResource, CreatePlacedResource, GetImplementationName
+FD3D12LegacyBarriersForContext:
+  kind: class
+  bases: ID3D12BarriersForContext
+  conditions: D3D12RHI_SUPPORTS_LEGACY_BARRIERS
+  fields: 1
+  pub_methods: 8
+  virtual_api: ~FD3D12LegacyBarriersForContext, BeginTransitions, EndTransitions, AddGlobalBarrier, AddBarrier, FlushIntoCommandList, GetNumPendingBarriers
+  private_methods: 6
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12NvidiaExtensions.cpp"
+impl_summary:
+  lines: 305
+  complexity: MEDIUM
+  topics: async, shaders, gpu-crash-debug
+  sync: 0
+  assertions: 2
+  logging: 10
+  conditionals: 8
+
+includes: 12
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12NvidiaExtensions.h"
+impl_summary:
+  lines: 43
+  complexity: LOW
+  topics: gpu-crash-debug
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 3
+
+includes: 6
+
+typedefs[2]{name,aliased_type,is_using,conditions,line}:
+  FCommandList,struct GFSDK_Aftermath_ContextHandle__ *,false,NV_AFTERMATH,24
+  FResource,struct GFSDK_Aftermath_ResourceHandle__ *,false,NV_AFTERMATH,25
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Pipelinestate.cpp"
+impl_summary:
+  lines: 964
+  complexity: HIGH
+  topics: caching, shaders
+  sync: 15
+  assertions: 21
+  logging: 1
+  conditionals: 25
+  globals: GIsRHIInitialized, GRHISupportsPipelineStateSortKey
+  notes[3]:
+    "// TODO: [PSO API] For now, keep DBT enabled, if available, until it is added as part of a member to the Initializer's DepthSte"
+    "// TODO: For now PSOs will be created on every node of the LDA chain."
+    "// TODO: Try to load from a PipelineLibrary now instead of at Create time."
+
+includes: 4
+
+cvars[3]{cvar_name,type,default,help_summary}:
+  D3D12.PSO.StallWarningThresholdInMs,TAutoConsoleVariable,100.0f,Sets a threshold of when to logs messages about stalls due to PSO creation. Value is in milliseconds. (100 is the defaul
+  D3D12.PSOPrecache.KeepLowLevel,FAutoConsoleVariableRef,GLowLevelCacheKeepPrecachedPSOs,Keep in memory the d3d12 PSO blob for precached PSOs. Consumes more memory but reduces stalls.
+  D3D12.PSO.KeepUsedPSOsInLowLevelCache,FAutoConsoleVariableRef,GLowLevelCacheKeepUsedPSOs,Keep in memory the d3d12 PSO blob for used PSOs. Consumes more memory but reduces potential stalls.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12PipelineState.h"
+impl_summary:
+  lines: 555
+  complexity: HIGH
+  topics: caching, async, shaders
+  sync: 7
+  assertions: 0
+  logging: 0
+  conditionals: 24
+  globals: GRHISupportsPipelineStateSortKey
+  notes[2]:
+    "// TODO: Remove or rewrite D3D12RHI high level PSO cache"
+    "// TODO: Replace with a global hash lookup to reduce overall footprint?"
+
+includes: 4
+
+FStat_STAT_PSOGraphicsNumLowlevelCacheEntries:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOGraphicsLowlevelCacheHit:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOGraphicsLowlevelCacheMiss:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOComputeNumLowlevelCacheEntries:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOComputeLowlevelCacheHit:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOComputeLowlevelCacheMiss:
+  kind: struct
+  pub_methods: 7
+FD3D12_GRAPHICS_PIPELINE_STATE_DESC:
+  kind: struct
+  fields: 19
+  pub_methods: 2
+FD3D12LowLevelGraphicsPipelineStateDesc:
+  kind: struct
+  fields: 15
+  pub_methods: 3
+FD3D12_COMPUTE_PIPELINE_STATE_DESC:
+  kind: struct
+  bases: D3D12_COMPUTE_PIPELINE_STATE_DESC
+  pub_methods: 1
+FD3D12ComputePipelineStateDesc:
+  kind: struct
+  fields: 5
+  pub_methods: 2
+equality_pipeline_state_desc:
+  kind: struct
+  pub_methods: 1
+equality_pipeline_state_desc:
+  kind: struct
+  pub_methods: 1
+FD3D12PipelineStateWorker:
+  kind: struct
+  bases: FD3D12AdapterChild, FNonAbandonableTask
+  fields: 3
+  pub_methods: 4
+  nested_types:
+    PipelineCreationArgs:
+      kind: union
+      fields: 2
+FD3D12PipelineState:
+  kind: struct
+  bases: FD3D12AdapterChild, FD3D12MultiNodeGPUObject, FNoncopyable, FRefCountBase
+  fields: 5
+  pub_methods: 12
+  virtual_api: ~FD3D12PipelineState
+  private_methods: 1
+  nested_enums:
+    PSOInitState:
+      kind: enum class
+      type: int
+      values[3]: Initialized, Uninitialized, CreationFailed
+D3D12ResourceFrameCounter:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+FD3D12PipelineStateCommonData:
+  kind: struct
+  fields: 3
+  pub_methods: 1
+FD3D12GraphicsPipelineState:
+  kind: struct
+  bases: FRHIGraphicsPipelineState, FD3D12PipelineStateCommonData
+  fields: 3
+  pub_methods: 9
+  virtual_api: ~FD3D12GraphicsPipelineState, GetShader
+FD3D12ComputePipelineState:
+  kind: struct
+  bases: FRHIComputePipelineState, FD3D12PipelineStateCommonData
+  fields: 2
+  pub_methods: 3
+  virtual_api: ~FD3D12ComputePipelineState
+FD3D12PipelineStateCacheBase:
+  kind: class
+  bases: FD3D12AdapterChild
+  fields: 6
+  pub_methods: 9
+  virtual_api: ~FD3D12PipelineStateCacheBase
+  protected_methods: 11
+  nested_enums:
+    PSO_CACHE_TYPE:
+      kind: enum
+      type: int
+      values[3]: PSO_CACHE_GRAPHICS, PSO_CACHE_COMPUTE, NUM_PSO_CACHE_TYPES
+  nested_types:
+    TStateCacheKeyFuncs:
+      kind: class
+      template: TDesc, TValue
+      bases: BaseKeyFuncs<TPair<TDesc, TValue>, TDesc, false>
+      pub_methods: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12PoolAllocator.cpp"
+impl_summary:
+  lines: 1057
+  complexity: HIGH
+  topics: validation, profiling, caching, multi-gpu, resource-transitions, ray-tracing
+  sync: 4
+  assertions: 36
+  logging: 0
+  conditionals: 20
+  globals: GNumExplicitGPUsForRendering
+  notes[3]:
+    "// TODO: optimize to not perform the full iteration here!"
+    "// TODO: Using aliasing buffer on whole heap for copies to reduce flushes and resource transitions"
+    "// TODO: sort the copy ops to reduce amount of transitions!!"
+
+includes: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12PoolAllocator.h"
+impl_summary:
+  lines: 242
+  complexity: LOW
+  sync: 0
+  assertions: 2
+  logging: 0
+  conditionals: 0
+
+includes: 2
+
+EResourceAllocationStrategy:
+  kind: enum class
+  type: int
+  values[2]: kPlacedResource, kManualSubAllocation
+
+FD3D12ResourceInitConfig:
+  kind: struct
+  fields: 4
+  pub_methods: 2
+FD3D12VRAMCopyOperation:
+  kind: struct
+  fields: 8
+  nested_enums:
+    ECopyType:
+      kind: enum
+      type: int
+      values[2]: BufferRegion, Resource
+FD3D12HeapAndOffset:
+  kind: struct
+  fields: 2
+FD3D12MemoryPool:
+  kind: class
+  bases: FRHIMemoryPool, FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 7
+  pub_methods: 8
+  virtual_api: ~FD3D12MemoryPool, Init, Destroy
+FD3D12PoolAllocator:
+  kind: class
+  bases: FRHIPoolAllocator, FD3D12DeviceChild, FD3D12MultiNodeGPUObject, ID3D12ResourceAllocator
+  fields: 8
+  pub_methods: 17
+  virtual_api: ~FD3D12PoolAllocator, DeallocateResource, AllocateResource
+  protected_methods: 4
+  nested_enums:
+    EAllocationType:
+      kind: enum class
+      type: int
+      values[3]: Allocate, DefragFree, Free
+  nested_types:
+    FrameFencedAllocationData:
+      kind: struct
+      fields: 4
+      nested_enums:
+        EOperation:
+          kind: enum class
+          type: int
+          values[4]: Invalid, Deallocate, Unlock, Nop
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Query.cpp"
+impl_summary:
+  lines: 352
+  complexity: MEDIUM
+  topics: profiling, multi-gpu
+  sync: 0
+  assertions: 8
+  logging: 0
+  conditionals: 3
+  platform_apis: POSIX
+  globals: GDynamicRHI, GNumExplicitGPUsForRendering
+
+includes: 4
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  D3D12.InsertOuterOcclusionQuery,FAutoConsoleVariableRef,GInsertOuterOcclusionQuery,"If true, enable a dummy outer occlusion query around occlusion query batches. Can help performance on some GPU architect"
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Query.h"
+impl_summary:
+  lines: 240
+  complexity: MEDIUM
+  topics: profiling
+  sync: 1
+  assertions: 5
+  logging: 0
+  conditionals: 1
+  platform_apis: POSIX
+
+includes: 4
+
+ED3D12QueryType:
+  kind: enum class
+  type: int
+  values[7]: None, PipelineStats, TimestampMicroseconds, TimestampRaw, ProfilerTimestampTOP, ProfilerTimestampBOP, Occlusion
+ED3D12QueryPosition:
+  kind: enum class
+  type: int
+  values[2]: TopOfPipe, BottomOfPipe
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,11
+
+FD3D12QueryHeap:
+  kind: class
+  bases: FD3D12SingleNodeGPUObject
+  fields: 10
+  pub_methods: 7
+  private_methods: 3
+FD3D12QueryRange:
+  kind: struct
+  fields: 2
+  pub_methods: 5
+FD3D12QueryLocation:
+  kind: struct
+  fields: 4
+  pub_methods: 5
+FD3D12QueryAllocator:
+  kind: class
+  fields: 6
+  pub_methods: 4
+FD3D12RenderQuery:
+  kind: class
+  bases: FRHIRenderQuery, FD3D12DeviceChild, FD3D12LinkedAdapterObject<FD3D12RenderQuery>
+  fields: 4
+  pub_methods: 2
+  virtual_api: ~FD3D12RenderQuery
+TD3D12ResourceTraits:
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Queue.h"
+impl_summary:
+  lines: 54
+  complexity: LOW
+  topics: async
+  sync: 0
+  assertions: 3
+  logging: 0
+  conditionals: 0
+  notes[1]:
+    "// TODO: move FD3D12Queue here"
+
+includes: 3
+
+ED3D12QueueType:
+  kind: enum class
+  type: int
+  values[4]: Direct, Copy, Async, Count
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracing.cpp"
+impl_summary:
+  lines: 6420
+  complexity: HIGH
+  topics: validation, profiling, caching, async, serialization, shaders, multi-gpu, resource-transitions
+  sync: 10
+  assertions: 234
+  logging: 10
+  conditionals: 59
+  globals: GMaxRHIShaderPlatform, GNumExplicitGPUsForRendering, GRHIGlobals, GRHIRayTracingAccelerationStructureAlignment, GRHIRayTracingInstanceDescriptorSize, GRHIRayTracingScratchBufferAlignment, GRHISupportsRayTracingDispatchIndirect, GRHISupportsRayTracingPSOAdditions, GRHISupportsWaveOperations
+  notes[5]:
+    "// NOTE: typical DXIL library may contain up to 3 entry points (i.e. hit groups with closest hit, any hit and intersection shad"
+    "// TODO: Manage switching between RAS_READ and RAS_WRITE?"
+    "// TODO: Validation related to SBT needs to be done somewhere else since SBT is not known when in BuildAccelerationStructure"
+    "// TODO: add optional validation that all (used/valid) shader identifiers used in the SBT are also available in the RTPSO"
+    "// TODO: disable RecordCache when using persistent SBT"
+
+includes: 24
+
+EDumpRayTracingGeometryMode:
+  kind: enum class
+  type: int
+  conditions: !UE_BUILD_SHIPPING && D3D12_RHI_RAYTRACING
+  values[2]: Top, All
+ERayTracingBufferType:
+  kind: enum class
+  type: int
+  conditions: D3D12_RHI_RAYTRACING
+  values[2]: AccelerationStructure, Scratch
+
+FStatGroup_STATGROUP_D3D12RayTracing:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracing.cpp:117:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStat_STAT_D3D12RayTracingCreatedPipelines:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingCompiledShaders:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingAllocatedBLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingAllocatedTLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingTrianglesBLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingBuiltBLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingUpdatedBLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingBuiltTLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingUpdatedTLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingUBRecordUpdate:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingBLASMemory:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingStaticBLASMemory:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingDynamicBLASMemory:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingTLASMemory:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingUsedVideoMemory:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_RTPSO_CompileShader:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_RTPSO_CreatePipeline:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12RayTracingAllocatedSBT:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12SetBindingsOnShaderBindingTable:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12CreateShaderTable:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12BuildTLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12BuildBLAS:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12DispatchRays:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FStat_STAT_D3D12ClusterOperation:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 7
+FD3D12RayTracingGeometryTracker:
+  kind: struct
+  conditions: !UE_BUILD_SHIPPING && D3D12_RHI_RAYTRACING
+  fields: 4
+  pub_methods: 3
+FDXILLibrary:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 5
+  pub_methods: 8
+FD3D12RayTracingPipelineCache:
+  kind: class
+  bases: FD3D12AdapterChild
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 3
+  pub_methods: 10
+  nested_enums:
+    ECollectionType:
+      kind: enum class
+      type: int
+      values[5]: Unknown, RayGen, Miss, HitGroup, Callable
+  nested_types:
+    FKey:
+      kind: struct
+      fields: 5
+      pub_methods: 1
+    FEntry:
+      kind: struct
+      fields: 10
+      pub_methods: 7
+    FShaderCompileTask:
+      kind: class
+      fields: 6
+      pub_methods: 9
+FD3D12RayTracingShaderBindingTableInternal:
+  kind: class
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 28
+  pub_methods: 42
+  private_methods: 4
+  nested_types:
+    FRecordUpdateUniformBufferListener:
+      kind: struct
+      bases: ID3D12UniformBufferUpdateListener
+      fields: 5
+      pub_methods: 6
+      virtual_api: ~FRecordUpdateUniformBufferListener, RemoveListener, UniformBufferUpdated
+    FRecordUpdateRayTracingGeometryListener:
+      kind: struct
+      bases: ID3D12RayTracingGeometryUpdateListener
+      fields: 5
+      pub_methods: 5
+      virtual_api: ~FRecordUpdateRayTracingGeometryListener, RemoveListener, HitGroupParametersUpdated
+    FRecordUpdateShaderResourceRenameListener:
+      kind: struct
+      bases: FD3D12ShaderResourceRenameListener
+      fields: 4
+      pub_methods: 5
+      virtual_api: ~FRecordUpdateShaderResourceRenameListener, ResourceRenamed
+    FRecordUpdateTextureReferenceReplaceListener:
+      kind: struct
+      bases: FD3D12TextureReferenceReplaceListener, FD3D12ShaderResourceRenameListener
+      fields: 4
+      pub_methods: 6
+      virtual_api: ~FRecordUpdateTextureReferenceReplaceListener, TextureReplaced, ResourceRenamed
+    FRecordData:
+      kind: struct
+      fields: 7
+      pub_methods: 1
+      nested_enums:
+        EState:
+          kind: enum class
+          type: int
+          values[3]: Uninitialized, Persistent, Transient
+    FShaderRecordCacheKey:
+      kind: struct
+      fields: 5
+      pub_methods: 3
+    FWorkerThreadData:
+      kind: struct
+      fields: 6
+FD3D12RayTracingShaderBindingTable:
+  kind: class
+  bases: FRHIShaderBindingTable, FD3D12AdapterChild
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 1
+  pub_methods: 9
+  virtual_api: ~FD3D12RayTracingShaderBindingTable, GetInlineBindingDataSizeAndStride
+  private_methods: 1
+FD3D12RayTracingGlobalResourceBinder:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 3
+  pub_methods: 12
+FD3D12RayTracingLocalResourceBinder:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 11
+  pub_methods: 13
+
+cvars[10]{cvar_name,type,default,help_summary}:
+  r.D3D12.RayTracing.DebugForceBuildMode,FAutoConsoleVariableRef,GRayTracingDebugForceBuildMode,Forces specific acceleration structure build mode (not runtime-tweakable). 0: Use build mode requested by high-level cod
+  r.D3D12.RayTracing.CacheShaderRecords,FAutoConsoleVariableRef,GRayTracingCacheShaderRecords,Automatically cache and re-use SBT hit group records. This significantly improves CPU performance in large scenes with m
+  r.D3D12.RayTracing.AllowCompaction,FAutoConsoleVariableRef,GD3D12RayTracingAllowCompaction,Whether to automatically perform compaction for static acceleration structures to save GPU memory. (default = 1)
+  r.D3D12.RayTracing.MaxBatchedCompaction,FAutoConsoleVariableRef,GD3D12RayTracingMaxBatchedCompaction,Maximum of amount of compaction requests and rebuilds per frame. (default = 64)
+  r.D3D12.RayTracing.Compaction.MinPrimitiveCount,FAutoConsoleVariableRef,GD3D12RayTracingCompactionMinPrimitiveCount,Sets the minimum primitive count threshold below which geometry skips the compaction. (default = 128)
+  r.D3D12.RayTracing.SpecializeStateObjects,FAutoConsoleVariableRef,GRayTracingSpecializeStateObjects,Whether to create specialized unique ray tracing pipeline state objects for each ray generation shader. (default = 0) Th
+  r.D3D12.RayTracing.AllowSpecializedStateObjects,FAutoConsoleVariableRef,GRayTracingAllowSpecializedStateObjects,Whether to use specialized RTPSOs if they have been created. This is intended for performance testingand has no effect i
+  r.D3D12.RayTracing.GPUValidation,FAutoConsoleVariableRef,GD3D12RayTracingGPUValidation,Whether to perform validation of ray tracing geometry and other structures on the GPU. Requires Shader Model 6. (default
+  D3D12.DumpRayTracingGeometries,FAutoConsoleCommandWithWorldArgsAndOutputDevice,,Dump memory allocations for ray tracing resources.
+  D3D12.DumpRayTracingGeometriesToCSV,FAutoConsoleCommandWithWorldArgsAndOutputDevice,,Dump all memory allocations for ray tracing resources to a CSV file on disc.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracing.h"
+impl_summary:
+  lines: 308
+  complexity: MEDIUM
+  topics: shaders, bindless, ray-tracing
+  sync: 6
+  assertions: 4
+  logging: 0
+  conditionals: 2
+
+includes: 2
+
+ID3D12RayTracingGeometryUpdateListener:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  pub_methods: 2
+  virtual_api: RemoveListener, HitGroupParametersUpdated
+FD3D12ShaderIdentifier:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 2
+  pub_methods: 4
+FD3D12RayTracingShaderLibrary:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 2
+  pub_methods: 2
+FD3D12RayTracingPipelineState:
+  kind: class
+  bases: FRHIRayTracingPipelineState
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 16
+  pub_methods: 5
+  nested_types:
+    FShaderStats:
+      kind: struct
+      fields: 4
+FD3D12RayTracingGeometry:
+  kind: class
+  bases: FRHIRayTracingGeometry, FD3D12AdapterChild, FD3D12ShaderResourceRenameListener, FNoncopyable
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 15
+  pub_methods: 20
+  virtual_api: ~FD3D12RayTracingGeometry, GetAccelerationStructureAddress, ResourceRenamed
+FD3D12RayTracingScene:
+  kind: class
+  bases: FRHIRayTracingScene, FD3D12AdapterChild, FNoncopyable
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 8
+  pub_methods: 6
+  virtual_api: ~FD3D12RayTracingScene, GetInitializer
+FD3D12RayTracingCompactionRequestHandler:
+  kind: class
+  bases: FD3D12DeviceChild
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 7
+  pub_methods: 9
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracingDebug.cpp"
+impl_summary:
+  lines: 365
+  complexity: MEDIUM
+  topics: serialization, ray-tracing
+  sync: 0
+  assertions: 11
+  logging: 0
+  conditionals: 1
+  globals: GRHIRayTracingInstanceDescriptorSize
+
+includes: 5
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  D3D12.RayTracing.SerializeScene,FAutoConsoleCommand,,Serialize Ray Tracing Scene to disk.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracingDebug.h"
+impl_summary:
+  lines: 14
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RenderTarget.cpp"
+impl_summary:
+  lines: 1206
+  complexity: HIGH
+  topics: profiling, shaders, resource-transitions
+  sync: 0
+  assertions: 29
+  logging: 0
+  conditionals: 5
+  platform_apis: POSIX
+  globals: GMaxRHIFeatureLevel
+  notes[3]:
+    "// TODO: Is this taken care of now that we're paying attention to the RHI states?"
+    "// TODO: high level setting to D3D12_RESOURCE_STATE_RESOLVE_SOURCE"
+    "// TODO: transition only subresource not the whole resource"
+
+includes: 10
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Residency.h"
+impl_summary:
+  lines: 189
+  complexity: MEDIUM
+  sync: 0
+  assertions: 2
+  logging: 0
+  conditionals: 18
+  globals: GEnableResidencyManagement
+
+includes: 7
+
+typedefs[2]{name,aliased_type,is_using,line}:
+  FD3D12ResidencySet,D3DX12Residency::ResidencySet,false,187
+  FD3D12ResidencyManager,D3DX12Residency::ResidencyManager,false,188
+
+FD3D12ResidencyHandle:
+  kind: struct
+  bases: D3DX12Residency::ManagedObject
+  fields: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ResourceCollection.cpp"
+impl_summary:
+  lines: 143
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 4
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12ResourceCollection.h"
+impl_summary:
+  lines: 39
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 4
+
+FD3D12ResourceCollection:
+  kind: class
+  bases: FRHIResourceCollection, FD3D12DeviceChild, FD3D12LinkedAdapterObject<FD3D12ResourceCollection>
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+  fields: 4
+  pub_methods: 4
+  virtual_api: ~FD3D12ResourceCollection, GetBindlessHandle
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: PLATFORM_SUPPORTS_BINDLESS_RENDERING
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Resources.cpp"
+impl_summary:
+  lines: 1685
+  complexity: HIGH
+  topics: profiling, async, multi-gpu, resource-transitions
+  sync: 1
+  assertions: 57
+  logging: 3
+  conditionals: 30
+  platform_apis: POSIX
+  globals: GEnableResidencyManagement, GNumExplicitGPUsForRendering, GRHIGlobals
+  notes[3]:
+    "// NOTE: ResidencySet ownership is taken over by the residency manager."
+    "// NOTE: reserved resource residency is not tracked/managed by the engine, so we don't need to call StartTrackingForResidency()"
+    "// TODO: fix retrieval of ClearValue from owner (currently not a problem because not defragging RT/DS resource yet)"
+
+includes: 9
+
+FD3D12UpdateTileMappingsParams:
+  kind: struct
+  fields: 5
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  d3d12.ReservedResourceHeapSizeMB,TAutoConsoleVariable,16,Size of the backing heaps for reserved resources in megabytes (default 16MB).
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Resources.h"
+impl_summary:
+  lines: 1236
+  complexity: HIGH
+  topics: caching, shaders, resource-transitions
+  sync: 10
+  assertions: 28
+  logging: 0
+  conditionals: 22
+  globals: GRHIGlobals
+  notes[2]:
+    "// NOTE: classes with virtual methods are not supported. The struct must be the first declared base class"
+    "// TODO: use this type everywhere and disallow implicit conversion"
+
+includes: 9
+
+ED3D12ResourceStateMode:
+  kind: enum class
+  type: int
+  values[3]: Default, SingleState, MultiState
+
+typedefs[2]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,33
+  FD3D12BaseAllocatorType,class FD3D12BuddyAllocator,false,586
+
+FD3D12PendingResourceBarrier:
+  kind: class
+  fields: 3
+  pub_methods: 1
+FD3D12Heap:
+  kind: class
+  bases: FThreadSafeRefCountedObject, FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 10
+  pub_methods: 13
+  virtual_api: ~FD3D12Heap
+TZeroedStruct:
+  kind: class
+  template: T
+  pub_methods: 1
+FD3D12ResourceDesc:
+  kind: struct
+  bases: TZeroedStruct<FD3D12ResourceDesc>, D3D12_RESOURCE_DESC
+  fields: 6
+  pub_methods: 6
+FD3D12Resource:
+  kind: class
+  bases: FThreadSafeRefCountedObject, FD3D12DeviceChild, FD3D12MultiNodeGPUObject
+  fields: 19
+  pub_methods: 38
+  virtual_api: ~FD3D12Resource
+  private_methods: 2
+  nested_types:
+    FD3D12ReservedResourceData:
+      kind: struct
+      fields: 5
+    FD3D12ResourceTypeHelper:
+      kind: struct
+      fields: 8
+      pub_methods: 2
+FD3D12BuddyAllocatorPrivateData:
+  kind: struct
+  fields: 2
+  pub_methods: 1
+FD3D12BlockAllocatorPrivateData:
+  kind: struct
+  fields: 4
+  pub_methods: 1
+FD3D12SegListAllocatorPrivateData:
+  kind: struct
+  fields: 1
+  pub_methods: 1
+FD3D12PoolAllocatorPrivateData:
+  kind: struct
+  fields: 1
+  pub_methods: 1
+FD3D12ResourceLocation:
+  kind: class
+  bases: FRHIPoolResource, FD3D12DeviceChild, FNoncopyable
+  fields: 10
+  pub_methods: 43
+  private_methods: 3
+  nested_enums:
+    ResourceLocationType:
+      kind: enum class
+      type: uint8
+      values[8]: eUndefined, eStandAlone, eSubAllocation, eFastAllocation, eMultiFrameFastAllocation, eAliased, eNodeReference, eHeapAliased
+    EAllocatorType:
+      kind: enum
+      type: uint8
+      values[4]: AT_Default, AT_SegList, AT_Pool, AT_Unknown
+  nested_types:
+    (anonymous union at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Resources.h:796:2):
+      kind: union
+      fields: 3
+    PrivateAllocatorData:
+      kind: union
+      fields: 4
+ID3D12ResourceAllocator:
+  kind: struct
+  pub_methods: 2
+  virtual_api: AllocateResource
+FD3D12LockedResource:
+  kind: struct
+  bases: FD3D12DeviceChild
+  fields: 7
+  pub_methods: 2
+FD3D12ShaderResourceRenameListener:
+  kind: struct
+  pub_methods: 1
+  virtual_api: ResourceRenamed
+FD3D12BaseShaderResource:
+  kind: class
+  bases: FD3D12DeviceChild, IRefCountedObject
+  fields: 3
+  pub_methods: 7
+  virtual_api: ~FD3D12BaseShaderResource
+ID3D12UniformBufferUpdateListener:
+  kind: struct
+  pub_methods: 2
+  virtual_api: RemoveListener, UniformBufferUpdated
+FD3D12UniformBuffer:
+  kind: class
+  bases: FRHIUniformBuffer, FD3D12DeviceChild, FD3D12LinkedAdapterObject<FD3D12UniformBuffer>
+  fields: 4
+  pub_methods: 7
+  virtual_api: ~FD3D12UniformBuffer
+FD3D12Buffer:
+  kind: class
+  bases: FRHIBuffer, FD3D12BaseShaderResource, FD3D12LinkedAdapterObject<FD3D12Buffer>
+  fields: 2
+  pub_methods: 14
+  virtual_api: ~FD3D12Buffer, GetResourceInfo, AddRef, Release, GetRefCount
+FD3D12StagingBuffer:
+  kind: class
+  bases: FRHIStagingBuffer
+  fields: 2
+  pub_methods: 6
+  virtual_api: ~FD3D12StagingBuffer, Lock, Unlock, GetGPUSizeBytes
+FD3D12ShaderBundle:
+  kind: class
+  bases: FRHIShaderBundle, FD3D12DeviceChild
+  pub_methods: 1
+FD3D12GPUFence:
+  kind: class
+  bases: FRHIGPUFence
+  fields: 1
+  pub_methods: 5
+  virtual_api: Clear, Poll, Poll, Wait
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+TD3D12ResourceTraits:
+  kind: struct
+  conditions: D3D12_RHI_RAYTRACING
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RHI.cpp"
+impl_summary:
+  lines: 1120
+  complexity: HIGH
+  topics: validation, profiling, caching, async, multi-gpu, resource-transitions
+  sync: 1
+  assertions: 16
+  logging: 4
+  conditionals: 15
+  platform_apis: Win32, POSIX
+  globals: GEngineIni, GIsRHIInitialized, GIsThreadedRendering, GMaxCubeTextureDimensions, GMaxShadowDepthBufferSizeX, GMaxShadowDepthBufferSizeY, GMaxTextureArrayLayers, GMaxTextureDimensions, GMaxTextureMipCount, GMaxTextureSamplers
+  notes[3]:
+    "// TODO: Not supported in D3D11"
+    "// TODO: Cap at 1 for default output"
+    "// TODO: GetDisplayModeList is a terribly SLOW call.  It can take up to a second per invocation."
+
+includes: 8
+
+cvars[4]{cvar_name,type,default,help_summary}:
+  r.D3D12.Depth24Bit,TAutoConsoleVariable,0,0: Use 32-bit float depth buffer 1: Use 24-bit fixed point depth buffer(default)
+  D3D12.ZeroBufferSizeInMB,TAutoConsoleVariable,4,The D3D12 RHI needs a static allocation of zeroes to use when streaming textures asynchronously. It should be large enou
+  d3d12.BindResourceLabels,FAutoConsoleVariableRef,GD3D12BindResourceLabels,Whether to enable binding of debug names to D3D12 resources.
+  r.PSOPrecache.D3D12.DriverCacheAware,FAutoConsoleVariableRef,GPSOPrecacheD3D12DriverCacheAware,"If enabled, the PSO precaching system will not precache PSOs that the D3D12 graphics driver considers similar for cachin"
+
+macros[2]{name,macro_type,line}:
+  LogD3D12RHI,LOG_CATEGORY_DEF,21
+  LogD3D12GapRecorder,LOG_CATEGORY_DEF,22
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RHICommon.h"
+impl_summary:
+  lines: 404
+  complexity: MEDIUM
+  topics: validation, multi-gpu, bindless
+  sync: 0
+  assertions: 7
+  logging: 0
+  conditionals: 14
+
+includes: 8
+
+typedefs[4]{name,aliased_type,is_using,conditions,line}:
+  CBVSlotMask,uint16,false,,29
+  SRVSlotMask,uint64,false,MAX_SRVS > 32,38
+  SamplerSlotMask,uint32,false,,44
+  UAVSlotMask,uint16,false,,47
+
+FLogCategoryLogD3D12RHI:
+  kind: struct
+  bases: FLogCategory<ELogVerbosity::Log, ELogVerbosity::All>
+  pub_methods: 1
+FLogCategoryLogD3D12GapRecorder:
+  kind: struct
+  bases: FLogCategory<ELogVerbosity::Log, ELogVerbosity::All>
+  pub_methods: 1
+FD3D12AdapterChild:
+  kind: class
+  fields: 1
+  pub_methods: 3
+FD3D12DeviceChild:
+  kind: class
+  fields: 1
+  pub_methods: 3
+FD3D12GPUObject:
+  kind: class
+  fields: 2
+  pub_methods: 3
+FD3D12SingleNodeGPUObject:
+  kind: class
+  bases: FD3D12GPUObject
+  fields: 1
+  pub_methods: 2
+FD3D12MultiNodeGPUObject:
+  kind: class
+  bases: FD3D12GPUObject
+  pub_methods: 1
+FD3D12LinkedAdapterObject:
+  kind: class
+  template: ObjectType
+  fields: 1
+  pub_methods: 8
+  protected_methods: 1
+  nested_types:
+    FLinkedObjectIterator:
+      kind: class
+      fields: 2
+      pub_methods: 9
+    FLinkedObjects:
+      kind: struct
+      fields: 2
+      pub_methods: 1
+TD3D12DualLinkedObjectIterator:
+  kind: class
+  template: ObjectType0, ObjectType1
+  fields: 3
+  pub_methods: 7
+TD3D12ResourceTraits:
+  kind: class
+  template: T
+TD3D12ObjectPool:
+  kind: class
+  template: TObjectType
+  bases: TLockFreePointerListUnordered<TObjectType, 64>
+  pub_methods: 2
+
+macros[2]{name,macro_type,line}:
+  LogD3D12RHI,LOG_CATEGORY,50
+  LogD3D12GapRecorder,LOG_CATEGORY,51
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RHIDefinitions.h"
+impl_summary:
+  lines: 143
+  complexity: MEDIUM
+  topics: shaders
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 14
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RHIPrivate.h"
+impl_summary:
+  lines: 781
+  complexity: HIGH
+  topics: validation, profiling, async, serialization, multi-gpu, gpu-crash-debug, resource-transitions
+  sync: 7
+  assertions: 6
+  logging: 0
+  conditionals: 10
+  notes[1]:
+    "// TODO reorder includes so we just include D3D12PipelineState.h here"
+
+includes: 47
+
+FD3D12UpdateTexture3DData:
+  kind: struct
+  fields: 2
+FD3D12RayTracingPipelineInfo:
+  kind: struct
+  fields: 6
+FD3D12WorkaroundFlags:
+  kind: struct
+FD3D12DynamicRHI:
+  kind: class
+  bases: ID3D12PlatformDynamicRHI
+  fields: 26
+  pub_methods: 194
+  protected_methods: 9
+  private_methods: 6
+  nested_enums:
+    EQueueStatus:
+      kind: enum class
+      type: int
+      values[3]: None, Processed, Pending
+  nested_types:
+    FProcessResult:
+      kind: struct
+      fields: 2
+    FD3D12TimingArray:
+      kind: struct
+      bases: TArray<TUniquePtr<FD3D12Timing>, TInlineAllocator<GD3D12MaxNumQueues>>
+      pub_methods: 1
+    FCreateTextureInternalResult:
+      kind: struct
+      fields: 3
+    FCreateBufferInternalResult:
+      kind: struct
+      fields: 2
+FD3D12DynamicRHIModule:
+  kind: class
+  bases: IDynamicRHIModule
+  fields: 3
+  pub_methods: 8
+  virtual_api: ~FD3D12DynamicRHIModule, SupportsDynamicReloading, StartupModule, ShutdownModule, IsSupported, IsSupported, CreateRHI
+  private_methods: 1
+FScopedResourceBarrier:
+  kind: class
+  fields: 6
+  pub_methods: 3
+
+macros[2]{name,macro_type,line}:
+  EQueueStatus,ENUM_FLAGS,213
+  FD3D12DynamicRHI::EQueueStatus,ENUM_FLAGS,679
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RootSignature.cpp"
+impl_summary:
+  lines: 877
+  complexity: HIGH
+  topics: serialization, shaders, bindless
+  sync: 2
+  assertions: 36
+  logging: 2
+  conditionals: 17
+  globals: GRHISupportsMeshShadersTier0
+  notes[1]:
+    "// TODO: Analyze vendor extension space?"
+
+includes: 6
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12RootSignature.h"
+impl_summary:
+  lines: 511
+  complexity: HIGH
+  topics: shaders
+  sync: 1
+  assertions: 24
+  logging: 0
+  conditionals: 3
+  notes[1]:
+    "// TODO: Make these arrays and index into them by type instead of individual variables."
+
+includes: 2
+
+ERootParameterKeys:
+  kind: enum
+  type: int
+  values[27]: PS_SRVs, PS_CBVs, PS_RootCBVs, PS_Samplers, VS_SRVs, VS_CBVs, VS_RootCBVs, VS_Samplers, VS_UAVs, GS_SRVs, GS_CBVs, GS_RootCBVs, GS_Samplers, MS_SRVs, MS_CBVs, MS_RootCBVs, MS_Samplers, AS_SRVs, AS_CBVs, AS_RootCBVs, AS_Samplers, ALL_SRVs, ALL_CBVs, ALL_RootCBVs, ALL_Samplers, ALL_UAVs, RPK_RootParameterKeyCount
+
+FD3D12RootSignatureDesc:
+  kind: class
+  fields: 9
+  pub_methods: 6
+FD3D12RootSignature:
+  kind: class
+  bases: FD3D12AdapterChild
+  fields: 18
+  pub_methods: 43
+  private_methods: 15
+  nested_types:
+    ShaderStage:
+      kind: struct
+      fields: 6
+FD3D12RootSignatureManager:
+  kind: class
+  bases: FD3D12AdapterChild
+  fields: 2
+  pub_methods: 5
+  private_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h"
+impl_summary:
+  lines: 235
+  complexity: LOW
+  topics: shaders, ray-tracing
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 6
+
+includes: 4
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12VertexElements,"TArray<D3D12_INPUT_ELEMENT_DESC, TFixedAllocator<MaxVertexElementCount>>",false,23
+
+TTypeTraits:
+  kind: struct
+  bases: TTypeTraitsBase<D3D12_INPUT_ELEMENT_DESC>
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:19:2):
+      kind: enum
+      type: int
+      values[1]: IsBytewiseComparable
+FD3D12VertexDeclaration:
+  kind: class
+  bases: FRHIVertexDeclaration
+  fields: 4
+  pub_methods: 3
+  virtual_api: GetInitializer, GetPrecachePSOHash
+ShaderBytecodeHash:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+FD3D12ShaderData:
+  kind: struct
+  fields: 5
+  pub_methods: 9
+FD3D12VertexShader:
+  kind: class
+  bases: FRHIVertexShader, FD3D12ShaderData
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:128:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12MeshShader:
+  kind: class
+  bases: FRHIMeshShader, FD3D12ShaderData
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:134:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12AmplificationShader:
+  kind: class
+  bases: FRHIAmplificationShader, FD3D12ShaderData
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:140:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12GeometryShader:
+  kind: class
+  bases: FRHIGeometryShader, FD3D12ShaderData
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:146:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12PixelShader:
+  kind: class
+  bases: FRHIPixelShader, FD3D12ShaderData
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:152:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12ComputeShader:
+  kind: class
+  bases: FRHIComputeShader, FD3D12ShaderData
+  fields: 1
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h:162:2):
+      kind: enum
+      type: int
+      values[1]: StaticFrequency
+FD3D12WorkGraphShader:
+  kind: class
+  bases: FRHIWorkGraphShader, FD3D12ShaderData
+  fields: 2
+  pub_methods: 1
+FD3D12RayTracingShader:
+  kind: class
+  bases: FRHIRayTracingShader, FD3D12ShaderData
+  conditions: D3D12_RHI_RAYTRACING
+  fields: 5
+  pub_methods: 1
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Shaders.cpp"
+impl_summary:
+  lines: 307
+  complexity: MEDIUM
+  topics: shaders, bindless, ray-tracing
+  sync: 0
+  assertions: 6
+  logging: 5
+  conditionals: 6
+  globals: GRHIGlobals, GRHISupportsMeshShadersTier0, GRHISupportsRayTracing, GRHISupportsRayTracingShaders, GRHISupportsStencilRefFromPixelShader, GRHISupportsWaveOperations
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12SRV.cpp"
+impl_summary:
+  lines: 336
+  complexity: MEDIUM
+  topics: ray-tracing
+  sync: 0
+  assertions: 6
+  logging: 1
+  conditionals: 5
+  notes[1]:
+    "// NOTE (from D3D Debug runtime): pResource must be NULL for acceleration structures, since the resource location comes from a"
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12State.cpp"
+impl_summary:
+  lines: 837
+  complexity: HIGH
+  topics: profiling, caching, shaders, bindless
+  sync: 2
+  assertions: 6
+  logging: 3
+  conditionals: 15
+  globals: GMaxRHIFeatureLevel
+
+includes: 3
+
+FStat_STAT_PSOGraphicsFindOrCreateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_PSOComputeFindOrCreateTime:
+  kind: struct
+  pub_methods: 7
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12State.h"
+impl_summary:
+  lines: 57
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 2
+
+FD3D12SamplerState:
+  kind: class
+  bases: FRHISamplerState, FD3D12DeviceChild, FD3D12LinkedAdapterObject<FD3D12SamplerState>
+  fields: 3
+  pub_methods: 5
+  virtual_api: ~FD3D12SamplerState, GetBindlessHandle
+FD3D12RasterizerState:
+  kind: class
+  bases: FRHIRasterizerState
+  fields: 1
+  pub_methods: 1
+  virtual_api: GetInitializer
+FD3D12DepthStencilState:
+  kind: class
+  bases: FRHIDepthStencilState
+  fields: 2
+  pub_methods: 1
+  virtual_api: GetInitializer
+FD3D12BlendState:
+  kind: class
+  bases: FRHIBlendState
+  fields: 1
+  pub_methods: 1
+  virtual_api: GetInitializer
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCache.cpp"
+impl_summary:
+  lines: 1645
+  complexity: HIGH
+  topics: caching, shaders, resource-transitions, bindless, ray-tracing
+  sync: 0
+  assertions: 35
+  logging: 2
+  conditionals: 17
+  globals: GRHIGlobals, GRHISupportsAttachmentVariableRateShading, GRHISupportsMeshShadersTier0, GRHISupportsPipelineVariableRateShading
+  notes[1]:
+    "// TODO: Verify vertex buffer, index buffer, and constant buffer state."
+
+includes: 2
+
+cvars[8]{cvar_name,type,default,help_summary}:
+  D3D12.GlobalResourceDescriptorHeapSize,FAutoConsoleVariableRef,GGlobalResourceDescriptorHeapSize,Global resource descriptor heap size
+  D3D12.GlobalSamplerDescriptorHeapSize,FAutoConsoleVariableRef,GGlobalSamplerDescriptorHeapSize,Global sampler descriptor heap size
+  D3D12.LocalViewHeapSize,FAutoConsoleVariableRef,GLocalViewHeapSize,Local view heap size
+  D3D12.GlobalSamplerHeapSize,FAutoConsoleVariableRef,GGlobalSamplerHeapSize,Global sampler descriptor heap size
+  D3D12.OnlineDescriptorHeapSize,FAutoConsoleVariableRef,GOnlineDescriptorHeapSize,Online descriptor heap size
+  D3D12.OnlineDescriptorHeapBlockSize,FAutoConsoleVariableRef,GOnlineDescriptorHeapBlockSize,Block size for sub allocations on the global view descriptor heap.
+  D3D12.BindlessOnlineDescriptorHeapSize,FAutoConsoleVariableRef,GBindlessOnlineDescriptorHeapSize,Online descriptor heap size
+  D3D12.BindlessOnlineDescriptorHeapBlockSize,FAutoConsoleVariableRef,GBindlessOnlineDescriptorHeapBlockSize,Block size for sub allocations on the global view descriptor heap.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCachePrivate.h"
+impl_summary:
+  lines: 791
+  complexity: MEDIUM
+  topics: caching, shaders, resource-transitions, bindless, ray-tracing
+  sync: 0
+  assertions: 8
+  logging: 0
+  conditionals: 11
+  globals: GRHISupportsAttachmentVariableRateShading, GRHISupportsPipelineVariableRateShading
+  notes[1]:
+    "// TODO reorder includes so we just include D3D12PipelineState.h here"
+
+includes: 5
+
+EShaderParameterTypeMask:
+  kind: enum class
+  type: uint16
+ED3D12PipelineType:
+  kind: enum class
+  type: uint8
+  values[3]: Graphics, Compute, RayTracing
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  VBSlotMask,uint32,false,74
+
+FD3D12VertexBufferCache:
+  kind: struct
+  fields: 5
+  pub_methods: 2
+FD3D12IndexBufferCache:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+FD3D12ResourceCache:
+  kind: class
+  template: ResourceSlotMask
+  fields: 1
+  pub_methods: 8
+FD3D12ConstantBufferCache:
+  kind: struct
+  bases: FD3D12ResourceCache<CBVSlotMask>
+  fields: 2
+  pub_methods: 2
+FD3D12ShaderResourceViewCache:
+  kind: struct
+  bases: FD3D12ResourceCache<SRVSlotMask>
+  fields: 4
+  pub_methods: 2
+FD3D12UnorderedAccessViewCache:
+  kind: struct
+  bases: FD3D12ResourceCache<UAVSlotMask>
+  fields: 3
+  pub_methods: 2
+FD3D12SamplerStateCache:
+  kind: struct
+  bases: FD3D12ResourceCache<SamplerSlotMask>
+  fields: 1
+  pub_methods: 2
+FD3D12StateCache:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12SingleNodeGPUObject
+  fields: 16
+  pub_methods: 62
+  protected_methods: 5
+  private_methods: 1
+  nested_types:
+    (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCachePrivate.h:321:2):
+      kind: struct
+      fields: 3
+      nested_types[3]: FGraphicsState, (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCachePrivate.h:388:3), (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCachePrivate.h:400:3)
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.cpp"
+impl_summary:
+  lines: 61
+  complexity: LOW
+  topics: profiling
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 5
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h"
+impl_summary:
+  lines: 183
+  complexity: LOW
+  topics: shaders, bindless, ray-tracing
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+
+FStatGroup_STATGROUP_D3D12RHI:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:11:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12Memory:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:12:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12MemoryDetails:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:13:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12Resources:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:14:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12Bindless:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:15:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12BufferDetails:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:16:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12PipelineState:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:17:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStatGroup_STATGROUP_D3D12DescriptorHeap:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h:18:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStat_STAT_D3D12PresentTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CustomPresentTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NumCommandAllocators:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NumCommandLists:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NumQueryHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NumPSOs:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ExecutedCommandLists:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ExecutedCommandListBatches:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TexturesAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TexturesReleased:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CreateTextureTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12LockTextureTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UnlockTextureTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CreateBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CopyToStagingBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12LockBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UnlockBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CommitTransientResourceTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12DecommitTransientResourceTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVBarriers:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceHeapsAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceHeapsActive:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceHeapsInUseByGPU:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceHeapsVersioned:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceDescriptorsInitialized:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceDescriptorsUpdated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceGPUDescriptorsCopied:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BindlessResourceHeapGPUMemoryUsage:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CreateBoundShaderStateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NewBoundShaderStateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12NumBoundShaderState:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12SetBoundShaderState:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UpdateUniformBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CommitResourceTables:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12SetTextureInTableCalls:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12DispatchShaderBundle:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ClearShaderResourceViewsTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12SetShaderResourceViewTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12SetUnorderedAccessViewTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CommitGraphicsConstants:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12CommitComputeConstants:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12SetShaderUniformBuffer:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateRebuildPSOTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateFindPSOTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateSetSRVTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateSetUAVTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateSetVertexBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ApplyStateSetConstantBufferTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12PSOCreateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ClearMRT:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ExecuteCommandListTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12WaitForFenceTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12GlobalConstantBufferUpdateTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12MemoryCurrentTotal:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RenderTargets:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVTextures:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12Textures:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVBuffers:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RTBuffers:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12Buffer:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TransientHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RenderTargetStandAloneAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVTextureStandAloneAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TextureStandAloneAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVBufferStandAloneAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferStandAloneAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RenderTargetStandAloneCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVTextureStandAloneCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TextureStandAloneCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UAVBufferStandAloneCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferStandAloneCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TextureAllocatorAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TextureAllocatorUnused:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12TextureAllocatorCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ViewOnlineDescriptorHeapMemory:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_SamplerOnlineDescriptorHeapMemory:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolMemoryAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolMemoryUsed:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolMemoryAllocated:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolMemoryUsed:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolMemoryFree:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolAlignmentWaste:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolPageCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolFullPages:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolFragmentation:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12BufferPoolFragmentationPercentage:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolMemoryFree:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolAlignmentWaste:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolPageCount:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12UploadPoolFullPages:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12ReservedResourcePhysical:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_UniqueSamplers:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ViewHeapChanged:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_SamplerHeapChanged:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumViewOnlineDescriptorHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumSamplerOnlineDescriptorHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumReuseableSamplerOnlineDescriptorTables:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumReuseableSamplerOnlineDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumReservedViewOnlineDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumReservedSamplerOnlineDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_NumReusedSamplerOnlineDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_GlobalViewHeapFreeDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_GlobalViewHeapReservedDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_GlobalViewHeapUsedDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_GlobalViewHeapWastedDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_GlobalViewHeapBlockAllocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitSamplerDescriptorHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitSamplerDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitViewDescriptorHeaps:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitViewDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitMaxUsedSamplerDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitUsedSamplerDescriptors:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_ExplicitUsedViewDescriptors:
+  kind: struct
+  pub_methods: 7
+FD3D12GlobalStats:
+  kind: struct
+  fields: 4
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp"
+impl_summary:
+  lines: 1482
+  complexity: HIGH
+  topics: profiling, async, multi-gpu, gpu-crash-debug, resource-transitions
+  sync: 3
+  assertions: 22
+  logging: 0
+  conditionals: 30
+  platform_apis: Win32, POSIX
+  globals: GRHIGPUFrameTimeHistory
+
+includes: 7
+
+FStat_STAT_D3D12Submit:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_RHI_GPUTotalTime:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_RHI_GPUTotalTimeHW:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_RHI_GPUTotalTimeGraphics:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_RHI_GPUTotalTimeAsyncCompute:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_RHI_GPUTotalTimeCopy:
+  kind: struct
+  pub_methods: 7
+FStatGroup_STATGROUP_D3D12RHIPipeline:
+  kind: struct
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp:36:1):
+      kind: enum
+      type: int
+      values[3]: DefaultEnable, CompileTimeEnable, SortByName
+FStat_STAT_D3D12RHI_IAVertices:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_IAPrimitives:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_VSInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_GSInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_GSPrimitives:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_CInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_CPrimitives:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_PSInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_HSInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_DSInvocations:
+  kind: struct
+  pub_methods: 7
+FStat_STAT_D3D12RHI_CSInvocations:
+  kind: struct
+  pub_methods: 7
+FD3D12Thread:
+  kind: class
+  bases: FRunnable
+  fields: 5
+  pub_methods: 5
+  virtual_api: ~FD3D12Thread
+  private_methods: 1
+FD3D12FinalizedCommands:
+  kind: struct
+  bases: IRHIPlatformCommandList, TArray<FD3D12Payload *>
+FCpuSyncPoint_WaitFields:
+  kind: struct
+  fields: 4
+  pub_methods: 6
+  nested_enums:
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp:972:1):
+      kind: enum
+      type: int
+      values[8]: Important, NoSync, Definition8bit, Definition16bit, Definition32bit, Definition64bit, DefinitionBits, PartialEventFlags
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp:972:1):
+      kind: enum
+      type: bool
+      values[6]: bIsImportant, bIsDefinition, bIsDefinition8, bIsDefinition16, bIsDefinition32, bIsDefinition64
+    (unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp:974:1):
+      kind: enum
+      type: int
+      values[1]: EventFlags
+
+cvars[6]{cvar_name,type,default,help_summary}:
+  rhi.UseSubmissionThread,TAutoConsoleVariable,2,"Whether to enable the RHI submission thread. 0: No 1: Yes, but not when running with multi-gpu. 2: Yes, always"
+  r.D3D12.GPUTimeFromTimestamps,TAutoConsoleVariable,D3D12_PREFER_QUERIES_FOR_GPU_TIME,Prefer timestamps instead of GetHardwareGPUFrameTime to compute GPU frame time
+  r.D3D12.SubmissionTimeout,FAutoConsoleVariableRef,GD3D12SubmissionTimeout,"The maximum time, in seconds, that a submitted GPU command list is allowed to take before the RHI reports a GPU hang"
+  r.D3D12.Submission.MaxExecuteBatchSize.Direct,FAutoConsoleVariableRef,GD3D12SubmissionMaxExecuteBatchSizeDirect,The maximum number of command lists to pass to a single ExecuteCommandLists invocation for direct queues The valid range
+  r.D3D12.Submission.MaxExecuteBatchSize.Copy,FAutoConsoleVariableRef,GD3D12SubmissionMaxExecuteBatchSizeCopy,The maximum number of command lists to pass to a single ExecuteCommandLists invocation for copy queues The valid range i
+  r.D3D12.Submission.MaxExecuteBatchSize.Async,FAutoConsoleVariableRef,GD3D12SubmissionMaxExecuteBatchSizeAsync,The maximum number of command lists to pass to a single ExecuteCommandLists invocation for async queues The valid range 
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h"
+impl_summary:
+  lines: 309
+  complexity: MEDIUM
+  topics: profiling, async
+  sync: 2
+  assertions: 3
+  logging: 0
+  conditionals: 6
+  platform_apis: POSIX
+
+includes: 9
+
+ED3D12QueueType:
+  kind: enum class
+  type: int
+ED3D12SyncPointType:
+  kind: enum class
+  type: int
+  values[2]: GPUOnly, GPUAndCPU
+ED3D12QueueType:
+  kind: enum class
+  type: int
+(unnamed enum at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:29:12):
+  kind: enum class
+  type: int
+
+typedefs[2]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,27
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,27
+
+FD3D12Fence:
+  kind: struct
+  fields: 5
+  pub_methods: 1
+FD3D12ResolvedFence:
+  kind: struct
+  fields: 2
+  pub_methods: 1
+FD3D12SyncPoint:
+  kind: class
+  bases: FThreadSafeRefCountedObject
+  fields: 4
+  pub_methods: 8
+  private_methods: 3
+FD3D12CommitReservedResourceDesc:
+  kind: struct
+  fields: 2
+FD3D12BatchedPayloadObjects:
+  kind: struct
+  fields: 4
+  pub_methods: 1
+FD3D12PayloadBaseFixLayout:
+  kind: struct
+  pub_methods: 1
+  virtual_api: ~FD3D12PayloadBaseFixLayout
+FD3D12PayloadBase:
+  kind: struct
+  bases: FD3D12PayloadBaseFixLayout
+  fields: 21
+  pub_methods: 8
+  virtual_api: ~FD3D12PayloadBase, PreExecute, HasPreExecuteWork, RequiresQueueFenceSignal, HasWaitWork, HasUpdateReservedResourcesWork, HasSignalWork
+  protected_methods: 1
+  nested_types:
+    FManualFence:
+      kind: struct
+      fields: 2
+      pub_methods: 2
+    (unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:215:2):
+      kind: struct
+      bases: TArray<FD3D12SyncPointRef>
+      fields: 1
+    FQueueFence:
+      kind: struct
+      fields: 2
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:41:8):
+  kind: struct
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:55:8):
+  kind: struct
+(unnamed class at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:75:7):
+  kind: class
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:162:8):
+  kind: struct
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:168:8):
+  kind: struct
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:187:8):
+  kind: struct
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h:193:8):
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Texture.cpp"
+impl_summary:
+  lines: 3206
+  complexity: HIGH
+  topics: profiling, caching, async, shaders, multi-gpu, resource-transitions
+  sync: 3
+  assertions: 83
+  logging: 6
+  conditionals: 21
+  platform_apis: POSIX
+  globals: GFrameNumberRenderThread, GNumExplicitGPUsForRendering, GRHIGlobals, GRHISupportsAsyncTextureCreation
+  notes[4]:
+    "// NOTE: Accessing the queue from this thread is OK, as D3D12 runtime acquires a lock around all command queue APIs."
+    "//TODO: Make this work for multi-GPU (it's probably a very rare occurrence though)"
+    "// TODO: implement proper EndMultiUpdate for the compute shader path"
+    "//TODO: Somehow Oculus is creating a Render Target with 4k alignment with ovr_GetTextureSwapChainBufferDX"
+
+includes: 10
+
+FWaitInitialMipDataUploadTask:
+  kind: class
+  fields: 3
+  pub_methods: 5
+FSubresourceIndices:
+  kind: struct
+  fields: 3
+FD3D12RHICmdEndMultiUpdateTexture3DString:
+  kind: struct
+  pub_methods: 1
+FD3D12RHICmdEndMultiUpdateTexture3D:
+  kind: class
+  bases: FRHICommand<FD3D12RHICmdEndMultiUpdateTexture3D, FD3D12RHICmdEndMultiUpdateTexture3DString>
+  fields: 3
+  pub_methods: 3
+  virtual_api: ~FD3D12RHICmdEndMultiUpdateTexture3D
+  nested_types:
+    FUpdateInfo:
+      kind: struct
+      fields: 5
+
+cvars[3]{cvar_name,type,default,help_summary}:
+  D3D12.UseUpdateTexture3DComputeShader,TAutoConsoleVariable,0,"If enabled, use a compute shader for UpdateTexture3D. Avoids alignment restrictions 0: off (default) 1: on"
+  D3D12.AdjustTexturePoolSizeBasedOnBudget,FAutoConsoleVariableRef,GAdjustTexturePoolSizeBasedOnBudget,Indicates if the RHI should lower the texture pool size when the application is over the memory budget provided by the O
+  D3D12.TexturePoolOnlyAccountStreamableTexture,FAutoConsoleVariableRef,GTexturePoolOnlyAccountStreamableTexture,"Texture streaming pool size only account streamable texture . - 0: All texture types are counted in the pool (legacy, de"
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Texture.h"
+impl_summary:
+  lines: 288
+  complexity: MEDIUM
+  topics: shaders
+  sync: 0
+  assertions: 9
+  logging: 0
+  conditionals: 5
+
+includes: 3
+
+FD3D12Texture:
+  kind: class
+  bases: FRHITexture, FD3D12BaseShaderResource, FD3D12LinkedAdapterObject<FD3D12Texture>
+  fields: 8
+  pub_methods: 36
+  virtual_api: ~FD3D12Texture, AddRef, Release, GetRefCount, GetResourceInfo, GetTextureBaseRHI, GetNativeResource, GetDefaultBindlessHandle
+TD3D12ResourceTraits:
+  kind: struct
+FD3D12BackBufferReferenceTexture2D:
+  kind: class
+  bases: FD3D12Texture
+  conditions: D3D12RHI_USE_DUMMY_BACKBUFFER
+  fields: 1
+  pub_methods: 5
+  virtual_api: GetDefaultBindlessHandle, GetTextureBaseRHI
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12TextureReference.cpp"
+impl_summary:
+  lines: 125
+  complexity: LOW
+  topics: bindless
+  sync: 0
+  assertions: 3
+  logging: 0
+  conditionals: 5
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12TextureReference.h"
+impl_summary:
+  lines: 78
+  complexity: MEDIUM
+  sync: 5
+  assertions: 2
+  logging: 0
+  conditionals: 3
+
+includes: 2
+
+FD3D12TextureReferenceReplaceListener:
+  kind: struct
+  pub_methods: 1
+  virtual_api: TextureReplaced
+FD3D12RHITextureReference:
+  kind: class
+  bases: FD3D12DeviceChild, FRHITextureReference, FD3D12LinkedAdapterObject<FD3D12RHITextureReference>, FD3D12ShaderResourceRenameListener
+  fields: 3
+  pub_methods: 7
+  virtual_api: ~FD3D12RHITextureReference, ResourceRenamed
+  private_methods: 2
+TD3D12ResourceTraits:
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12TransientResourceAllocator.cpp"
+impl_summary:
+  lines: 245
+  complexity: LOW
+  topics: profiling
+  sync: 0
+  assertions: 2
+  logging: 0
+  conditionals: 4
+
+includes: 5
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12TransientResourceAllocator.h"
+impl_summary:
+  lines: 91
+  complexity: LOW
+  sync: 0
+  assertions: 1
+  logging: 0
+  conditionals: 0
+
+includes: 2
+
+FD3D12TransientHeap:
+  kind: class
+  bases: FRHITransientHeap, FRefCountBase, FD3D12LinkedAdapterObject<FD3D12TransientHeap>
+  fields: 1
+  pub_methods: 3
+  virtual_api: ~FD3D12TransientHeap
+FD3D12TransientHeapCache:
+  kind: class
+  bases: FRHITransientHeapCache, FD3D12AdapterChild
+  pub_methods: 2
+  virtual_api: CreateHeap
+  private_methods: 1
+FD3D12TransientResourceHeapAllocator:
+  kind: class
+  bases: FRHITransientResourceHeapAllocator, FD3D12AdapterChild
+  fields: 1
+  pub_methods: 4
+  virtual_api: SupportsResourceType, CreateTexture, CreateBuffer
+  nested_types:
+    FResourceAllocatorAdapter:
+      kind: class
+      bases: FD3D12AdapterChild, ID3D12ResourceAllocator
+      fields: 4
+      pub_methods: 2
+      virtual_api: AllocateResource
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12UAV.cpp"
+impl_summary:
+  lines: 483
+  complexity: MEDIUM
+  topics: profiling, bindless
+  sync: 0
+  assertions: 11
+  logging: 0
+  conditionals: 4
+  platform_apis: POSIX
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12UniformBuffer.cpp"
+impl_summary:
+  lines: 258
+  complexity: MEDIUM
+  topics: validation, multi-gpu
+  sync: 0
+  assertions: 14
+  logging: 1
+  conditionals: 5
+
+includes: 4
+
+FRHICommandD3D12UpdateUniformBufferString114:
+  kind: struct
+  pub_methods: 1
+FRHICommandD3D12UpdateUniformBuffer:
+  kind: struct
+  bases: FRHICommand<FRHICommandD3D12UpdateUniformBuffer, FRHICommandD3D12UpdateUniformBufferString114>
+  fields: 3
+  pub_methods: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.cpp"
+impl_summary:
+  lines: 1888
+  complexity: HIGH
+  topics: async, shaders, gpu-crash-debug, resource-transitions
+  sync: 1
+  assertions: 26
+  logging: 35
+  conditionals: 44
+  globals: GIsCriticalError, GIsGPUCrashed, GRHIGlobals, GRHISupportsShaderRootConstants
+
+includes: 10
+
+FDred_1_1:
+  kind: struct
+  conditions: PLATFORM_WINDOWS
+  fields: 2
+  pub_methods: 1
+FDred_1_2:
+  kind: struct
+  conditions: PLATFORM_WINDOWS
+  fields: 2
+  pub_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.h"
+impl_summary:
+  lines: 726
+  complexity: HIGH
+  topics: caching, shaders
+  sync: 11
+  assertions: 17
+  logging: 0
+  conditionals: 4
+
+includes: 8
+
+EShaderVisibility:
+  kind: enum
+  type: int
+  values[7]: SV_Vertex, SV_Pixel, SV_Geometry, SV_Mesh, SV_Amplification, SV_All, SV_ShaderVisibilityCount
+ERootSignatureType:
+  kind: enum
+  type: int
+  values[6]: RS_Raster, RS_RayTracingGlobal, RS_RayTracingLocal, RS_WorkGraphGlobal, RS_WorkGraphLocalCompute, RS_WorkGraphLocalRaster
+
+FShaderRegisterCounts:
+  kind: struct
+  fields: 4
+  pub_methods: 1
+FD3D12QuantizedBoundShaderState:
+  kind: struct
+  fields: 3
+  pub_methods: 2
+  nested_types:
+    (anonymous union at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.h:122:2):
+      kind: union
+      fields: 1
+      nested_types[1]: (anonymous struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.h:124:3)
+FD3D12LockedKey:
+  kind: class
+  fields: 2
+  pub_methods: 7
+FD3D12BoundRenderTargets:
+  kind: class
+  fields: 3
+  pub_methods: 5
+FThreadsafeQueue:
+  kind: class
+  template: Type
+  fields: 3
+  pub_methods: 8
+FD3D12ScopeLock:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+FD3D12ScopeNoLock:
+  kind: struct
+  pub_methods: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12VertexDeclaration.cpp"
+impl_summary:
+  lines: 222
+  complexity: MEDIUM
+  topics: caching
+  sync: 4
+  assertions: 4
+  logging: 2
+  conditionals: 0
+  notes[2]:
+    "//TODO: uint32 doesn't work because D3D12  squishes it to 0 in the IA-VS conversion"
+    "//TODO: SINT, blendindices"
+
+includes: 1
+
+FD3D12VertexDeclarationKey:
+  kind: struct
+  fields: 4
+  pub_methods: 1
+FVertexDeclarationCache:
+  kind: struct
+  fields: 2
+  pub_methods: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12View.cpp"
+impl_summary:
+  lines: 416
+  complexity: MEDIUM
+  topics: bindless
+  sync: 0
+  assertions: 4
+  logging: 0
+  conditionals: 7
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12View.h"
+impl_summary:
+  lines: 533
+  complexity: MEDIUM
+  topics: shaders, multi-gpu
+  sync: 0
+  assertions: 8
+  logging: 0
+  conditionals: 3
+
+includes: 5
+
+ED3D12ViewType:
+  kind: enum class
+  type: uint8
+  values[5]: ShaderResource, ConstantBuffer, UnorderedAccess, RenderTarget, DepthStencil
+
+FD3D12DefaultViews:
+  kind: struct
+  fields: 6
+FD3D12ViewRange:
+  kind: struct
+  fields: 3
+  pub_methods: 8
+FD3D12ResourceLayout:
+  kind: struct
+  fields: 3
+  pub_methods: 2
+FD3D12ViewSubset:
+  kind: struct
+  fields: 2
+  pub_methods: 7
+  nested_types:
+    FIterator:
+      kind: class
+      fields: 7
+      pub_methods: 5
+FD3D12View:
+  kind: class
+  bases: FD3D12DeviceChild, FD3D12ShaderResourceRenameListener
+  fields: 6
+  pub_methods: 8
+  protected_methods: 10
+  nested_enums:
+    EReason:
+      kind: enum class
+      type: int
+      values[2]: InitialCreate, UpdateOrRename
+  nested_types:
+    FResourceInfo:
+      kind: struct
+      fields: 3
+      pub_methods: 3
+TD3D12View:
+  kind: class
+  template: TParent, TDesc
+  bases: FD3D12View
+  fields: 1
+  pub_methods: 1
+  protected_methods: 4
+FD3D12ConstantBufferView:
+  kind: class
+  bases: TD3D12View<FD3D12ConstantBufferView, D3D12_CONSTANT_BUFFER_VIEW_DESC>
+  fields: 2
+  pub_methods: 2
+  private_methods: 2
+FD3D12ShaderResourceView:
+  kind: class
+  bases: TD3D12View<FD3D12ShaderResourceView, D3D12_SHADER_RESOURCE_VIEW_DESC>
+  fields: 5
+  pub_methods: 6
+  protected_methods: 3
+  nested_enums:
+    EFlags:
+      kind: enum class
+      type: uint8
+      values[2]: None, SkipFastClearFinalize
+FD3D12UnorderedAccessView:
+  kind: class
+  bases: TD3D12View<FD3D12UnorderedAccessView, D3D12_UNORDERED_ACCESS_VIEW_DESC>
+  fields: 4
+  pub_methods: 4
+  protected_methods: 3
+  nested_enums:
+    EFlags:
+      kind: enum class
+      type: uint8
+      values[2]: None, NeedsCounter
+FD3D12RenderTargetView:
+  kind: class
+  bases: TD3D12View<FD3D12RenderTargetView, D3D12_RENDER_TARGET_VIEW_DESC>
+  fields: 1
+  pub_methods: 1
+  private_methods: 1
+FD3D12DepthStencilView:
+  kind: class
+  bases: TD3D12View<FD3D12DepthStencilView, D3D12_DEPTH_STENCIL_VIEW_DESC>
+  fields: 1
+  pub_methods: 5
+  private_methods: 1
+FD3D12DeferredInitView:
+  kind: class
+  template: TParent
+  bases: FD3D12LinkedAdapterObject<TParent>
+  pub_methods: 1
+FD3D12ShaderResourceView_RHI:
+  kind: class
+  bases: FRHIShaderResourceView, FD3D12ShaderResourceView, FD3D12DeferredInitView<FD3D12ShaderResourceView_RHI>
+  pub_methods: 5
+  virtual_api: CreateView, UpdateView, ResourceRenamed, GetBindlessHandle
+FD3D12UnorderedAccessView_RHI:
+  kind: class
+  bases: FRHIUnorderedAccessView, FD3D12UnorderedAccessView, FD3D12DeferredInitView<FD3D12UnorderedAccessView_RHI>
+  pub_methods: 5
+  virtual_api: CreateView, UpdateView, ResourceRenamed, GetBindlessHandle
+TD3D12ResourceTraits:
+  kind: struct
+TD3D12ResourceTraits:
+  kind: struct
+
+macros[4]{name,macro_type,line}:
+  EFlags,ENUM_FLAGS,360
+  FD3D12ShaderResourceView::EFlags,ENUM_FLAGS,385
+  EFlags,ENUM_FLAGS,397
+  FD3D12UnorderedAccessView::EFlags,ENUM_FLAGS,420
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Viewport.cpp"
+impl_summary:
+  lines: 861
+  complexity: HIGH
+  topics: shaders, multi-gpu
+  sync: 3
+  assertions: 14
+  logging: 10
+  conditionals: 25
+  globals: GNumExplicitGPUsForRendering
+
+includes: 7
+
+cvars[2]{cvar_name,type,default,help_summary}:
+  D3D12.LogViewportEvents,FAutoConsoleVariableRef,LogViewportEvents,Log all the viewport events.
+  r.D3D12.NumViewportBuffers,FAutoConsoleVariableRef,GD3D12NumViewportBuffers,The number of viewport buffers to allocate for the RHI viewport.
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12Viewport.h"
+impl_summary:
+  lines: 287
+  complexity: HIGH
+  topics: multi-gpu
+  sync: 3
+  assertions: 5
+  logging: 0
+  conditionals: 19
+
+includes: 7
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12SyncPointRef,TRefCountPtr<FD3D12SyncPoint>,true,21
+
+FD3D12Viewport:
+  kind: class
+  bases: FRHIViewport, FD3D12AdapterChild
+  fields: 29
+  pub_methods: 25
+  virtual_api: ~FD3D12Viewport, WaitForFrameEventCompletion, IssueFrameEvent, GetNativeSwapChain, GetNativeBackBufferTexture, GetNativeBackBufferRT, SetCustomPresent, GetCustomPresent, GetNativeWindow
+  private_methods: 15
+  nested_types:
+    FBackBufferData:
+      kind: struct
+      fields: 2
+TD3D12ResourceTraits:
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12WorkGraph.cpp"
+impl_summary:
+  lines: 1435
+  complexity: HIGH
+  topics: validation, caching, async, shaders, resource-transitions, bindless
+  sync: 0
+  assertions: 29
+  logging: 0
+  conditionals: 10
+  globals: GMaxRHIFeatureLevel, GShaderBundleSkipDispatch
+  notes[2]:
+    "//TODO: don't use raw device?"
+    "//TODO: check resource view"
+
+includes: 11
+
+FShaderBundleBinderOps:
+  kind: struct
+  conditions: D3D12_RHI_WORKGRAPHS
+  fields: 5
+  pub_methods: 3
+FWorkGraphShaderBundleBinder:
+  kind: struct
+  conditions: D3D12_RHI_WORKGRAPHS
+  fields: 18
+  pub_methods: 6
+FAllocatedConstantBuffer:
+  kind: struct
+  conditions: D3D12_RHI_WORKGRAPHS
+  fields: 2
+  pub_methods: 1
+FD3D12BindlessConstantSetter:
+  kind: struct
+  conditions: D3D12_RHI_WORKGRAPHS
+  fields: 4
+  pub_methods: 10
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  wg.ShaderBundle.SkipDispatch,FAutoConsoleVariableRef,GShaderBundleSkipDispatch,Whether to dispatch the built shader bundle pipeline (for debugging)
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/D3D12WorkGraph.h"
+impl_summary:
+  lines: 43
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 2
+
+includes: 3
+
+FD3D12WorkGraphPipelineState:
+  kind: struct
+  bases: FRHIWorkGraphPipelineState
+  fields: 12
+  pub_methods: 5
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/ID3D12Barriers.h"
+impl_summary:
+  lines: 125
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 2
+
+ED3D12Access:
+  kind: enum class
+  type: uint32
+ED3D12ResourceStateMode:
+  kind: enum class
+  type: int
+
+ID3D12BarriersForAdapter:
+  kind: class
+  pub_methods: 10
+  virtual_api: ~ID3D12BarriersForAdapter, ConfigureDevice, GetTransitionDataSizeBytes, GetTransitionDataAlignmentBytes, CreateTransition, ReleaseTransition, CreateCommittedResource, CreateReservedResource, CreatePlacedResource, GetImplementationName
+ID3D12BarriersForContext:
+  kind: class
+  pub_methods: 7
+  virtual_api: ~ID3D12BarriersForContext, BeginTransitions, EndTransitions, AddGlobalBarrier, AddBarrier, FlushIntoCommandList, GetNumPendingBarriers
+
+cvars[3]{cvar_name,type,default,help_summary}:
+  d3d12.AllowDiscardResources,FAutoConsoleVariableRef,GD3D12AllowDiscardResources,Whether to call DiscardResources after transient aliasing acquire. This is not needed on some platforms if newly acquire
+  d3d12.DisableDiscardOfDepthResources,FAutoConsoleVariableRef,GD3D12DisableDiscardOfDepthResources,Whether to skip discarding depth resources after transient aliasing acquire. This is not needed on some platforms if the
+  d3d12.BatchResourceBarriers,FAutoConsoleVariableRef,GD3D12BatchResourceBarriers,Whether to allow batching resource barriers
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Adapter.h"
+impl_summary:
+  lines: 21
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+
+FWindowsD3D12Adapter:
+  kind: class
+  bases: FD3D12Adapter
+  pub_methods: 1
+  protected_methods: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12BarriersFactory.h"
+impl_summary:
+  lines: 24
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 2
+
+includes: 3
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  FD3D12BarriersFactory,"TD3D12BarriersFactory<TD3D12BarriersFactoryEntry<ED3D12BarrierImplementationType::Enhanced, FD3D12EnhancedBarriersForAdapter, FD3D12EnhancedBarriersForContext>, TD3D12BarriersFactoryEntry<ED3D12BarrierImplementationType::Legacy, FD3D12LegacyBarriersForAdapter, FD3D12LegacyBarriersForContext>, FNullD3D12BarriersFactoryEntry>",true,10
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12BindlessDescriptors.h"
+impl_summary:
+  lines: 7
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Device.cpp"
+impl_summary:
+  lines: 2332
+  complexity: HIGH
+  topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions, ray-tracing
+  sync: 0
+  assertions: 19
+  logging: 77
+  conditionals: 41
+  platform_apis: Win32
+  globals: GEnableResidencyManagement, GEngineIni, GIsEditor, GIsRHIInitialized, GMaxRHIFeatureLevel, GMaxRHIShaderPlatform, GMaxTextureSamplers, GNumExplicitGPUsForRendering, GRHIAdapterName, GRHIDeviceId
+  notes[5]:
+    "// TODO: Revisit based on vendor/adapter/perf query"
+    "// TODO: FD3D12ExplicitDescriptorHeap::UpdateSyncPoint() is not safe for parallel translate due to frame fencing"
+    "//TODO: should only be called on display out device"
+    "// TODO: GetDisplayModeList is a terribly SLOW call.  It can take up to a second per invocation."
+    "// TODO: Cap at 1 for default output"
+
+includes: 19
+
+cvars[6]{cvar_name,type,default,help_summary}:
+  r.D3D12.ExperimentalShaderModels,TAutoConsoleVariable,0,Controls whether D3D12 experimental shader models should be allowed. Not available in shipping builds. (default = 0).
+  r.D3D12.DXR.MinimumWindowsBuildVersion,FAutoConsoleVariableRef,GMinimumWindowsBuildVersionForRayTracing,Sets the minimum Windows build version required to enable ray tracing.
+  r.D3D12.DXR.MinimumDriverVersionNVIDIA,FAutoConsoleVariableRef,GMinimumDriverVersionForRayTracingNVIDIA,Sets the minimum driver version required to enable ray tracing on NVIDIA GPUs.
+  r.D3D12.DXR.MinimumDriverVersionAMD,FAutoConsoleVariableRef,GMinimumDriverVersionForRayTracingAMD,Sets the minimum driver version required to enable ray tracing on AMD GPUs.
+  r.D3D12.DevDisableD3DRuntimeBackgroundThreads,FAutoConsoleVariableRef,GDevDisableD3DRuntimeBackgroundThreads,"If > 0, disables the background threads created by the D3D runtime for background shader optimization. Only available wh"
+  r.D3D12.AutoAttachPIX,FAutoConsoleVariableRef,GAutoAttachPIX,Automatically attach PIX on startup
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12DiskCache.cpp"
+impl_summary:
+  lines: 296
+  complexity: LOW
+  topics: caching, shaders
+  sync: 0
+  assertions: 4
+  logging: 2
+  conditionals: 1
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12DiskCache.h"
+impl_summary:
+  lines: 103
+  complexity: LOW
+  sync: 0
+  assertions: 1
+  logging: 0
+  conditionals: 0
+
+includes: 3
+
+FDiskCacheInterface:
+  kind: class
+  fields: 14
+  pub_methods: 15
+  private_methods: 1
+  nested_enums:
+    RESET_TYPE:
+      kind: enum
+      type: int
+      values[2]: RESET_TO_FIRST_OBJECT, RESET_TO_AFTER_LAST_OBJECT
+  nested_types:
+    FDiskCacheHeader:
+      kind: struct
+      fields: 3
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12EnhancedBarriers.cpp"
+impl_summary:
+  lines: 14
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12LegacyBarriers.cpp"
+impl_summary:
+  lines: 14
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12PipelineState.cpp"
+impl_summary:
+  lines: 1035
+  complexity: HIGH
+  topics: caching, async, serialization, shaders
+  sync: 5
+  assertions: 20
+  logging: 15
+  conditionals: 18
+  platform_apis: Win32
+  notes[6]:
+    "// TODO: Make sure we clear the disk caches that are in error."
+    "//TODO: Optimize by only storing unique pointers"
+    "// TODO: In the case of D3D12_ERROR_ADAPTER_NOT_FOUND, we don't really need to clear the cache, we just need to try another one"
+    "// Thread-safe create graphics/compute pipeline state. Conditionally load/store the PSO using a Pipeline Library."
+    "// TODO: Temp workaround until RenderDoc fixes SM 5.0 opcode detection (need to ignore register space)"
+    "// TODO: Should use the same special space as AMD to avoid driver pattern matching"
+
+includes: 6
+
+FStat_STAT_PSOCreateTime:
+  kind: struct
+  pub_methods: 7
+
+cvars[2]{cvar_name,type,default,help_summary}:
+  D3D12.PSO.DiskCache,TAutoConsoleVariable,0,Enables a disk cache for Pipeline State Objects (PSOs). PSO descs are cached to disk so subsequent runs can create PSOs 
+  D3D12.PSO.DriverOptimizedDiskCache,TAutoConsoleVariable,0,Enables a disk cache for driver-optimized Pipeline State Objects (PSOs). PSO descs are cached to disk so subsequent runs
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12PipelineState.h"
+impl_summary:
+  lines: 221
+  complexity: LOW
+  topics: caching
+  sync: 0
+  assertions: 3
+  logging: 0
+  conditionals: 2
+
+includes: 2
+
+FD3D12_GRAPHICS_PIPELINE_STATE_STREAM:
+  kind: struct
+  fields: 18
+FD3D12_MESH_PIPELINE_STATE_STREAM:
+  kind: struct
+  conditions: PLATFORM_SUPPORTS_MESH_SHADERS
+  fields: 14
+FD3D12_COMPUTE_PIPELINE_STATE_STREAM:
+  kind: struct
+  fields: 4
+ComputePipelineCreationArgs_POD:
+  kind: struct
+  fields: 2
+  pub_methods: 2
+GraphicsPipelineCreationArgs_POD:
+  kind: struct
+  fields: 2
+  pub_methods: 2
+ComputePipelineCreationArgs:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+GraphicsPipelineCreationArgs:
+  kind: struct
+  fields: 1
+  pub_methods: 2
+FD3D12PipelineStateCache:
+  kind: class
+  bases: FD3D12PipelineStateCacheBase
+  fields: 3
+  pub_methods: 6
+  virtual_api: ~FD3D12PipelineStateCache
+  protected_methods: 4
+  private_methods: 4
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12RHIDefinitions.h"
+impl_summary:
+  lines: 39
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+
+typedefs[1]{name,aliased_type,is_using,line}:
+  ID3D12CopyCommandList,ID3D12GraphicsCommandList,false,10
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Submission.h"
+impl_summary:
+  lines: 19
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 1
+
+FD3D12Payload:
+  kind: struct
+  bases: FD3D12PayloadBase
+  pub_methods: 1
+(unnamed struct at C:/Users/nanat/Desktop/UE5.7/Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Submission.h:12:8):
+  kind: struct
+---
+file: "Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Viewport.cpp"
+impl_summary:
+  lines: 554
+  complexity: HIGH
+  topics: profiling, multi-gpu
+  sync: 1
+  assertions: 5
+  logging: 12
+  conditionals: 7
+  platform_apis: Win32
+  globals: GNumExplicitGPUsForRendering, GRHIPresentCounter, GRHISupportsHDROutput
+
+includes: 8
+
+cvars[1]{cvar_name,type,default,help_summary}:
+  r.D3D12.UseAllowTearing,FAutoConsoleVariableRef,GD3D12UseAllowTearing,Enable new dxgi flip mode with d3d12
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/D3D12RHI.h"
+impl_summary:
+  lines: 37
+  complexity: LOW
+  topics: profiling, caching, shaders
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 2
+
+includes: 2
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/D3D12RootSignatureDefinitions.h"
+impl_summary:
+  lines: 538
+  complexity: LOW
+  topics: bindless
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 7
+
+includes: 10
+
+ERootSignatureRangeType:
+  kind: enum class
+  type: int
+  values[4]: CBV, SRV, UAV, Sampler
+ERootSignatureVisibility:
+  kind: enum class
+  type: int
+  values[6]: Vertex, Pixel, Geometry, Mesh, Amplification, All
+
+FRootSignatureCreator:
+  kind: struct
+  fields: 2
+  pub_methods: 12
+  virtual_api: ~FRootSignatureCreator, AddRootFlag, AddConstantBufferViewParameter, AddShaderResourceViewParameter, AddUnorderedAccessViewParameter, AddTable, AddConstantsParameter
+FBinaryRootSignatureCreator:
+  kind: struct
+  bases: FRootSignatureCreator
+  fields: 5
+  pub_methods: 7
+  virtual_api: AddRootFlag, AddConstantBufferViewParameter, AddShaderResourceViewParameter, AddUnorderedAccessViewParameter, AddConstantsParameter, AddTable
+  nested_types:
+    FPendingTable:
+      kind: struct
+      fields: 4
+FTextRootSignatureCreator:
+  kind: struct
+  bases: FRootSignatureCreator
+  fields: 2
+  pub_methods: 7
+  virtual_api: AddRootFlag, AddConstantBufferViewParameter, AddShaderResourceViewParameter, AddUnorderedAccessViewParameter, AddConstantsParameter, AddTable
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/D3D12ShaderResources.h"
+impl_summary:
+  lines: 16
+  complexity: LOW
+  topics: shaders, ray-tracing
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/D3D12ThirdParty.h"
+impl_summary:
+  lines: 8
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 0
+
+includes: 1
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/ID3D12DynamicRHI.h"
+impl_summary:
+  lines: 87
+  complexity: LOW
+  topics: resource-transitions
+  sync: 0
+  assertions: 2
+  logging: 0
+  conditionals: 1
+  globals: GDynamicRHI
+
+includes: 4
+
+ED3D12RHIRunOnQueueType:
+  kind: enum class
+  type: int
+  values[2]: Graphics, Copy
+
+typedefs[1]{name,aliased_type,is_using,conditions,line}:
+  ID3D12PlatformDynamicRHI,ID3D12DynamicRHI,true,!D3D12RHI_PLATFORM_HAS_CUSTOM_INTERFACE,79
+
+FD3D12MinimalAdapterDesc:
+  kind: struct
+  fields: 2
+ID3D12DynamicRHI:
+  kind: struct
+  bases: FDynamicRHI
+  pub_methods: 28
+
+macros[1]{name,macro_type,line}:
+  5.6,DEPRECATION,51
+---
+file: "Engine/Source/Runtime/D3D12RHI/Public/Windows/WindowsD3D12ThirdParty.h"
+impl_summary:
+  lines: 27
+  complexity: LOW
+  sync: 0
+  assertions: 0
+  logging: 0
+  conditionals: 1
+
+includes: 7

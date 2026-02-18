@@ -1,0 +1,481 @@
+# File Priority Index — Documentation Reading Order
+#
+# Files ranked by implementation complexity and information density.
+# Read HIGH files in full. MEDIUM files selectively. Skip LOW files.
+
+[ 1] HIGH    score=404  Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracing.cpp
+     lines=6420  sync=10  assert=234  log=10  #if=59  cvars=10  classes=32
+     topics: validation, profiling, caching, async, serialization, shaders, multi-gpu, resource-transitions
+     notes: // NOTE: typical DXIL library may contain up to 3 entry points (i.e. hit groups with closest hit, any hit and intersection shad
+
+[ 2] HIGH    score=300  Engine/Source/Runtime/D3D12RHI/Private/D3D12Adapter.cpp
+     lines=2220  sync=11  assert=18  log=55  #if=92  cvars=13  classes=1
+     topics: validation, profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions
+     platform: Win32
+     notes: // TODO: Remove this when the debug layers work for executions which are guarded by a fence
+
+[ 3] HIGH    score=246  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Device.cpp
+     lines=2332  sync=0  assert=19  log=77  #if=41  cvars=6  classes=0
+     topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions, ray-tracing
+     platform: Win32
+     notes: // TODO: Revisit based on vendor/adapter/perf query
+
+[ 4] HIGH    score=213  Engine/Source/Runtime/D3D12RHI/Private/D3D12Allocation.cpp
+     lines=2686  sync=22  assert=54  log=5  #if=41  cvars=19  classes=2
+     topics: validation, profiling, async, shaders, resource-transitions, ray-tracing
+     notes: //TODO
+
+[ 5] HIGH    score=149  Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.cpp
+     lines=1888  sync=1  assert=26  log=35  #if=44  cvars=0  classes=2
+     topics: async, shaders, gpu-crash-debug, resource-transitions
+
+[ 6] HIGH    score=144  Engine/Source/Runtime/D3D12RHI/Private/D3D12Texture.cpp
+     lines=3206  sync=3  assert=83  log=6  #if=21  cvars=3  classes=4
+     topics: profiling, caching, async, shaders, multi-gpu, resource-transitions
+     platform: POSIX
+     notes: // NOTE: Accessing the queue from this thread is OK, as D3D12 runtime acquires a lock around all command queue APIs.
+
+[ 7] LOW     score=123  Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.h
+     lines=183  sync=0  assert=0  log=0  #if=0  cvars=0  classes=123
+     topics: shaders, bindless, ray-tracing
+
+[ 8] HIGH    score=118  Engine/Source/Runtime/D3D12RHI/Private/D3D12Resources.h
+     lines=1236  sync=10  assert=28  log=0  #if=22  cvars=0  classes=37
+     topics: caching, shaders, resource-transitions
+     notes: // NOTE: classes with virtual methods are not supported. The struct must be the first declared base class
+
+[ 9] HIGH    score=107  Engine/Source/Runtime/D3D12RHI/Private/D3D12Resources.cpp
+     lines=1685  sync=1  assert=57  log=3  #if=30  cvars=1  classes=1
+     topics: profiling, async, multi-gpu, resource-transitions
+     platform: POSIX
+     notes: // NOTE: ResidencySet ownership is taken over by the residency manager.
+
+[10] HIGH    score=105  Engine/Source/Runtime/D3D12RHI/Private/D3D12Allocation.h
+     lines=1037  sync=16  assert=25  log=0  #if=16  cvars=0  classes=16
+     topics: async
+     notes: // TODO:
+
+[11] HIGH    score=105  Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.cpp
+     lines=1482  sync=3  assert=22  log=0  #if=30  cvars=6  classes=21
+     topics: profiling, async, multi-gpu, gpu-crash-debug, resource-transitions
+     platform: Win32, POSIX
+
+[12] HIGH    score=101  Engine/Source/Runtime/D3D12RHI/Private/D3D12Pipelinestate.cpp
+     lines=964  sync=15  assert=21  log=1  #if=25  cvars=3  classes=0
+     topics: caching, shaders
+     notes: // TODO: [PSO API] For now, keep DBT enabled, if available, until it is added as part of a member to the Initializer's DepthSte
+
+[13] HIGH    score= 99  Engine/Source/Runtime/D3D12RHI/Private/D3D12EnhancedBarriers.cpp
+     lines=3207  sync=0  assert=66  log=3  #if=16  cvars=0  classes=5
+     topics: validation, profiling, async, multi-gpu, resource-transitions, ray-tracing
+     platform: POSIX
+
+[14] HIGH    score= 98  Engine/Source/Runtime/D3D12RHI/Private/D3D12DescriptorCache.cpp
+     lines=1327  sync=2  assert=52  log=9  #if=22  cvars=0  classes=0
+     topics: caching, shaders, resource-transitions, bindless
+     notes: // NOTE: For this function, setting zero render targets might not be a no-op, since this is also used
+
+[15] HIGH    score= 93  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12PipelineState.cpp
+     lines=1035  sync=5  assert=20  log=15  #if=18  cvars=2  classes=1
+     topics: caching, async, serialization, shaders
+     platform: Win32
+     notes: // TODO: Make sure we clear the disk caches that are in error.
+
+[16] HIGH    score= 87  Engine/Source/Runtime/D3D12RHI/Private/D3D12Commands.cpp
+     lines=1574  sync=0  assert=41  log=6  #if=30  cvars=0  classes=2
+     topics: validation, profiling, caching, shaders, resource-transitions, ray-tracing
+     notes: // TODO: Buffer in D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE needs CopyRaytracingAccelerationStructure
+
+[17] HIGH    score= 76  Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCache.cpp
+     lines=1645  sync=0  assert=35  log=2  #if=17  cvars=8  classes=0
+     topics: caching, shaders, resource-transitions, bindless, ray-tracing
+     notes: // TODO: Verify vertex buffer, index buffer, and constant buffer state.
+
+[18] HIGH    score= 75  Engine/Source/Runtime/D3D12RHI/Private/D3D12RHI.cpp
+     lines=1120  sync=1  assert=16  log=4  #if=15  cvars=4  classes=0
+     topics: validation, profiling, caching, async, multi-gpu, resource-transitions
+     platform: Win32, POSIX
+     notes: // TODO: Not supported in D3D11
+
+[19] HIGH    score= 74  Engine/Source/Runtime/D3D12RHI/Private/D3D12LegacyBarriers.cpp
+     lines=1716  sync=0  assert=30  log=5  #if=23  cvars=0  classes=3
+     topics: validation, profiling, async, multi-gpu, resource-transitions, ray-tracing
+     platform: POSIX
+
+[20] HIGH    score= 73  Engine/Source/Runtime/D3D12RHI/Private/D3D12Viewport.cpp
+     lines=861  sync=3  assert=14  log=10  #if=25  cvars=2  classes=0
+     topics: shaders, multi-gpu
+
+[21] HIGH    score= 69  Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.cpp
+     lines=1188  sync=0  assert=32  log=1  #if=24  cvars=3  classes=0
+     topics: validation, profiling, caching, async, multi-gpu, gpu-crash-debug, resource-transitions, bindless
+     platform: POSIX
+
+[22] HIGH    score= 69  Engine/Source/Runtime/D3D12RHI/Private/D3D12PoolAllocator.cpp
+     lines=1057  sync=4  assert=36  log=0  #if=20  cvars=0  classes=0
+     topics: validation, profiling, caching, multi-gpu, resource-transitions, ray-tracing
+     notes: // TODO: optimize to not perform the full iteration here!
+
+[23] HIGH    score= 65  Engine/Source/Runtime/D3D12RHI/Private/D3D12PipelineState.h
+     lines=555  sync=7  assert=0  log=0  #if=24  cvars=0  classes=19
+     topics: caching, async, shaders
+     notes: // TODO: Remove or rewrite D3D12RHI high level PSO cache
+
+[24] HIGH    score= 64  Engine/Source/Runtime/D3D12RHI/Private/D3D12RootSignature.cpp
+     lines=877  sync=2  assert=36  log=2  #if=17  cvars=0  classes=0
+     topics: serialization, shaders, bindless
+     notes: // TODO: Analyze vendor extension space?
+
+[25] HIGH    score= 63  Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandContext.h
+     lines=1214  sync=0  assert=8  log=0  #if=37  cvars=0  classes=8
+     topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug, resource-transitions
+     platform: Win32, POSIX
+
+[26] HIGH    score= 63  Engine/Source/Runtime/D3D12RHI/Private/D3D12Device.cpp
+     lines=851  sync=0  assert=28  log=2  #if=20  cvars=2  classes=0
+     topics: profiling, caching, async, shaders, multi-gpu, gpu-crash-debug
+     platform: Win32
+     notes: // TODO: Sort out DXC shader database SM6.0 usage. DX12 supports this feature, but need to improve DXC support.
+
+[27] HIGH    score= 61  Engine/Source/Runtime/D3D12RHI/Private/D3D12BindlessDescriptors.cpp
+     lines=929  sync=8  assert=18  log=3  #if=6  cvars=3  classes=0
+     topics: profiling, caching, multi-gpu, bindless, ray-tracing
+     notes: // NOTE: copying over duplicate descriptor entries is faster then adding them to set for reduction
+
+[28] HIGH    score= 61  Engine/Source/Runtime/D3D12RHI/Private/D3D12Util.h
+     lines=726  sync=11  assert=17  log=0  #if=4  cvars=0  classes=7
+     topics: caching, shaders
+
+[29] HIGH    score= 60  Engine/Source/Runtime/D3D12RHI/Private/D3D12Adapter.h
+     lines=680  sync=2  assert=2  log=0  #if=46  cvars=0  classes=5
+     topics: shaders, multi-gpu, resource-transitions
+
+[30] HIGH    score= 60  Engine/Source/Runtime/D3D12RHI/Private/D3D12Buffer.cpp
+     lines=999  sync=0  assert=40  log=1  #if=11  cvars=0  classes=0
+     topics: profiling, async, multi-gpu, resource-transitions
+     platform: POSIX
+     notes: // TODO: the UploadLocation logic is too complex to "just" write a different code path for each initializer type, so we will ju
+
+[31] HIGH    score= 49  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Viewport.cpp
+     lines=554  sync=1  assert=5  log=12  #if=7  cvars=1  classes=0
+     topics: profiling, multi-gpu
+     platform: Win32
+
+[32] HIGH    score= 48  Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandList.cpp
+     lines=428  sync=0  assert=14  log=0  #if=29  cvars=0  classes=0
+     topics: profiling, async, resource-transitions
+     platform: POSIX
+
+[33] HIGH    score= 47  Engine/Source/Runtime/D3D12RHI/Private/D3D12WorkGraph.cpp
+     lines=1435  sync=0  assert=29  log=0  #if=10  cvars=1  classes=4
+     topics: validation, caching, async, shaders, resource-transitions, bindless
+     notes: //TODO: don't use raw device?
+
+[34] HIGH    score= 43  Engine/Source/Runtime/D3D12RHI/Private/D3D12RHIPrivate.h
+     lines=781  sync=7  assert=6  log=0  #if=10  cvars=0  classes=6
+     topics: validation, profiling, async, serialization, multi-gpu, gpu-crash-debug, resource-transitions
+     notes: // TODO reorder includes so we just include D3D12PipelineState.h here
+
+[35] HIGH    score= 40  Engine/Source/Runtime/D3D12RHI/Private/D3D12RenderTarget.cpp
+     lines=1206  sync=0  assert=29  log=0  #if=5  cvars=0  classes=0
+     topics: profiling, shaders, resource-transitions
+     platform: POSIX
+     notes: // TODO: Is this taken care of now that we're paying attention to the RHI states?
+
+[36] HIGH    score= 37  Engine/Source/Runtime/D3D12RHI/Private/D3D12ExplicitDescriptorCache.cpp
+     lines=447  sync=4  assert=9  log=3  #if=5  cvars=2  classes=0
+     topics: validation, caching, shaders
+     notes: // Thread-safe (uses atomic linear allocation).
+
+[37] MEDIUM  score= 37  Engine/Source/Runtime/D3D12RHI/Private/D3D12GPUProfiler.cpp
+     lines=327  sync=0  assert=5  log=14  #if=1  cvars=1  classes=0
+     topics: profiling, multi-gpu
+
+[38] HIGH    score= 36  Engine/Source/Runtime/D3D12RHI/Private/D3D12State.cpp
+     lines=837  sync=2  assert=6  log=3  #if=15  cvars=0  classes=2
+     topics: profiling, caching, shaders, bindless
+
+[39] HIGH    score= 35  Engine/Source/Runtime/D3D12RHI/Private/D3D12Viewport.h
+     lines=287  sync=3  assert=5  log=0  #if=19  cvars=0  classes=2
+     topics: multi-gpu
+
+[40] MEDIUM  score= 34  Engine/Source/Runtime/D3D12RHI/Private/D3D12Submission.h
+     lines=309  sync=2  assert=3  log=0  #if=6  cvars=0  classes=14
+     topics: profiling, async
+     platform: POSIX
+
+[41] HIGH    score= 33  Engine/Source/Runtime/D3D12RHI/Private/D3D12CommandList.h
+     lines=321  sync=0  assert=0  log=0  #if=31  cvars=0  classes=2
+     topics: profiling, resource-transitions
+
+[42] HIGH    score= 33  Engine/Source/Runtime/D3D12RHI/Private/D3D12RootSignature.h
+     lines=511  sync=1  assert=24  log=0  #if=3  cvars=0  classes=3
+     topics: shaders
+     notes: // TODO: Make these arrays and index into them by type instead of individual variables.
+
+[43] HIGH    score= 32  Engine/Source/Runtime/D3D12RHI/Private/D3D12Descriptors.cpp
+     lines=629  sync=6  assert=9  log=0  #if=5  cvars=0  classes=0
+     topics: profiling
+     notes: // TODO: handle running out of space
+
+[44] MEDIUM  score= 32  Engine/Source/Runtime/D3D12RHI/Private/D3D12RHICommon.h
+     lines=404  sync=0  assert=7  log=0  #if=14  cvars=0  classes=11
+     topics: validation, multi-gpu, bindless
+
+[45] MEDIUM  score= 31  Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracing.h
+     lines=308  sync=6  assert=4  log=0  #if=2  cvars=0  classes=7
+     topics: shaders, bindless, ray-tracing
+
+[46] MEDIUM  score= 30  Engine/Source/Runtime/D3D12RHI/Private/D3D12NvidiaExtensions.cpp
+     lines=305  sync=0  assert=2  log=10  #if=8  cvars=0  classes=0
+     topics: async, shaders, gpu-crash-debug
+
+[47] MEDIUM  score= 29  Engine/Source/Runtime/D3D12RHI/Private/D3D12StateCachePrivate.h
+     lines=791  sync=0  assert=8  log=0  #if=11  cvars=0  classes=8
+     topics: caching, shaders, resource-transitions, bindless, ray-tracing
+     notes: // TODO reorder includes so we just include D3D12PipelineState.h here
+
+[48] MEDIUM  score= 28  Engine/Source/Runtime/D3D12RHI/Private/D3D12Shaders.cpp
+     lines=307  sync=0  assert=6  log=5  #if=6  cvars=0  classes=0
+     topics: shaders, bindless, ray-tracing
+
+[49] MEDIUM  score= 27  Engine/Source/Runtime/D3D12RHI/Private/D3D12View.h
+     lines=533  sync=0  assert=8  log=0  #if=3  cvars=0  classes=16
+     topics: shaders, multi-gpu
+
+[50] LOW     score= 26  Engine/Source/Runtime/D3D12RHI/Private/D3D12Shader.h
+     lines=235  sync=0  assert=0  log=0  #if=6  cvars=0  classes=20
+     topics: shaders, ray-tracing
+
+[51] MEDIUM  score= 23  Engine/Source/Runtime/D3D12RHI/Private/D3D12BindlessDescriptors.h
+     lines=327  sync=3  assert=1  log=0  #if=6  cvars=0  classes=7
+     topics: multi-gpu, bindless
+     notes: // Called from FD3D12Adapter::AllocateBindlessResourceHandle
+
+[52] MEDIUM  score= 23  Engine/Source/Runtime/D3D12RHI/Private/D3D12TextureReference.h
+     lines=78  sync=5  assert=2  log=0  #if=3  cvars=0  classes=3
+
+[53] MEDIUM  score= 23  Engine/Source/Runtime/D3D12RHI/Private/D3D12UniformBuffer.cpp
+     lines=258  sync=0  assert=14  log=1  #if=5  cvars=0  classes=2
+     topics: validation, multi-gpu
+
+[54] MEDIUM  score= 22  Engine/Source/Runtime/D3D12RHI/Private/D3D12Device.h
+     lines=379  sync=1  assert=1  log=0  #if=13  cvars=0  classes=4
+     topics: profiling, caching, async, gpu-crash-debug, ray-tracing
+
+[55] MEDIUM  score= 22  Engine/Source/Runtime/D3D12RHI/Private/D3D12Residency.h
+     lines=189  sync=0  assert=2  log=0  #if=18  cvars=0  classes=1
+
+[56] MEDIUM  score= 22  Engine/Source/Runtime/D3D12RHI/Private/D3D12VertexDeclaration.cpp
+     lines=222  sync=4  assert=4  log=2  #if=0  cvars=0  classes=2
+     topics: caching
+     notes: //TODO: uint32 doesn't work because D3D12  squishes it to 0 in the IA-VS conversion
+
+[57] MEDIUM  score= 20  Engine/Source/Runtime/D3D12RHI/Private/D3D12Descriptors.h
+     lines=337  sync=3  assert=2  log=0  #if=0  cvars=0  classes=9
+     topics: multi-gpu
+
+[58] MEDIUM  score= 20  Engine/Source/Runtime/D3D12RHI/Private/D3D12Query.cpp
+     lines=352  sync=0  assert=8  log=0  #if=3  cvars=1  classes=0
+     topics: profiling, multi-gpu
+     platform: POSIX
+
+[59] MEDIUM  score= 20  Engine/Source/Runtime/D3D12RHI/Private/D3D12Query.h
+     lines=240  sync=1  assert=5  log=0  #if=1  cvars=0  classes=6
+     topics: profiling
+     platform: POSIX
+
+[60] MEDIUM  score= 20  Engine/Source/Runtime/D3D12RHI/Private/D3D12UAV.cpp
+     lines=483  sync=0  assert=11  log=0  #if=4  cvars=0  classes=0
+     topics: profiling, bindless
+     platform: POSIX
+
+[61] LOW     score= 17  Engine/Source/Runtime/D3D12RHI/Private/D3D12DescriptorCache.h
+     lines=449  sync=1  assert=2  log=0  #if=3  cvars=0  classes=9
+     topics: caching, bindless
+
+[62] MEDIUM  score= 17  Engine/Source/Runtime/D3D12RHI/Private/D3D12Texture.h
+     lines=288  sync=0  assert=9  log=0  #if=5  cvars=0  classes=3
+     topics: shaders
+
+[63] MEDIUM  score= 15  Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracingDebug.cpp
+     lines=365  sync=0  assert=11  log=0  #if=1  cvars=1  classes=0
+     topics: serialization, ray-tracing
+
+[64] MEDIUM  score= 14  Engine/Source/Runtime/D3D12RHI/Private/D3D12RHIDefinitions.h
+     lines=143  sync=0  assert=0  log=0  #if=14  cvars=0  classes=0
+     topics: shaders
+
+[65] MEDIUM  score= 13  Engine/Source/Runtime/D3D12RHI/Private/D3D12SRV.cpp
+     lines=336  sync=0  assert=6  log=1  #if=5  cvars=0  classes=0
+     topics: ray-tracing
+     notes: // NOTE (from D3D Debug runtime): pResource must be NULL for acceleration structures, since the resource location comes from a
+
+[66] LOW     score= 13  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12PipelineState.h
+     lines=221  sync=0  assert=3  log=0  #if=2  cvars=0  classes=8
+     topics: caching
+
+[67] MEDIUM  score= 11  Engine/Source/Runtime/D3D12RHI/Private/D3D12View.cpp
+     lines=416  sync=0  assert=4  log=0  #if=7  cvars=0  classes=0
+     topics: bindless
+
+[68] LOW     score= 10  Engine/Source/Runtime/D3D12RHI/Public/D3D12RootSignatureDefinitions.h
+     lines=538  sync=0  assert=0  log=0  #if=7  cvars=0  classes=3
+     topics: bindless
+
+[69] LOW     score=  9  Engine/Source/Runtime/D3D12RHI/Private/D3D12DirectCommandListManager.h
+     lines=52  sync=1  assert=0  log=0  #if=0  cvars=0  classes=1
+     topics: multi-gpu
+     platform: POSIX
+
+[70] LOW     score=  9  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12DiskCache.cpp
+     lines=296  sync=0  assert=4  log=2  #if=1  cvars=0  classes=0
+     topics: caching, shaders
+
+[71] LOW     score=  8  Engine/Source/Runtime/D3D12RHI/Private/D3D12DirectCommandListManager.cpp
+     lines=202  sync=0  assert=7  log=0  #if=1  cvars=0  classes=0
+
+[72] LOW     score=  8  Engine/Source/Runtime/D3D12RHI/Private/D3D12ExplicitDescriptorCache.h
+     lines=198  sync=1  assert=1  log=0  #if=1  cvars=0  classes=3
+     topics: caching
+     notes: // Thread-safe (uses atomic linear allocation).
+
+[73] LOW     score=  8  Engine/Source/Runtime/D3D12RHI/Private/D3D12TextureReference.cpp
+     lines=125  sync=0  assert=3  log=0  #if=5  cvars=0  classes=0
+     topics: bindless
+
+[74] LOW     score=  8  Engine/Source/Runtime/D3D12RHI/Private/ID3D12Barriers.h
+     lines=125  sync=0  assert=0  log=0  #if=0  cvars=3  classes=2
+     topics: resource-transitions
+
+[75] LOW     score=  7  Engine/Source/Runtime/D3D12RHI/Private/D3D12IntelExtensions.cpp
+     lines=106  sync=0  assert=0  log=0  #if=7  cvars=0  classes=0
+     topics: gpu-crash-debug
+
+[76] LOW     score=  7  Engine/Source/Runtime/D3D12RHI/Private/D3D12PoolAllocator.h
+     lines=242  sync=0  assert=2  log=0  #if=0  cvars=0  classes=5
+
+[77] LOW     score=  6  Engine/Source/Runtime/D3D12RHI/Private/D3D12GPUProfiler.h
+     lines=129  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+     topics: profiling
+     platform: Win32
+
+[78] LOW     score=  6  Engine/Source/Runtime/D3D12RHI/Private/D3D12TransientResourceAllocator.cpp
+     lines=245  sync=0  assert=2  log=0  #if=4  cvars=0  classes=0
+     topics: profiling
+
+[79] LOW     score=  6  Engine/Source/Runtime/D3D12RHI/Public/ID3D12DynamicRHI.h
+     lines=87  sync=0  assert=2  log=0  #if=1  cvars=0  classes=2
+     topics: resource-transitions
+
+[80] LOW     score=  5  Engine/Source/Runtime/D3D12RHI/Private/D3D12IntelExtensions.h
+     lines=62  sync=0  assert=0  log=0  #if=4  cvars=0  classes=1
+     topics: gpu-crash-debug
+
+[81] LOW     score=  4  Engine/Source/Runtime/D3D12RHI/Private/D3D12BarriersFactory.h
+     lines=266  sync=0  assert=0  log=0  #if=0  cvars=0  classes=4
+     topics: resource-transitions
+
+[82] LOW     score=  4  Engine/Source/Runtime/D3D12RHI/Private/D3D12ConstantBuffer.cpp
+     lines=63  sync=0  assert=1  log=0  #if=3  cvars=0  classes=0
+
+[83] LOW     score=  4  Engine/Source/Runtime/D3D12RHI/Private/D3D12ConstantBuffer.h
+     lines=77  sync=0  assert=0  log=0  #if=3  cvars=0  classes=1
+
+[84] LOW     score=  4  Engine/Source/Runtime/D3D12RHI/Private/D3D12State.h
+     lines=57  sync=0  assert=0  log=0  #if=0  cvars=0  classes=4
+
+[85] LOW     score=  4  Engine/Source/Runtime/D3D12RHI/Private/D3D12TransientResourceAllocator.h
+     lines=91  sync=0  assert=1  log=0  #if=0  cvars=0  classes=3
+
+[86] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12EnhancedBarriers.h
+     lines=187  sync=0  assert=0  log=0  #if=1  cvars=0  classes=2
+     topics: resource-transitions
+
+[87] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12LegacyBarriers.h
+     lines=186  sync=0  assert=0  log=0  #if=1  cvars=0  classes=2
+     topics: resource-transitions
+
+[88] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12NvidiaExtensions.h
+     lines=43  sync=0  assert=0  log=0  #if=3  cvars=0  classes=0
+     topics: gpu-crash-debug
+
+[89] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12Queue.h
+     lines=54  sync=0  assert=3  log=0  #if=0  cvars=0  classes=0
+     topics: async
+     notes: // TODO: move FD3D12Queue here
+
+[90] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12ResourceCollection.h
+     lines=39  sync=0  assert=0  log=0  #if=1  cvars=0  classes=2
+
+[91] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/D3D12WorkGraph.h
+     lines=43  sync=0  assert=0  log=0  #if=2  cvars=0  classes=1
+
+[92] LOW     score=  3  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Submission.h
+     lines=19  sync=0  assert=0  log=0  #if=1  cvars=0  classes=2
+
+[93] LOW     score=  2  Engine/Source/Runtime/D3D12RHI/Internal/D3D12RayTracingResources.h
+     lines=41  sync=0  assert=0  log=0  #if=0  cvars=0  classes=2
+     topics: bindless, ray-tracing
+
+[94] LOW     score=  2  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12BarriersFactory.h
+     lines=24  sync=0  assert=0  log=0  #if=2  cvars=0  classes=0
+
+[95] LOW     score=  2  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12DiskCache.h
+     lines=103  sync=0  assert=1  log=0  #if=0  cvars=0  classes=1
+
+[96] LOW     score=  2  Engine/Source/Runtime/D3D12RHI/Public/D3D12RHI.h
+     lines=37  sync=0  assert=0  log=0  #if=2  cvars=0  classes=0
+     topics: profiling, caching, shaders
+
+[97] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/D3D12AmdExtensions.h
+     lines=14  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+
+[98] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/D3D12RayTracingDebug.h
+     lines=14  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+
+[99] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/D3D12ResourceCollection.cpp
+     lines=143  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+     topics: resource-transitions
+
+[100] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/D3D12Stats.cpp
+     lines=61  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+     topics: profiling
+
+[101] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12Adapter.h
+     lines=21  sync=0  assert=0  log=0  #if=0  cvars=0  classes=1
+
+[102] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12EnhancedBarriers.cpp
+     lines=14  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+
+[103] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12LegacyBarriers.cpp
+     lines=14  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+
+[104] LOW     score=  1  Engine/Source/Runtime/D3D12RHI/Public/Windows/WindowsD3D12ThirdParty.h
+     lines=27  sync=0  assert=0  log=0  #if=1  cvars=0  classes=0
+
+[105] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Private/D3D12Access.h
+     lines=81  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+
+[106] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Private/D3D12DiskCache.h
+     lines=8  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+
+[107] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12BindlessDescriptors.h
+     lines=7  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+
+[108] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Private/Windows/WindowsD3D12RHIDefinitions.h
+     lines=39  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+
+[109] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Public/D3D12ShaderResources.h
+     lines=16  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+     topics: shaders, ray-tracing
+
+[110] LOW     score=  0  Engine/Source/Runtime/D3D12RHI/Public/D3D12ThirdParty.h
+     lines=8  sync=0  assert=0  log=0  #if=0  cvars=0  classes=0
+
+# Summary
+#   Total files: 110 (67142 lines)
+#   HIGH: 40 files (54153 lines) — read in full
+#   MEDIUM: 23 files — read selectively
+#   LOW: 47 files — skip or skim
+#   Estimated context savings: read only HIGH = 54153/67142 lines (80%)
