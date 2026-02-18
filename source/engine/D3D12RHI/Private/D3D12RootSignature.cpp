@@ -187,12 +187,12 @@ namespace NS::D3D12RHI
     bool D3D12RootSignature::Init(D3D12Device* device, const NS::RHI::RHIRootSignatureDesc& desc, const char* debugName)
     {
         if (!device)
+        {
             return false;
+        }
 
         device_ = device;
         flags_ = desc.flags;
-        paramCount_ = desc.parameterCount;
-        staticSamplerCount_ = desc.staticSamplerCount;
 
         // ディスクリプタレンジ用一時バッファ（全パラメータのレンジをフラットに格納）
         constexpr uint32 kMaxRanges = 256;
@@ -204,6 +204,10 @@ namespace NS::D3D12RHI
         D3D12_ROOT_PARAMETER1 d3dParams[kMaxParams];
 
         uint32 numParams = desc.parameterCount < kMaxParams ? desc.parameterCount : kMaxParams;
+        if (desc.parameterCount > kMaxParams)
+            LOG_WARN("[D3D12RHI] RootSignature parameter count " + std::to_string(desc.parameterCount) +
+                     " exceeds max " + std::to_string(kMaxParams) + ", truncated");
+        paramCount_ = numParams;
         for (uint32 i = 0; i < numParams; ++i)
         {
             const auto& rhiParam = desc.parameters[i];
@@ -242,7 +246,9 @@ namespace NS::D3D12RHI
                     d3dRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 
                     if (rhiRange.numDescriptors != NS::RHI::kUnboundedDescriptorCount)
+                    {
                         tableSize += rhiRange.numDescriptors;
+                    }
                 }
                 d3dParam.DescriptorTable.NumDescriptorRanges = rangeOffset - startRange;
                 d3dParam.DescriptorTable.pDescriptorRanges = &d3dRanges[startRange];
@@ -283,6 +289,11 @@ namespace NS::D3D12RHI
         D3D12_STATIC_SAMPLER_DESC d3dStaticSamplers[kMaxStaticSamplers];
         uint32 numStaticSamplers =
             desc.staticSamplerCount < kMaxStaticSamplers ? desc.staticSamplerCount : kMaxStaticSamplers;
+        if (desc.staticSamplerCount > kMaxStaticSamplers)
+        {
+            LOG_WARN("[D3D12RHI] RootSignature static sampler count exceeds max, truncated");
+        }
+        staticSamplerCount_ = numStaticSamplers;
 
         for (uint32 i = 0; i < numStaticSamplers; ++i)
         {
@@ -341,7 +352,9 @@ namespace NS::D3D12RHI
         {
             wchar_t wname[128]{};
             for (int i = 0; i < 127 && debugName[i]; ++i)
+            {
                 wname[i] = static_cast<wchar_t>(debugName[i]);
+            }
             rootSig_->SetName(wname);
         }
 
@@ -357,7 +370,9 @@ namespace NS::D3D12RHI
                                           const char* debugName)
     {
         if (!device || !blob.data || blob.size == 0)
+        {
             return false;
+        }
 
         device_ = device;
 
@@ -372,7 +387,9 @@ namespace NS::D3D12RHI
         {
             wchar_t wname[128]{};
             for (int i = 0; i < 127 && debugName[i]; ++i)
+            {
                 wname[i] = static_cast<wchar_t>(debugName[i]);
+            }
             rootSig_->SetName(wname);
         }
 

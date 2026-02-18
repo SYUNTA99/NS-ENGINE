@@ -59,6 +59,9 @@ namespace NS::D3D12RHI
         /// バリア蓄積をリセット（発行せずクリア）
         void Reset();
 
+        /// コマンドリストをバインド（auto-flush用）
+        void SetCommandList(ID3D12GraphicsCommandList* cmdList) { cmdList_ = cmdList; }
+
         //=====================================================================
         // 情報
         //=====================================================================
@@ -69,8 +72,16 @@ namespace NS::D3D12RHI
     private:
         D3D12_RESOURCE_BARRIER barriers_[kMaxBatchedBarriers] = {};
         uint32 count_ = 0;
+        ID3D12GraphicsCommandList* cmdList_ = nullptr;
 
         bool HasCapacity() const { return count_ < kMaxBatchedBarriers; }
+
+        /// バッチ満杯時に自動フラッシュ
+        void FlushIfFull()
+        {
+            if (count_ >= kMaxBatchedBarriers && cmdList_)
+                Flush(cmdList_);
+        }
     };
 
     //=========================================================================
@@ -132,6 +143,9 @@ namespace NS::D3D12RHI
         /// リセット
         void Reset();
 
+        /// コマンドリストをバインド（auto-flush用）
+        void SetCommandList(ID3D12GraphicsCommandList7* cmdList) { cmdList_ = cmdList; }
+
         //=====================================================================
         // 情報
         //=====================================================================
@@ -148,6 +162,15 @@ namespace NS::D3D12RHI
 
         D3D12_BUFFER_BARRIER bufferBarriers_[kMaxBarriers] = {};
         uint32 bufferCount_ = 0;
+
+        ID3D12GraphicsCommandList7* cmdList_ = nullptr;
+
+        /// 指定タイプのバリアが満杯時に自動フラッシュ
+        void FlushIfFull()
+        {
+            if (cmdList_)
+                Flush(cmdList_);
+        }
     };
 
     //=========================================================================

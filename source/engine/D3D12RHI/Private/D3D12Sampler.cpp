@@ -88,7 +88,9 @@ namespace NS::D3D12RHI
     bool D3D12Sampler::Init(D3D12Device* device, const NS::RHI::RHISamplerDesc& desc, const char* /*debugName*/)
     {
         if (!device)
+        {
             return false;
+        }
 
         device_ = device;
         desc_ = desc;
@@ -132,7 +134,7 @@ namespace NS::D3D12RHI
             }
         }
 
-        // 暫定: 1個サンプラーヒープ作成
+        // 1個サンプラーヒープ作成
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
         heapDesc.NumDescriptors = 1;
@@ -150,7 +152,7 @@ namespace NS::D3D12RHI
         device_->GetD3DDevice()->CreateSampler(&d3dDesc, cpuHandle);
 
         cpuHandle_.ptr = cpuHandle.ptr;
-        heap.Detach(); // 暫定: ビューと同パターン
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }

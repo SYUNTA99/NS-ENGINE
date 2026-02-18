@@ -26,48 +26,47 @@
 namespace NS::D3D12RHI
 {
     // ヘルパー: コンテキストからID3D12GraphicsCommandListを取得
+    // QueueTypeでGraphics/Computeを判別し、dynamic_castを回避
     static ID3D12GraphicsCommandList* GetCmdList(NS::RHI::IRHICommandContextBase* ctx)
     {
-        // CommandContextとComputeContextの両方をサポート
-        // D3D12CommandContextはIRHICommandContext→IRHIComputeContext→IRHICommandContextBaseの順に継承
-        auto* gfxCtx = dynamic_cast<D3D12CommandContext*>(ctx);
-        if (gfxCtx)
-            return gfxCtx->GetD3DCommandList();
-
-        auto* compCtx = dynamic_cast<D3D12ComputeContext*>(ctx);
-        if (compCtx)
-            return compCtx->GetD3DCommandList();
-
-        return nullptr;
+        if (!ctx)
+        {
+            return nullptr;
+        }
+        if (ctx->GetQueueType() == NS::RHI::ERHIQueueType::Compute)
+        {
+            return static_cast<D3D12ComputeContext*>(static_cast<NS::RHI::IRHIComputeContext*>(ctx))->GetD3DCommandList();
+        }
+        return static_cast<D3D12CommandContext*>(static_cast<NS::RHI::IRHICommandContext*>(ctx))->GetD3DCommandList();
     }
 
     // ヘルパー: コンテキストからバリアバッチャーを取得
     static D3D12BarrierBatcher* GetBatcher(NS::RHI::IRHICommandContextBase* ctx)
     {
-        auto* gfxCtx = dynamic_cast<D3D12CommandContext*>(ctx);
-        if (gfxCtx)
-            return &gfxCtx->GetBarrierBatcher();
-
-        auto* compCtx = dynamic_cast<D3D12ComputeContext*>(ctx);
-        if (compCtx)
-            return &compCtx->GetBarrierBatcher();
-
-        return nullptr;
+        if (!ctx)
+        {
+            return nullptr;
+        }
+        if (ctx->GetQueueType() == NS::RHI::ERHIQueueType::Compute)
+        {
+            return &static_cast<D3D12ComputeContext*>(static_cast<NS::RHI::IRHIComputeContext*>(ctx))->GetBarrierBatcher();
+        }
+        return &static_cast<D3D12CommandContext*>(static_cast<NS::RHI::IRHICommandContext*>(ctx))->GetBarrierBatcher();
     }
 
     // ヘルパー: コンテキストのバリアをフラッシュ
     static void FlushContextBarriers(NS::RHI::IRHICommandContextBase* ctx)
     {
-        auto* gfxCtx = dynamic_cast<D3D12CommandContext*>(ctx);
-        if (gfxCtx)
+        if (!ctx)
         {
-            gfxCtx->FlushBarriers();
             return;
         }
-
-        auto* compCtx = dynamic_cast<D3D12ComputeContext*>(ctx);
-        if (compCtx)
-            compCtx->FlushBarriers();
+        if (ctx->GetQueueType() == NS::RHI::ERHIQueueType::Compute)
+        {
+            static_cast<D3D12ComputeContext*>(static_cast<NS::RHI::IRHIComputeContext*>(ctx))->FlushBarriers();
+        } else {
+            static_cast<D3D12CommandContext*>(static_cast<NS::RHI::IRHICommandContext*>(ctx))->FlushBarriers();
+        }
     }
 
     //=========================================================================
@@ -136,13 +135,17 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher)
+        {
             return;
+        }
 
         batcher->AddUAV(GetD3D12Resource(resource));
 
         // 上限到達時は自動フラッシュ
         if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+        {
             FlushContextBarriers(ctx);
+        }
     }
 
     static void D3D12_AliasingBarrier(NS::RHI::IRHICommandContextBase* ctx,
@@ -151,12 +154,16 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher)
+        {
             return;
+        }
 
         batcher->AddAliasing(GetD3D12Resource(before), GetD3D12Resource(after));
 
         if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+        {
             FlushContextBarriers(ctx);
+        }
     }
 
     static void D3D12_FlushBarriers(NS::RHI::IRHICommandContextBase* ctx)
@@ -174,7 +181,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
         auto* d3dDst = static_cast<D3D12Buffer*>(dst)->GetD3DResource();
         auto* d3dSrc = static_cast<D3D12Buffer*>(src)->GetD3DResource();
         cmdList->CopyResource(d3dDst, d3dSrc);
@@ -189,7 +198,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
         auto* d3dDst = static_cast<D3D12Buffer*>(dst)->GetD3DResource();
         auto* d3dSrc = static_cast<D3D12Buffer*>(src)->GetD3DResource();
         cmdList->CopyBufferRegion(d3dDst, dstOffset, d3dSrc, srcOffset, size);
@@ -201,7 +212,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
         auto* d3dDst = static_cast<D3D12Texture*>(dst)->GetD3DResource();
         auto* d3dSrc = static_cast<D3D12Texture*>(src)->GetD3DResource();
         cmdList->CopyResource(d3dDst, d3dSrc);
@@ -219,7 +232,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
 
         auto* dstTex = static_cast<D3D12Texture*>(dst);
         auto* srcTex = static_cast<D3D12Texture*>(src);
@@ -267,7 +282,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
 
         auto* dstTex = static_cast<D3D12Texture*>(dst);
         auto* srcBuf = static_cast<D3D12Buffer*>(src);
@@ -287,9 +304,13 @@ namespace NS::D3D12RHI
         srcLoc.PlacedFootprint.Footprint.Depth = 1;
         srcLoc.PlacedFootprint.Footprint.RowPitch = srcRowPitch;
         if (srcLoc.PlacedFootprint.Footprint.Width == 0)
+        {
             srcLoc.PlacedFootprint.Footprint.Width = 1;
+        }
         if (srcLoc.PlacedFootprint.Footprint.Height == 0)
+        {
             srcLoc.PlacedFootprint.Footprint.Height = 1;
+        }
 
         cmdList->CopyTextureRegion(&dstLoc,
                                    static_cast<UINT>(dstOffset.x),
@@ -311,7 +332,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !src)
+        {
             return;
+        }
 
         auto* dstBuf = static_cast<D3D12Buffer*>(dst);
         auto* srcTex = static_cast<D3D12Texture*>(src);
@@ -326,9 +349,13 @@ namespace NS::D3D12RHI
         dstLoc.PlacedFootprint.Footprint.Depth = 1;
         dstLoc.PlacedFootprint.Footprint.RowPitch = dstRowPitch;
         if (dstLoc.PlacedFootprint.Footprint.Width == 0)
+        {
             dstLoc.PlacedFootprint.Footprint.Width = 1;
+        }
         if (dstLoc.PlacedFootprint.Footprint.Height == 0)
+        {
             dstLoc.PlacedFootprint.Footprint.Height = 1;
+        }
 
         D3D12_TEXTURE_COPY_LOCATION srcLoc{};
         srcLoc.pResource = srcTex->GetD3DResource();
@@ -411,7 +438,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !pso)
+        {
             return;
+        }
         cmdList->SetPipelineState(static_cast<D3D12ComputePipelineState*>(pso)->GetD3DPipelineState());
     }
 
@@ -419,7 +448,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !rootSig)
+        {
             return;
+        }
         cmdList->SetComputeRootSignature(static_cast<D3D12RootSignature*>(rootSig)->GetD3DRootSignature());
     }
 
@@ -435,7 +466,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetComputeRoot32BitConstants(rootParameterIndex, num32BitValues, data, destOffset);
+        }
     }
 
     static void D3D12_SetComputeRootCBV(NS::RHI::IRHIComputeContext* ctx,
@@ -444,7 +477,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetComputeRootConstantBufferView(rootParameterIndex, bufferAddress);
+        }
     }
 
     static void D3D12_SetComputeRootSRV(NS::RHI::IRHIComputeContext* ctx,
@@ -453,7 +488,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetComputeRootShaderResourceView(rootParameterIndex, bufferAddress);
+        }
     }
 
     static void D3D12_SetComputeRootUAV(NS::RHI::IRHIComputeContext* ctx,
@@ -462,7 +499,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetComputeRootUnorderedAccessView(rootParameterIndex, bufferAddress);
+        }
     }
 
     static void D3D12_SetDescriptorHeaps(NS::RHI::IRHIComputeContext* ctx,
@@ -471,7 +510,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12DescriptorHeap* heaps[2] = {};
         uint32 heapCount = 0;
@@ -488,7 +529,9 @@ namespace NS::D3D12RHI
         }
 
         if (heapCount > 0)
+        {
             cmdList->SetDescriptorHeaps(heapCount, heaps);
+        }
     }
 
     static NS::RHI::IRHIDescriptorHeap* D3D12_GetCBVSRVUAVHeap(NS::RHI::IRHIComputeContext* ctx)
@@ -525,7 +568,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->Dispatch(groupCountX, groupCountY, groupCountZ);
+        }
     }
 
     static void D3D12_DispatchIndirect(NS::RHI::IRHIComputeContext* /*ctx*/,
@@ -562,7 +607,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !queryHeap)
+        {
             return;
+        }
         auto* d3dHeap = static_cast<D3D12QueryHeap*>(queryHeap);
         // Timestamp: EndQueryのみ（BeginQueryは不可）
         cmdList->EndQuery(d3dHeap->GetD3DQueryHeap(), D3D12_QUERY_TYPE_TIMESTAMP, queryIndex);
@@ -572,7 +619,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !queryHeap)
+        {
             return;
+        }
         auto* d3dHeap = static_cast<D3D12QueryHeap*>(queryHeap);
         cmdList->BeginQuery(d3dHeap->GetD3DQueryHeap(), d3dHeap->GetD3DQueryType(), queryIndex);
     }
@@ -581,7 +630,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !queryHeap)
+        {
             return;
+        }
         auto* d3dHeap = static_cast<D3D12QueryHeap*>(queryHeap);
         cmdList->EndQuery(d3dHeap->GetD3DQueryHeap(), d3dHeap->GetD3DQueryType(), queryIndex);
     }
@@ -595,7 +646,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !queryHeap)
+        {
             return;
+        }
         auto* d3dHeap = static_cast<D3D12QueryHeap*>(queryHeap);
 
         // ResolveQueryData先: ユーザー指定バッファまたはヒープ内蔵Readbackバッファ
@@ -611,7 +664,9 @@ namespace NS::D3D12RHI
         }
 
         if (!destResource)
+        {
             return;
+        }
 
         cmdList->ResolveQueryData(
             d3dHeap->GetD3DQueryHeap(), d3dHeap->GetD3DQueryType(), startIndex, numQueries, destResource, destOffset);
@@ -624,11 +679,15 @@ namespace NS::D3D12RHI
                                      bool /*bWait*/)
     {
         if (!queryHeap || !outResult)
+        {
             return false;
+        }
         auto* d3dHeap = static_cast<D3D12QueryHeap*>(queryHeap);
         const void* mappedPtr = d3dHeap->GetMappedPtr();
         if (!mappedPtr)
+        {
             return false;
+        }
 
         // 永続Map済みReadbackバッファから直接読取
         uint32 resultSize = d3dHeap->GetQueryResultSize();
@@ -646,7 +705,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !pso)
+        {
             return;
+        }
         cmdList->SetPipelineState(static_cast<D3D12GraphicsPipelineState*>(pso)->GetD3DPipelineState());
     }
 
@@ -654,7 +715,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !rootSig)
+        {
             return;
+        }
         cmdList->SetGraphicsRootSignature(static_cast<D3D12RootSignature*>(rootSig)->GetD3DRootSignature());
     }
 
@@ -669,14 +732,18 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[8] = {};
         uint32 count = (numRTVs < 8) ? numRTVs : 8;
         for (uint32 i = 0; i < count; ++i)
         {
             if (rtvs && rtvs[i])
+            {
                 rtvHandles[i].ptr = rtvs[i]->GetCPUHandle().ptr;
+            }
         }
 
         const D3D12_CPU_DESCRIPTOR_HANDLE* pDsvHandle = nullptr;
@@ -700,7 +767,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !rtv)
+        {
             return;
+        }
         D3D12_CPU_DESCRIPTOR_HANDLE handle;
         handle.ptr = rtv->GetCPUHandle().ptr;
         cmdList->ClearRenderTargetView(handle, color, 0, nullptr);
@@ -715,7 +784,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dsv)
+        {
             return;
+        }
         D3D12_CPU_DESCRIPTOR_HANDLE handle;
         handle.ptr = dsv->GetCPUHandle().ptr;
         D3D12_CLEAR_FLAGS flags = static_cast<D3D12_CLEAR_FLAGS>(0);
@@ -736,9 +807,13 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !viewports || count == 0)
+        {
             return;
+        }
 
         // RHIViewportとD3D12_VIEWPORTは同じレイアウト
+        static_assert(sizeof(NS::RHI::RHIViewport) == sizeof(D3D12_VIEWPORT),
+                      "RHIViewport and D3D12_VIEWPORT must have the same size");
         cmdList->RSSetViewports(count, reinterpret_cast<const D3D12_VIEWPORT*>(viewports));
     }
 
@@ -746,9 +821,13 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !rects || count == 0)
+        {
             return;
+        }
 
         // D3D12_RECTはLONG型、RHIRectはint32型 — 同レイアウト想定
+        static_assert(sizeof(NS::RHI::RHIRect) == sizeof(D3D12_RECT),
+                      "RHIRect and D3D12_RECT must have the same size");
         cmdList->RSSetScissorRects(count, reinterpret_cast<const D3D12_RECT*>(rects));
     }
 
@@ -763,7 +842,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !views || numBuffers == 0)
+        {
             return;
+        }
 
         // RHIVertexBufferViewとD3D12_VERTEX_BUFFER_VIEWは同じレイアウト
         cmdList->IASetVertexBuffers(startSlot, numBuffers, reinterpret_cast<const D3D12_VERTEX_BUFFER_VIEW*>(views));
@@ -773,7 +854,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         if (view)
         {
@@ -794,7 +877,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         D3D12_PRIMITIVE_TOPOLOGY d3dTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         switch (topology)
@@ -832,7 +917,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
+        }
     }
 
     static void D3D12_DrawIndexed(NS::RHI::IRHICommandContext* ctx,
@@ -844,7 +931,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
+        }
     }
 
     //=========================================================================
@@ -900,7 +989,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetGraphicsRootConstantBufferView(rootParameterIndex, bufferLocation);
+        }
     }
 
     static void D3D12_SetGraphicsRootSRV(NS::RHI::IRHICommandContext* ctx,
@@ -909,7 +1000,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetGraphicsRootShaderResourceView(rootParameterIndex, bufferLocation);
+        }
     }
 
     static void D3D12_SetGraphicsRootUAV(NS::RHI::IRHICommandContext* ctx,
@@ -918,7 +1011,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetGraphicsRootUnorderedAccessView(rootParameterIndex, bufferLocation);
+        }
     }
 
     static void D3D12_SetGraphicsRoot32BitConstants(NS::RHI::IRHICommandContext* ctx,
@@ -929,7 +1024,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->SetGraphicsRoot32BitConstants(rootParameterIndex, num32BitValues, data, destOffset);
+        }
     }
 
     //=========================================================================
@@ -940,14 +1037,18 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->OMSetBlendFactor(factor);
+        }
     }
 
     static void D3D12_SetStencilRef(NS::RHI::IRHICommandContext* ctx, uint32 refValue)
     {
         auto* cmdList = GetCmdList(ctx);
         if (cmdList)
+        {
             cmdList->OMSetStencilRef(refValue);
+        }
     }
 
     static void D3D12_SetLineWidth(NS::RHI::IRHICommandContext* /*ctx*/, float /*width*/)
@@ -968,7 +1069,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12Resource* d3dResource = nullptr;
         if (buffer)
@@ -1005,16 +1108,22 @@ namespace NS::D3D12RHI
                                                            const NS::RHI::RHIAccelerationStructureBuildDesc* desc)
     {
         if (!desc || !desc->dest)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         // ID3D12GraphicsCommandList4が必要
         ID3D12GraphicsCommandList4* cmdList4 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4))))
+        {
             return;
+        }
 
         // ビルド入力の変換
         constexpr uint32 kMaxGeometries = 64;
@@ -1045,15 +1154,21 @@ namespace NS::D3D12RHI
                                                           NS::RHI::ERHIRaytracingCopyMode mode)
     {
         if (!dest || !source)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList4* cmdList4 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4))))
+        {
             return;
+        }
 
         auto* d3dDest = static_cast<D3D12AccelerationStructure*>(dest);
         auto* d3dSrc = static_cast<D3D12AccelerationStructure*>(source);
@@ -1067,15 +1182,21 @@ namespace NS::D3D12RHI
                                                  NS::RHI::IRHIRaytracingPipelineState* pso)
     {
         if (!pso)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList4* cmdList4 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4))))
+        {
             return;
+        }
 
         auto* d3dPSO = static_cast<D3D12RaytracingPipelineState*>(pso);
         cmdList4->SetPipelineState1(d3dPSO->GetStateObject());
@@ -1085,15 +1206,21 @@ namespace NS::D3D12RHI
     static void D3D12_DispatchRays(NS::RHI::IRHICommandContext* ctx, const NS::RHI::RHIDispatchRaysDesc* desc)
     {
         if (!desc)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList4* cmdList4 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4))))
+        {
             return;
+        }
 
         D3D12_DISPATCH_RAYS_DESC d3dDesc{};
         d3dDesc.RayGenerationShaderRecord.StartAddress = desc->rayGenShaderTable.startAddress;
@@ -1122,15 +1249,21 @@ namespace NS::D3D12RHI
     static void D3D12_SetWorkGraphPipeline(NS::RHI::IRHICommandContext* ctx, NS::RHI::IRHIWorkGraphPipeline* pipeline)
     {
         if (!pipeline)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList10* cmdList10 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList10))))
+        {
             return;
+        }
 
         auto* wg = static_cast<D3D12WorkGraphPipeline*>(pipeline);
         cmdList10->SetPipelineState1(wg->GetStateObject());
@@ -1243,11 +1376,15 @@ namespace NS::D3D12RHI
     static void D3D12_SetMeshPipelineState(NS::RHI::IRHICommandContext* ctx, NS::RHI::IRHIMeshPipelineState* pso)
     {
         if (!pso)
+        {
             return;
+        }
 
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         auto* d3dPSO = static_cast<D3D12MeshPipelineState*>(pso);
         cmdList->SetPipelineState(d3dPSO->GetD3DPipelineState());
@@ -1260,11 +1397,15 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList6* cmdList6 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList6))))
+        {
             return;
+        }
 
         cmdList6->DispatchMesh(groupCountX, groupCountY, groupCountZ);
         cmdList6->Release();
@@ -1297,11 +1438,15 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList5* cmdList5 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList5))))
+        {
             return;
+        }
 
         // D3D12_SHADING_RATE is same encoding as ERHIShadingRate
         D3D12_SHADING_RATE d3dRate = static_cast<D3D12_SHADING_RATE>(rate);
@@ -1345,11 +1490,15 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList)
+        {
             return;
+        }
 
         ID3D12GraphicsCommandList5* cmdList5 = nullptr;
         if (FAILED(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList5))))
+        {
             return;
+        }
 
         ID3D12Resource* d3dResource = nullptr;
         if (vrsImage)
@@ -1392,7 +1541,9 @@ namespace NS::D3D12RHI
                                               NS::RHI::RHIRenderPassStatistics* outStats)
     {
         if (outStats)
+        {
             return ctx->GetRenderPassStatistics(*outStats);
+        }
         return false;
     }
 
@@ -1413,12 +1564,16 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher)
+        {
             return;
+        }
 
         batcher->AddTransitionFromRHI(resource, before, after, subresource);
 
         if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+        {
             FlushContextBarriers(ctx);
+        }
     }
 
     static void D3D12_TransitionBarriers(NS::RHI::IRHICommandContext* ctx,
@@ -1427,7 +1582,9 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher || !barriers || count == 0)
+        {
             return;
+        }
 
         for (uint32 i = 0; i < count; ++i)
         {
@@ -1438,7 +1595,9 @@ namespace NS::D3D12RHI
                                           barriers[i].flags);
 
             if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+            {
                 FlushContextBarriers(ctx);
+            }
         }
     }
 
@@ -1448,13 +1607,17 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher || !barriers || count == 0)
+        {
             return;
+        }
 
         for (uint32 i = 0; i < count; ++i)
         {
             batcher->AddUAV(GetD3D12Resource(barriers[i].resource));
             if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+            {
                 FlushContextBarriers(ctx);
+            }
         }
     }
 
@@ -1464,14 +1627,18 @@ namespace NS::D3D12RHI
     {
         auto* batcher = GetBatcher(ctx);
         if (!batcher || !barriers || count == 0)
+        {
             return;
+        }
 
         for (uint32 i = 0; i < count; ++i)
         {
             batcher->AddAliasing(GetD3D12Resource(barriers[i].resourceBefore),
                                  GetD3D12Resource(barriers[i].resourceAfter));
             if (batcher->GetPendingCount() >= D3D12BarrierBatcher::kMaxBatchedBarriers)
+            {
                 FlushContextBarriers(ctx);
+            }
         }
     }
 
@@ -1503,20 +1670,29 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !srcData || srcSize == 0)
+        {
             return;
+        }
 
         auto* dstBuf = static_cast<D3D12Buffer*>(dst);
         auto* device = dstBuf->GetGpuResource().GetDevice();
 
-        // 一時アップロードバッファ作成
         auto uploadBuffer = D3D12UploadHelper::CreateUploadBuffer(device, srcData, srcSize);
         if (!uploadBuffer)
+        {
             return;
+        }
 
         cmdList->CopyBufferRegion(dstBuf->GetD3DResource(), dstOffset, uploadBuffer.Get(), 0, srcSize);
 
-        // 一時バッファは遅延削除（GPUが使い終わるまで保持が必要）
-        // TODO: 遅延削除キューに登録（現時点ではComPtrのスコープで保持）
+        // コンテキストに一時バッファを保持し、GPU完了まで解放を遅延
+        auto* gfxCtx = dynamic_cast<D3D12CommandContext*>(ctx);
+        if (gfxCtx)
+        {
+            gfxCtx->DeferRelease(std::move(uploadBuffer));
+        } else if (auto* compCtx = dynamic_cast<D3D12ComputeContext*>(ctx)) {
+            compCtx->DeferRelease(std::move(uploadBuffer));
+        }
     }
 
     static void D3D12_UploadTexture(NS::RHI::IRHIUploadContext* ctx,
@@ -1529,7 +1705,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !srcData)
+        {
             return;
+        }
 
         auto* dstTex = static_cast<D3D12Texture*>(dst);
         auto* device = dstTex->GetGpuResource().GetDevice();
@@ -1537,12 +1715,12 @@ namespace NS::D3D12RHI
         // サブリソースレイアウト取得
         auto layout = dstTex->GetSubresourceLayout(dstMip, dstSlice);
 
-        // 一時アップロードバッファ作成
         auto uploadBuffer = D3D12UploadHelper::CreateUploadBuffer(device, srcData, layout.size);
         if (!uploadBuffer)
+        {
             return;
+        }
 
-        // テクスチャコピー設定
         D3D12_TEXTURE_COPY_LOCATION dstLoc{};
         dstLoc.pResource = dstTex->GetD3DResource();
         dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
@@ -1559,6 +1737,15 @@ namespace NS::D3D12RHI
         srcLoc.PlacedFootprint.Footprint.RowPitch = srcRowPitch > 0 ? srcRowPitch : layout.rowPitch;
 
         cmdList->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+
+        // コンテキストに一時バッファを保持し、GPU完了まで解放を遅延
+        auto* gfxCtx = dynamic_cast<D3D12CommandContext*>(ctx);
+        if (gfxCtx)
+        {
+            gfxCtx->DeferRelease(std::move(uploadBuffer));
+        } else if (auto* compCtx = dynamic_cast<D3D12ComputeContext*>(ctx)) {
+            compCtx->DeferRelease(std::move(uploadBuffer));
+        }
     }
 
     static void D3D12_CopyStagingToTexture(NS::RHI::IRHIUploadContext* ctx,
@@ -1573,7 +1760,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !staging)
+        {
             return;
+        }
 
         auto* dstTex = static_cast<D3D12Texture*>(dst);
         auto* srcBuf = static_cast<D3D12Buffer*>(staging);
@@ -1593,9 +1782,13 @@ namespace NS::D3D12RHI
         srcLoc.PlacedFootprint.Footprint.Depth = 1;
         srcLoc.PlacedFootprint.Footprint.RowPitch = rowPitch;
         if (srcLoc.PlacedFootprint.Footprint.Width == 0)
+        {
             srcLoc.PlacedFootprint.Footprint.Width = 1;
+        }
         if (srcLoc.PlacedFootprint.Footprint.Height == 0)
+        {
             srcLoc.PlacedFootprint.Footprint.Height = 1;
+        }
 
         cmdList->CopyTextureRegion(&dstLoc,
                                    static_cast<UINT>(dstOffset.x),
@@ -1614,7 +1807,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetCmdList(ctx);
         if (!cmdList || !dst || !staging)
+        {
             return;
+        }
 
         auto* d3dDst = static_cast<D3D12Buffer*>(dst)->GetD3DResource();
         auto* d3dSrc = static_cast<D3D12Buffer*>(staging)->GetD3DResource();

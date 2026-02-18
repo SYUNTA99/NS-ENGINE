@@ -5,6 +5,7 @@
 #include "D3D12Barriers.h"
 #include "D3D12RHIPrivate.h"
 #include "RHI/Public/IRHICommandContext.h"
+#include <vector>
 
 namespace NS::D3D12RHI
 {
@@ -73,6 +74,9 @@ namespace NS::D3D12RHI
         /// 蓄積バリアをフラッシュ
         void FlushBarriers();
 
+        /// 一時リソースをコンテキスト寿命まで保持（GPU参照中の早期解放を防止）
+        void DeferRelease(ComPtr<ID3D12Resource> resource) { pendingResources_.push_back(std::move(resource)); }
+
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::ERHIQueueType queueType_ = NS::RHI::ERHIQueueType::Graphics;
@@ -82,6 +86,7 @@ namespace NS::D3D12RHI
         bool inRenderPass_ = false;
         bool useEnhancedBarriers_ = false;
         D3D12BarrierBatcher legacyBatcher_;
+        std::vector<ComPtr<ID3D12Resource>> pendingResources_;
     };
 
     //=========================================================================
@@ -135,6 +140,9 @@ namespace NS::D3D12RHI
         /// 蓄積バリアをフラッシュ
         void FlushBarriers();
 
+        /// 一時リソースをコンテキスト寿命まで保持（GPU参照中の早期解放を防止）
+        void DeferRelease(ComPtr<ID3D12Resource> resource) { pendingResources_.push_back(std::move(resource)); }
+
     private:
         D3D12Device* device_ = nullptr;
         D3D12CommandList* commandList_ = nullptr;
@@ -142,6 +150,7 @@ namespace NS::D3D12RHI
         bool recording_ = false;
         bool useEnhancedBarriers_ = false;
         D3D12BarrierBatcher legacyBatcher_;
+        std::vector<ComPtr<ID3D12Resource>> pendingResources_;
     };
 
 } // namespace NS::D3D12RHI

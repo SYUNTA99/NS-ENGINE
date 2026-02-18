@@ -38,7 +38,9 @@ namespace NS::D3D12RHI
     void D3D12CommandContext::Begin(NS::RHI::IRHICommandAllocator* allocator)
     {
         if (!device_ || !allocator)
+        {
             return;
+        }
 
         allocator_ = allocator;
         legacyBatcher_.Reset();
@@ -47,13 +49,17 @@ namespace NS::D3D12RHI
         commandList_ = static_cast<D3D12CommandList*>(device_->ObtainCommandList(allocator, nullptr));
 
         if (commandList_)
+        {
             recording_ = true;
+        }
     }
 
     NS::RHI::IRHICommandList* D3D12CommandContext::Finish()
     {
         if (!commandList_)
+        {
             return nullptr;
+        }
 
         // 未発行バリアをフラッシュ
         FlushBarriers();
@@ -79,6 +85,7 @@ namespace NS::D3D12RHI
         allocator_ = nullptr;
         recording_ = false;
         inRenderPass_ = false;
+        pendingResources_.clear();
     }
 
     bool D3D12CommandContext::GetRenderPassStatistics(NS::RHI::RHIRenderPassStatistics& /*outStats*/) const
@@ -90,7 +97,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetD3DCommandList();
         if (!cmdList)
+        {
             return;
+        }
 
         legacyBatcher_.Flush(cmdList);
     }
@@ -129,7 +138,9 @@ namespace NS::D3D12RHI
     void D3D12ComputeContext::Begin(NS::RHI::IRHICommandAllocator* allocator)
     {
         if (!device_ || !allocator)
+        {
             return;
+        }
 
         allocator_ = allocator;
         legacyBatcher_.Reset();
@@ -137,13 +148,17 @@ namespace NS::D3D12RHI
         commandList_ = static_cast<D3D12CommandList*>(device_->ObtainCommandList(allocator, nullptr));
 
         if (commandList_)
+        {
             recording_ = true;
+        }
     }
 
     NS::RHI::IRHICommandList* D3D12ComputeContext::Finish()
     {
         if (!commandList_)
+        {
             return nullptr;
+        }
 
         // 未発行バリアをフラッシュ
         FlushBarriers();
@@ -161,7 +176,9 @@ namespace NS::D3D12RHI
     {
         auto* cmdList = GetD3DCommandList();
         if (!cmdList)
+        {
             return;
+        }
 
         legacyBatcher_.Flush(cmdList);
     }
@@ -176,6 +193,7 @@ namespace NS::D3D12RHI
         commandList_ = nullptr;
         allocator_ = nullptr;
         recording_ = false;
+        pendingResources_.clear();
     }
 
 } // namespace NS::D3D12RHI

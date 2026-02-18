@@ -602,3 +602,14 @@ D3D12バックエンド実装計画の全53サブ計画が完了。
 - Phase 2（機能拡張 29-39）: complete
 - Phase 3（先進機能 40-53）: complete
 - ビルド検証: Debug/Release/Burst全構成0エラー
+
+### コードレビュー修正 — complete (2026-02-19)
+- 有効なバグ10件を修正（P0: 6件、P1: 2件、P2/P3: 2件）
+- Debug/Release D3D12RHI.lib 0エラー
+
+### Lint修正（readability-braces-around-statements） — complete (2026-02-19)
+- clang-tidy --fix-errors で8ファイルに332箇所のブレース追加
+- K&R→Allman スタイル変換スクリプトで326箇所整形
+- 対象: D3D12Barriers.cpp(42), D3D12View.cpp(30), D3D12Sampler.cpp(2), D3D12Fence.cpp(20), D3D12RootSignature.cpp(12), D3D12CommandContext.cpp(16), D3D12CommandAllocator.cpp(8), D3D12Dispatch.cpp(202)
+- 全8ファイルで readability-braces-around-statements 警告 0件
+- Debug/Release D3D12RHI.lib 0エラー

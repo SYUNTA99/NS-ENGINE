@@ -1,38 +1,39 @@
-# タスク計画: D3D12 Backend 実装
+# タスク計画: D3D12RHI コードレビュー修正
 
 Mode: implementation
-実装中: [d3d12-backend/README.md](../d3d12-backend/README.md)
 
-## 状態: 全53サブ計画完了
+## 状態: complete
 
 ## ゴール
 
-NS-ENGINEのRHIフロントエンド（87ヘッダー + 50+ Private/*.cppスタブ）に対するD3D12バックエンド実装。
+コードレビューで検出された有効な10件のバグ・品質問題を修正する。
 
-## 完了済みフェーズ
+## 修正結果
 
-### Phase 1: コア基盤（三角形描画まで）— 28サブ計画 ✓
-- サブ計画01-28: 全complete
-- D3D12デバイス初期化、コマンド実行、リソース管理、PSO、SwapChain、三角形描画
+### 即座に修正（正確性バグ）— 全完了
 
-### Phase 2: 機能拡張 — 11サブ計画 ✓
-- サブ計画29-39: 全complete
-- Enhanced Barriers、Bindless、QueryHeap、Residency、DeviceLost
+| # | ファイル | 問題 | 修正内容 |
+|---|---------|------|---------|
+| 1 | D3D12Barriers.h/cpp | バリアサイレントドロップ | バッチ満杯時にauto-flush→再追加。SetCommandList()でcmdListバインド |
+| 2 | D3D12CommandContext.h/cpp + D3D12Dispatch.cpp | アップロードバッファUAF | DeferRelease()で一時ComPtrをコンテキストに保持、Reset()でクリア |
+| 3 | D3D12View.h/cpp + D3D12Sampler.h/cpp | ディスクリプタヒープリーク | ComPtr<ID3D12DescriptorHeap> descriptorHeap_をメンバに保持。Detach()廃止 |
+| 4 | D3D12Fence.cpp | HRESULT未チェック | Signal/SetEventOnCompletionの戻り値をチェック+LOG_HRESULT |
+| 5 | D3D12RootSignature.cpp | paramCount_不整合 | 実際にコピーした数をparamCount_/staticSamplerCount_に設定+LOG_WARN |
+| 6 | D3D12Dispatch.cpp | reinterpret_cast安全性 | static_assert(sizeof一致)をViewport/Rect変換に追加 |
 
-### Phase 3: 先進機能 — 14サブ計画 ✓
-- サブ計画40-53: 全complete
-- レイトレーシング、Work Graphs、Mesh Shader、VRS、DispatchTable検証、統合テスト
+### 設計改善 — 完了
 
-## ビルド検証結果
+| # | ファイル | 問題 | 修正内容 |
+|---|---------|------|---------|
+| 7 | D3D12Dispatch.cpp | dynamic_castホットパス | GetQueueType()判別+static_castに変更（毎フレーム数百回のRTTI回避） |
+
+### ドキュメント・防御的修正 — 完了
+
+| # | ファイル | 問題 | 修正内容 |
+|---|---------|------|---------|
+| 8 | D3D12CommandAllocator.cpp | スレッド安全性 | 単一スレッド前提のコメント追加 |
+
+## ビルド検証
 
 - Debug: D3D12RHI.lib 0エラー ✓
 - Release: D3D12RHI.lib 0エラー ✓
-- Burst: D3D12RHI.lib 0エラー ✓
-- E2Eランタイムテスト: engine.vcxproj既存エラーのため未実施
-
-## 成果物
-
-- D3D12RHIモジュール: ~35ヘッダー + ~35 cpp
-- 127 DispatchTable関数ポインタ全登録・IsValid検証済み
-- NS_RHI_STATIC_BACKEND=D3D12 Shipping構成対応
-- RHIフロントエンドバグ修正 30+件（protectedコンストラクタ、enum移動、include追加等）

@@ -47,7 +47,9 @@ namespace NS::D3D12RHI
     bool D3D12CommandAllocator::IsInUse() const
     {
         if (!waitFence_)
+        {
             return false;
+        }
 
         auto* d3dFence = static_cast<D3D12Fence*>(waitFence_);
         return d3dFence->GetCompletedValue() < waitFenceValue_;
@@ -82,9 +84,12 @@ namespace NS::D3D12RHI
 
     NS::RHI::IRHICommandAllocator* D3D12CommandAllocatorPool::Obtain(NS::RHI::ERHIQueueType queueType)
     {
+        // 注意: このプールは単一スレッドからのみ呼び出すこと（同期機構なし）
         uint32 idx = static_cast<uint32>(queueType);
         if (idx >= kQueueTypeCount)
+        {
             return nullptr;
+        }
 
         // 利用可能なアロケーターがあればそれを使う
         if (!available_[idx].empty())
@@ -112,7 +117,9 @@ namespace NS::D3D12RHI
                                             uint64 fenceValue)
     {
         if (!allocator)
+        {
             return;
+        }
 
         allocator->SetWaitFence(fence, fenceValue);
 
@@ -155,7 +162,9 @@ namespace NS::D3D12RHI
     {
         uint32 idx = static_cast<uint32>(queueType);
         if (idx >= kQueueTypeCount)
+        {
             return 0;
+        }
         return static_cast<uint32>(available_[idx].size());
     }
 

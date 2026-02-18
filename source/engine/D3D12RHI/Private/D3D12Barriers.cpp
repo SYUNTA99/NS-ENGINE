@@ -23,13 +23,19 @@ namespace NS::D3D12RHI
     ID3D12Resource* GetD3D12Resource(NS::RHI::IRHIResource* resource)
     {
         if (!resource)
+        {
             return nullptr;
+        }
 
         auto type = resource->GetResourceType();
         if (type == NS::RHI::ERHIResourceType::Buffer)
+        {
             return static_cast<D3D12Buffer*>(resource)->GetD3DResource();
+        }
         if (type == NS::RHI::ERHIResourceType::Texture)
+        {
             return static_cast<D3D12Texture*>(resource)->GetD3DResource();
+        }
         return nullptr;
     }
 
@@ -44,7 +50,9 @@ namespace NS::D3D12RHI
                                              D3D12_RESOURCE_BARRIER_FLAGS flags)
     {
         if (!resource || before == after)
+        {
             return 0;
+        }
 
         // 逆遷移キャンセル最適化:
         // 直前のバリアが同一リソース・同一サブリソースで逆方向の遷移なら両方除去
@@ -61,7 +69,13 @@ namespace NS::D3D12RHI
         }
 
         if (!HasCapacity())
-            return -1;
+        {
+            FlushIfFull();
+            if (!HasCapacity())
+            {
+                return -1;
+            }
+        }
 
         auto& barrier = barriers_[count_++];
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -76,7 +90,13 @@ namespace NS::D3D12RHI
     void D3D12BarrierBatcher::AddUAV(ID3D12Resource* resource)
     {
         if (!HasCapacity())
+        {
+            FlushIfFull();
+        }
+        if (!HasCapacity())
+        {
             return;
+        }
 
         auto& barrier = barriers_[count_++];
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
@@ -87,7 +107,13 @@ namespace NS::D3D12RHI
     void D3D12BarrierBatcher::AddAliasing(ID3D12Resource* before, ID3D12Resource* after)
     {
         if (!HasCapacity())
+        {
+            FlushIfFull();
+        }
+        if (!HasCapacity())
+        {
             return;
+        }
 
         auto& barrier = barriers_[count_++];
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
@@ -104,7 +130,9 @@ namespace NS::D3D12RHI
     {
         auto* d3dRes = GetD3D12Resource(resource);
         if (!d3dRes)
+        {
             return;
+        }
 
         D3D12_RESOURCE_STATES stateBefore = D3D12GpuResource::ConvertToD3D12State(before);
         D3D12_RESOURCE_STATES stateAfter = D3D12GpuResource::ConvertToD3D12State(after);
@@ -118,7 +146,9 @@ namespace NS::D3D12RHI
     void D3D12BarrierBatcher::Flush(ID3D12GraphicsCommandList* cmdList)
     {
         if (count_ == 0 || !cmdList)
+        {
             return;
+        }
 
         cmdList->ResourceBarrier(count_, barriers_);
         count_ = 0;
@@ -293,12 +323,18 @@ namespace NS::D3D12RHI
     //=========================================================================
 
     void D3D12EnhancedBarrierBatcher::AddGlobal(D3D12_BARRIER_SYNC syncBefore,
-                                                 D3D12_BARRIER_SYNC syncAfter,
-                                                 D3D12_BARRIER_ACCESS accessBefore,
-                                                 D3D12_BARRIER_ACCESS accessAfter)
+                                                D3D12_BARRIER_SYNC syncAfter,
+                                                D3D12_BARRIER_ACCESS accessBefore,
+                                                D3D12_BARRIER_ACCESS accessAfter)
     {
         if (globalCount_ >= kMaxBarriers)
+        {
+            FlushIfFull();
+        }
+        if (globalCount_ >= kMaxBarriers)
+        {
             return;
+        }
 
         auto& b = globalBarriers_[globalCount_++];
         b.SyncBefore = syncBefore;
@@ -308,17 +344,23 @@ namespace NS::D3D12RHI
     }
 
     void D3D12EnhancedBarrierBatcher::AddTexture(ID3D12Resource* resource,
-                                                  D3D12_BARRIER_SYNC syncBefore,
-                                                  D3D12_BARRIER_SYNC syncAfter,
-                                                  D3D12_BARRIER_ACCESS accessBefore,
-                                                  D3D12_BARRIER_ACCESS accessAfter,
-                                                  D3D12_BARRIER_LAYOUT layoutBefore,
-                                                  D3D12_BARRIER_LAYOUT layoutAfter,
-                                                  uint32 subresource,
-                                                  D3D12_TEXTURE_BARRIER_FLAGS flags)
+                                                 D3D12_BARRIER_SYNC syncBefore,
+                                                 D3D12_BARRIER_SYNC syncAfter,
+                                                 D3D12_BARRIER_ACCESS accessBefore,
+                                                 D3D12_BARRIER_ACCESS accessAfter,
+                                                 D3D12_BARRIER_LAYOUT layoutBefore,
+                                                 D3D12_BARRIER_LAYOUT layoutAfter,
+                                                 uint32 subresource,
+                                                 D3D12_TEXTURE_BARRIER_FLAGS flags)
     {
         if (textureCount_ >= kMaxBarriers)
+        {
+            FlushIfFull();
+        }
+        if (textureCount_ >= kMaxBarriers)
+        {
             return;
+        }
 
         auto& b = textureBarriers_[textureCount_++];
         b.SyncBefore = syncBefore;
@@ -338,15 +380,21 @@ namespace NS::D3D12RHI
     }
 
     void D3D12EnhancedBarrierBatcher::AddBuffer(ID3D12Resource* resource,
-                                                 D3D12_BARRIER_SYNC syncBefore,
-                                                 D3D12_BARRIER_SYNC syncAfter,
-                                                 D3D12_BARRIER_ACCESS accessBefore,
-                                                 D3D12_BARRIER_ACCESS accessAfter,
-                                                 uint64 offset,
-                                                 uint64 size)
+                                                D3D12_BARRIER_SYNC syncBefore,
+                                                D3D12_BARRIER_SYNC syncAfter,
+                                                D3D12_BARRIER_ACCESS accessBefore,
+                                                D3D12_BARRIER_ACCESS accessAfter,
+                                                uint64 offset,
+                                                uint64 size)
     {
         if (bufferCount_ >= kMaxBarriers)
+        {
+            FlushIfFull();
+        }
+        if (bufferCount_ >= kMaxBarriers)
+        {
             return;
+        }
 
         auto& b = bufferBarriers_[bufferCount_++];
         b.SyncBefore = syncBefore;
@@ -375,7 +423,9 @@ namespace NS::D3D12RHI
         auto resourceType = desc.resource->GetResourceType();
         auto* d3dRes = GetD3D12Resource(desc.resource);
         if (!d3dRes)
+        {
             return;
+        }
 
         if (resourceType == NS::RHI::ERHIResourceType::Texture)
         {
@@ -384,7 +434,13 @@ namespace NS::D3D12RHI
             D3D12_BARRIER_LAYOUT layoutAfter = ConvertBarrierLayout(desc.layoutAfter);
 
             if (textureCount_ >= kMaxBarriers)
+            {
+                FlushIfFull();
+            }
+            if (textureCount_ >= kMaxBarriers)
+            {
                 return;
+            }
 
             auto& b = textureBarriers_[textureCount_++];
             b.SyncBefore = syncBefore;
@@ -429,7 +485,9 @@ namespace NS::D3D12RHI
     void D3D12EnhancedBarrierBatcher::Flush(ID3D12GraphicsCommandList7* cmdList)
     {
         if (!cmdList || IsEmpty())
+        {
             return;
+        }
 
         D3D12_BARRIER_GROUP groups[3] = {};
         uint32 groupCount = 0;

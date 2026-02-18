@@ -42,6 +42,7 @@ namespace NS::D3D12RHI
         D3D12Device* device_ = nullptr;
         NS::RHI::RHISamplerDesc desc_{};
         NS::RHI::RHICPUDescriptorHandle cpuHandle_{};
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
     };
 
 } // namespace NS::D3D12RHI

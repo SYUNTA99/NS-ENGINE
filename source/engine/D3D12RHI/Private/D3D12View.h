@@ -26,6 +26,7 @@ namespace NS::D3D12RHI
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::IRHIResource* resource_ = nullptr;
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
         bool isBufferView_ = false;
     };
 
@@ -49,6 +50,7 @@ namespace NS::D3D12RHI
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::IRHIResource* resource_ = nullptr;
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
         NS::RHI::IRHIBuffer* counterBuffer_ = nullptr;
         uint64 counterOffset_ = 0;
         bool isBufferView_ = false;
@@ -73,6 +75,7 @@ namespace NS::D3D12RHI
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::IRHITexture* texture_ = nullptr;
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
         NS::RHI::ERHIPixelFormat format_ = NS::RHI::ERHIPixelFormat::Unknown;
         uint32 mipSlice_ = 0;
         uint32 firstArraySlice_ = 0;
@@ -99,6 +102,7 @@ namespace NS::D3D12RHI
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::IRHITexture* texture_ = nullptr;
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
         NS::RHI::ERHIPixelFormat format_ = NS::RHI::ERHIPixelFormat::Unknown;
         NS::RHI::ERHIDSVFlags flags_ = NS::RHI::ERHIDSVFlags::None;
         uint32 mipSlice_ = 0;
@@ -123,6 +127,7 @@ namespace NS::D3D12RHI
     private:
         D3D12Device* device_ = nullptr;
         NS::RHI::IRHIBuffer* buffer_ = nullptr;
+        ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
         NS::RHI::MemoryOffset offset_ = 0;
         NS::RHI::MemorySize size_ = 0;
     };

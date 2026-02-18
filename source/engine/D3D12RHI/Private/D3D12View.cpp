@@ -54,7 +54,9 @@ namespace NS::D3D12RHI
                                                  const char* /*debugName*/)
     {
         if (!device || !desc.buffer)
+        {
             return false;
+        }
 
         device_ = device;
         resource_ = desc.buffer;
@@ -97,7 +99,7 @@ namespace NS::D3D12RHI
             break;
         }
 
-        // 暫定: 1個だけのヒープを作成してビュー作成
+        // 1個ヒープでビュー作成
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         heapDesc.NumDescriptors = 1;
@@ -106,13 +108,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateShaderResourceView(d3dBuf->GetD3DResource(), &srvDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach(); // ビューが生存する限りヒープも保持（暫定）
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -122,7 +126,9 @@ namespace NS::D3D12RHI
                                                   const char* /*debugName*/)
     {
         if (!device || !desc.texture)
+        {
             return false;
+        }
 
         device_ = device;
         resource_ = desc.texture;
@@ -199,7 +205,7 @@ namespace NS::D3D12RHI
             break;
         }
 
-        // 暫定: 1個ヒープでビュー作成
+        // 1個ヒープでビュー作成
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         heapDesc.NumDescriptors = 1;
@@ -208,13 +214,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateShaderResourceView(d3dTex->GetD3DResource(), &srvDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -233,7 +241,9 @@ namespace NS::D3D12RHI
                                                   const char* /*debugName*/)
     {
         if (!device || !desc.buffer)
+        {
             return false;
+        }
 
         device_ = device;
         resource_ = desc.buffer;
@@ -279,7 +289,9 @@ namespace NS::D3D12RHI
 
         ID3D12Resource* counterResource = nullptr;
         if (desc.counterBuffer)
+        {
             counterResource = static_cast<D3D12Buffer*>(desc.counterBuffer)->GetD3DResource();
+        }
 
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -289,14 +301,16 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateUnorderedAccessView(
             d3dBuf->GetD3DResource(), counterResource, &uavDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -306,7 +320,9 @@ namespace NS::D3D12RHI
                                                    const char* /*debugName*/)
     {
         if (!device || !desc.texture)
+        {
             return false;
+        }
 
         device_ = device;
         resource_ = desc.texture;
@@ -331,13 +347,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateUnorderedAccessView(d3dTex->GetD3DResource(), nullptr, &uavDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -356,7 +374,9 @@ namespace NS::D3D12RHI
                                      const char* /*debugName*/)
     {
         if (!device || !desc.texture)
+        {
             return false;
+        }
 
         device_ = device;
         texture_ = desc.texture;
@@ -423,13 +443,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateRenderTargetView(d3dTex->GetD3DResource(), &rtvDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -448,7 +470,9 @@ namespace NS::D3D12RHI
                                      const char* /*debugName*/)
     {
         if (!device || !desc.texture)
+        {
             return false;
+        }
 
         device_ = device;
         texture_ = desc.texture;
@@ -513,13 +537,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateDepthStencilView(d3dTex->GetD3DResource(), &dsvDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
@@ -538,7 +564,9 @@ namespace NS::D3D12RHI
                                        const char* /*debugName*/)
     {
         if (!device)
+        {
             return false;
+        }
 
         device_ = device;
         buffer_ = desc.buffer;
@@ -576,13 +604,15 @@ namespace NS::D3D12RHI
         ComPtr<ID3D12DescriptorHeap> heap;
         HRESULT hr = device_->GetD3DDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
         if (FAILED(hr))
+        {
             return false;
+        }
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
         device_->GetD3DDevice()->CreateConstantBufferView(&cbvDesc, cpuHandle);
 
         m_cpuHandle.ptr = cpuHandle.ptr;
-        heap.Detach();
+        descriptorHeap_ = std::move(heap);
 
         return true;
     }
