@@ -14,18 +14,18 @@ namespace NS
     /// マルチスレッド環境では値が即座に古くなる可能性がある。
     struct PlatformMemoryStats
     {
-        uint64 availablePhysical; ///< 利用可能な物理メモリ（バイト）
-        uint64 availableVirtual;  ///< 利用可能な仮想メモリ（バイト）
-        uint64 usedPhysical;      ///< 使用中の物理メモリ（バイト）
-        uint64 usedVirtual;       ///< 使用中の仮想メモリ（バイト）
-        uint64 peakUsedPhysical;  ///< ピーク物理メモリ使用量（バイト）
-        uint64 peakUsedVirtual;   ///< ピーク仮想メモリ使用量（バイト）
+        uint64 availablePhysical{0}; ///< 利用可能な物理メモリ（バイト）
+        uint64 availableVirtual{0};  ///< 利用可能な仮想メモリ（バイト）
+        uint64 usedPhysical{0};      ///< 使用中の物理メモリ（バイト）
+        uint64 usedVirtual{0};       ///< 使用中の仮想メモリ（バイト）
+        uint64 peakUsedPhysical{0};  ///< ピーク物理メモリ使用量（バイト）
+        uint64 peakUsedVirtual{0};   ///< ピーク仮想メモリ使用量（バイト）
 
         /// デフォルト初期化
         PlatformMemoryStats()
-            : availablePhysical(0), availableVirtual(0), usedPhysical(0), usedVirtual(0), peakUsedPhysical(0),
-              peakUsedVirtual(0)
-        {}
+            
+              
+        = default;
     };
 
     /// システムメモリの定数情報
@@ -33,19 +33,18 @@ namespace NS
     /// Init()後は不変。スレッドセーフに読み取り可能。
     struct PlatformMemoryConstants
     {
-        uint64 totalPhysical;         ///< 総物理メモリ（バイト）
-        uint64 totalVirtual;          ///< 総仮想メモリ（バイト）
-        SIZE_T pageSize;              ///< ページサイズ（通常4096）
-        SIZE_T allocationGranularity; ///< 割り当て粒度（Windowsは64KB）
-        SIZE_T cacheLineSize;         ///< CPUキャッシュラインサイズ（通常64）
-        uint32 numberOfCores;         ///< 物理コア数
-        uint32 numberOfThreads;       ///< 論理スレッド数（ハイパースレッディング含む）
+        uint64 totalPhysical{0};         ///< 総物理メモリ（バイト）
+        uint64 totalVirtual{0};          ///< 総仮想メモリ（バイト）
+        SIZE_T pageSize{0};              ///< ページサイズ（通常4096）
+        SIZE_T allocationGranularity{0}; ///< 割り当て粒度（Windowsは64KB）
+        SIZE_T cacheLineSize{0};         ///< CPUキャッシュラインサイズ（通常64）
+        uint32 numberOfCores{0};         ///< 物理コア数
+        uint32 numberOfThreads{0};       ///< 論理スレッド数（ハイパースレッディング含む）
 
         /// デフォルト初期化
         PlatformMemoryConstants()
-            : totalPhysical(0), totalVirtual(0), pageSize(0), allocationGranularity(0), cacheLineSize(0),
-              numberOfCores(0), numberOfThreads(0)
-        {}
+             
+        = default;
     };
 
     /// プラットフォーム非依存のメモリ管理インターフェース

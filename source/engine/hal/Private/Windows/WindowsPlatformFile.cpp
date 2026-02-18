@@ -36,9 +36,9 @@ namespace NS
 
     int64 WindowsFileHandle::Tell()
     {
-        LARGE_INTEGER zero = {};
+        LARGE_INTEGER const zero = {};
         LARGE_INTEGER pos;
-        if (!SetFilePointerEx(m_handle, zero, &pos, FILE_CURRENT))
+        if (SetFilePointerEx(m_handle, zero, &pos, FILE_CURRENT) == 0)
         {
             return -1;
         }
@@ -64,10 +64,10 @@ namespace NS
         while (bytesToRead > 0)
         {
             // 一度に読み取れるのはDWORD_MAXまで
-            DWORD toRead = static_cast<DWORD>((bytesToRead > MAXDWORD) ? MAXDWORD : bytesToRead);
+            auto const toRead = static_cast<DWORD>((bytesToRead > MAXDWORD) ? MAXDWORD : bytesToRead);
             DWORD bytesRead = 0;
 
-            if (!ReadFile(m_handle, dest, toRead, &bytesRead, nullptr))
+            if (ReadFile(m_handle, dest, toRead, &bytesRead, nullptr) == 0)
             {
                 return false;
             }
@@ -87,10 +87,10 @@ namespace NS
     {
         while (bytesToWrite > 0)
         {
-            DWORD toWrite = static_cast<DWORD>((bytesToWrite > MAXDWORD) ? MAXDWORD : bytesToWrite);
+            auto const toWrite = static_cast<DWORD>((bytesToWrite > MAXDWORD) ? MAXDWORD : bytesToWrite);
             DWORD bytesWritten = 0;
 
-            if (!WriteFile(m_handle, src, toWrite, &bytesWritten, nullptr))
+            if (WriteFile(m_handle, src, toWrite, &bytesWritten, nullptr) == 0)
             {
                 return false;
             }
@@ -114,7 +114,7 @@ namespace NS
     int64 WindowsFileHandle::Size()
     {
         LARGE_INTEGER size;
-        if (!GetFileSizeEx(m_handle, &size))
+        if (GetFileSizeEx(m_handle, &size) == 0)
         {
             return -1;
         }
@@ -127,25 +127,25 @@ namespace NS
 
     bool WindowsPlatformFile::FileExists(const TCHAR* filename)
     {
-        DWORD attributes = GetFileAttributesW(filename);
-        return (attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+        DWORD const attributes = GetFileAttributesW(filename);
+        return (attributes != INVALID_FILE_ATTRIBUTES) && ((attributes & FILE_ATTRIBUTE_DIRECTORY) == 0U);
     }
 
     bool WindowsPlatformFile::DirectoryExists(const TCHAR* directory)
     {
-        DWORD attributes = GetFileAttributesW(directory);
-        return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
+        DWORD const attributes = GetFileAttributesW(directory);
+        return (attributes != INVALID_FILE_ATTRIBUTES) && ((attributes & FILE_ATTRIBUTE_DIRECTORY) != 0U);
     }
 
     int64 WindowsPlatformFile::FileSize(const TCHAR* filename)
     {
         WIN32_FILE_ATTRIBUTE_DATA data;
-        if (!GetFileAttributesExW(filename, GetFileExInfoStandard, &data))
+        if (GetFileAttributesExW(filename, GetFileExInfoStandard, &data) == 0)
         {
             return -1;
         }
         LARGE_INTEGER size;
-        size.HighPart = data.nFileSizeHigh;
+        size.HighPart = static_cast<LONG>(data.nFileSizeHigh);
         size.LowPart = data.nFileSizeLow;
         return static_cast<int64>(size.QuadPart);
     }
@@ -167,8 +167,8 @@ namespace NS
 
     bool WindowsPlatformFile::IsReadOnly(const TCHAR* filename)
     {
-        DWORD attributes = GetFileAttributesW(filename);
-        return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_READONLY);
+        DWORD const attributes = GetFileAttributesW(filename);
+        return (attributes != INVALID_FILE_ATTRIBUTES) && ((attributes & FILE_ATTRIBUTE_READONLY) != 0U);
     }
 
     bool WindowsPlatformFile::SetReadOnly(const TCHAR* filename, bool readOnly)
@@ -193,7 +193,7 @@ namespace NS
 
     bool WindowsPlatformFile::CreateDirectory(const TCHAR* directory)
     {
-        if (::CreateDirectoryW(directory, nullptr))
+        if (::CreateDirectoryW(directory, nullptr) != 0)
         {
             return true;
         }
@@ -213,21 +213,21 @@ namespace NS
         wcsncpy_s(path, directory, MAX_PATH - 1);
 
         // 末尾のセパレータを削除
-        size_t len = wcslen(path);
+        size_t const len = wcslen(path);
         if (len > 0 && (path[len - 1] == L'\\' || path[len - 1] == L'/'))
         {
             path[len - 1] = L'\0';
         }
 
         // 各階層を順番に作成
-        for (wchar_t* p = path + 1; *p; ++p)
+        for (wchar_t* p = path + 1; *p != 0U; ++p)
         {
             if (*p == L'\\' || *p == L'/')
             {
                 *p = L'\0';
                 if (!CreateDirectory(path))
                 {
-                    DWORD error = GetLastError();
+                    DWORD const error = GetLastError();
                     if (error != ERROR_ALREADY_EXISTS)
                     {
                         return false;
@@ -240,7 +240,7 @@ namespace NS
         return CreateDirectory(path);
     }
 
-    IFileHandle* WindowsPlatformFile::OpenRead(const TCHAR* filename)
+    std::unique_ptr<IFileHandle> WindowsPlatformFile::OpenRead(const TCHAR* filename)
     {
         HANDLE handle = CreateFileW(
             filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -248,10 +248,10 @@ namespace NS
         {
             return nullptr;
         }
-        return new WindowsFileHandle(handle);
+        return std::make_unique<WindowsFileHandle>(handle);
     }
 
-    IFileHandle* WindowsPlatformFile::OpenWrite(const TCHAR* filename, bool append, bool allowRead)
+    std::unique_ptr<IFileHandle> WindowsPlatformFile::OpenWrite(const TCHAR* filename, bool append, bool allowRead)
     {
         DWORD access = GENERIC_WRITE;
         if (allowRead)
@@ -259,8 +259,8 @@ namespace NS
             access |= GENERIC_READ;
         }
 
-        DWORD shareMode = allowRead ? FILE_SHARE_READ : 0;
-        DWORD creation = append ? OPEN_ALWAYS : CREATE_ALWAYS;
+        DWORD const shareMode = allowRead ? FILE_SHARE_READ : 0;
+        DWORD const creation = append ? OPEN_ALWAYS : CREATE_ALWAYS;
 
         HANDLE handle = CreateFileW(filename, access, shareMode, nullptr, creation, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (handle == INVALID_HANDLE_VALUE)
@@ -273,17 +273,17 @@ namespace NS
             SetFilePointer(handle, 0, nullptr, FILE_END);
         }
 
-        return new WindowsFileHandle(handle);
+        return std::make_unique<WindowsFileHandle>(handle);
     }
 
     // =========================================================================
     // グローバル関数
     // =========================================================================
 
-    static WindowsPlatformFile s_platformFile;
+    static WindowsPlatformFile g_sPlatformFile;
 
     IPlatformFile& GetPlatformFile()
     {
-        return s_platformFile;
+        return g_sPlatformFile;
     }
 } // namespace NS

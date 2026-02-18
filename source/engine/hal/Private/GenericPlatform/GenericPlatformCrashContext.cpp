@@ -29,7 +29,7 @@ namespace NS
     TCHAR GenericPlatformCrashContext::s_engineVersion[64] = L"Unknown";
     CrashHandlerFunc GenericPlatformCrashContext::s_crashHandler = nullptr;
 
-    GenericPlatformCrashContext::GenericPlatformCrashContext(CrashContextType type) : m_type(type), m_errorMessage{} {}
+    GenericPlatformCrashContext::GenericPlatformCrashContext(CrashContextType type) : m_type(type) {}
 
     void GenericPlatformCrashContext::CaptureContext()
     {
@@ -38,7 +38,7 @@ namespace NS
 
     void GenericPlatformCrashContext::SetErrorMessage(const TCHAR* message)
     {
-        if (message)
+        if (message != nullptr)
         {
             SafeWcsCopy(m_errorMessage, sizeof(m_errorMessage) / sizeof(m_errorMessage[0]), message);
         }
@@ -46,7 +46,7 @@ namespace NS
 
     void GenericPlatformCrashContext::SetEngineVersion(const TCHAR* version)
     {
-        if (version)
+        if (version != nullptr)
         {
             SafeWcsCopy(s_engineVersion, sizeof(s_engineVersion) / sizeof(s_engineVersion[0]), version);
         }

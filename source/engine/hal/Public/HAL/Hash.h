@@ -70,7 +70,7 @@ namespace NS
         {
             float f;
             uint32 u;
-        } converter;
+        } converter{};
         converter.f = value;
         return converter.u;
     }
@@ -81,7 +81,7 @@ namespace NS
         {
             double d;
             uint64 u;
-        } converter;
+        } converter{};
         converter.d = value;
         return GetTypeHash(converter.u);
     }

@@ -101,5 +101,5 @@ namespace NS
         static bool s_initialized;
     };
 
-    typedef WindowsPlatformMisc PlatformMisc;
+    using PlatformMisc = WindowsPlatformMisc;
 } // namespace NS

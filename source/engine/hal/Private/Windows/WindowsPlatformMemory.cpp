@@ -40,7 +40,7 @@ namespace NS
         // メモリ情報取得
         MEMORYSTATUSEX memStatus;
         memStatus.dwLength = sizeof(memStatus);
-        if (GlobalMemoryStatusEx(&memStatus))
+        if (GlobalMemoryStatusEx(&memStatus) != 0)
         {
             s_constants.totalPhysical = memStatus.ullTotalPhys;
             s_constants.totalVirtual = memStatus.ullTotalVirtual;
@@ -56,7 +56,7 @@ namespace NS
         if (length > 0)
         {
             auto* buffer = static_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION*>(HeapAlloc(GetProcessHeap(), 0, length));
-            if (buffer && GetLogicalProcessorInformation(buffer, &length))
+            if ((buffer != nullptr) && (GetLogicalProcessorInformation(buffer, &length) != 0))
             {
                 uint32 physicalCores = 0;
                 uint32 logicalProcessors = 0;
@@ -71,7 +71,7 @@ namespace NS
                         physicalCores++;
                         // 各コアの論理プロセッサ数をカウント
                         DWORD_PTR mask = info->ProcessorMask;
-                        while (mask)
+                        while (mask != 0U)
                         {
                             logicalProcessors += (mask & 1);
                             mask >>= 1;
@@ -86,7 +86,7 @@ namespace NS
                 s_constants.numberOfCores = physicalCores;
                 s_constants.numberOfThreads = logicalProcessors;
             }
-            if (buffer)
+            if (buffer != nullptr)
             {
                 HeapFree(GetProcessHeap(), 0, buffer);
             }
@@ -106,7 +106,7 @@ namespace NS
 
         MEMORYSTATUSEX memStatus;
         memStatus.dwLength = sizeof(memStatus);
-        if (GlobalMemoryStatusEx(&memStatus))
+        if (GlobalMemoryStatusEx(&memStatus) != 0)
         {
             stats.availablePhysical = memStatus.ullAvailPhys;
             stats.availableVirtual = memStatus.ullAvailVirtual;
@@ -138,7 +138,7 @@ namespace NS
 
     void WindowsPlatformMemory::BinnedFreeToOS(void* ptr, SIZE_T /*size*/)
     {
-        if (ptr)
+        if (ptr != nullptr)
         {
             ::VirtualFree(ptr, 0, MEM_RELEASE);
         }
@@ -161,7 +161,7 @@ namespace NS
 
     void WindowsPlatformMemory::VirtualFree(void* ptr, SIZE_T /*size*/)
     {
-        if (ptr)
+        if (ptr != nullptr)
         {
             ::VirtualFree(ptr, 0, MEM_RELEASE);
         }

@@ -21,6 +21,13 @@ Checks: >
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -misc-non-private-member-variables-in-classes,
   -misc-include-cleaner,
+  -cppcoreguidelines-macro-usage,
+  -modernize-macro-to-enum,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-avoid-do-while,
+  -misc-use-anonymous-namespace,
+  -modernize-use-ranges,
+  -readability-identifier-naming,
 
 WarningsAsErrors: ''
 

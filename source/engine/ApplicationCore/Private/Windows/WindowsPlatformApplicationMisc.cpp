@@ -46,7 +46,7 @@ namespace NS
     void WindowsPlatformApplicationMisc::SetHighDPIMode()
     {
         // Per-Monitor V2 (Win10 1703+)
-        if (::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+        if (::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) != 0)
         {
             return;
         }
@@ -77,26 +77,27 @@ namespace NS
     // DPI
     // =========================================================================
 
-    float WindowsPlatformApplicationMisc::GetDPIScaleFactorAtPoint(int32_t X, int32_t Y)
+    float WindowsPlatformApplicationMisc::GetDPIScaleFactorAtPoint(int32_t x, int32_t y)
     {
-        POINT pt = {X, Y};
+        POINT const pt = {x, y};
         HMONITOR hMon = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 
-        UINT dpiX = 96, dpiY = 96;
+        UINT dpiX = 96;
+        UINT dpiY = 96;
         if (SUCCEEDED(::GetDpiForMonitor(hMon, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)))
         {
-            return static_cast<float>(dpiX) / 96.0f;
+            return static_cast<float>(dpiX) / 96.0F;
         }
-        return 1.0f;
+        return 1.0F;
     }
 
     // =========================================================================
     // スクリーンセーバー
     // =========================================================================
 
-    bool WindowsPlatformApplicationMisc::ControlScreensaver(ScreenSaverAction Action)
+    bool WindowsPlatformApplicationMisc::ControlScreensaver(ScreenSaverAction action)
     {
-        if (Action == ScreenSaverAction::Disable)
+        if (action == ScreenSaverAction::Disable)
         {
             // 0ピクセルマウス移動でスクリーンセーバーリセット
             INPUT input = {};
@@ -113,40 +114,40 @@ namespace NS
     // クリップボード
     // =========================================================================
 
-    void WindowsPlatformApplicationMisc::ClipboardCopy(const wchar_t* Str)
+    void WindowsPlatformApplicationMisc::ClipboardCopy(const wchar_t* str)
     {
-        if (!Str)
+        if (str == nullptr)
         {
             return;
         }
 
-        if (!::OpenClipboard(nullptr))
+        if (::OpenClipboard(nullptr) == 0)
         {
             return;
         }
 
-        const size_t len = wcslen(Str);
-        const size_t bytes = (len + 1) * sizeof(wchar_t);
-        HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE, bytes);
-        if (!hMem)
+        const size_t kLen = wcslen(str);
+        const size_t kBytes = (kLen + 1) * sizeof(wchar_t);
+        HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE, kBytes);
+        if (hMem == nullptr)
         {
             ::CloseClipboard();
             return;
         }
 
-        wchar_t* dest = static_cast<wchar_t*>(::GlobalLock(hMem));
-        if (!dest)
+        auto* dest = static_cast<wchar_t*>(::GlobalLock(hMem));
+        if (dest == nullptr)
         {
             ::GlobalFree(hMem);
             ::CloseClipboard();
             return;
         }
 
-        memcpy(dest, Str, bytes);
+        memcpy(dest, str, kBytes);
         ::GlobalUnlock(hMem);
 
         ::EmptyClipboard();
-        if (!::SetClipboardData(CF_UNICODETEXT, hMem))
+        if (::SetClipboardData(CF_UNICODETEXT, hMem) == nullptr)
         {
             // SetClipboardData 失敗時は所有権が OS に移っていないため解放
             ::GlobalFree(hMem);
@@ -154,22 +155,22 @@ namespace NS
         ::CloseClipboard();
     }
 
-    void WindowsPlatformApplicationMisc::ClipboardPaste(std::wstring& Dest)
+    void WindowsPlatformApplicationMisc::ClipboardPaste(std::wstring& dest)
     {
-        Dest.clear();
+        dest.clear();
 
-        if (!::OpenClipboard(nullptr))
+        if (::OpenClipboard(nullptr) == 0)
         {
             return;
         }
 
         HGLOBAL hMem = ::GetClipboardData(CF_UNICODETEXT);
-        if (hMem)
+        if (hMem != nullptr)
         {
-            const wchar_t* src = static_cast<const wchar_t*>(::GlobalLock(hMem));
-            if (src)
+            const auto* src = static_cast<const wchar_t*>(::GlobalLock(hMem));
+            if (src != nullptr)
             {
-                Dest = src;
+                dest = src;
                 ::GlobalUnlock(hMem);
             }
         }
@@ -193,7 +194,7 @@ namespace NS
     bool WindowsPlatformApplicationMisc::IsThisApplicationForeground()
     {
         HWND hForeground = ::GetForegroundWindow();
-        if (!hForeground)
+        if (hForeground == nullptr)
         {
             return false;
         }
@@ -205,7 +206,7 @@ namespace NS
     void WindowsPlatformApplicationMisc::PumpMessages(bool /*bFromMainLoop*/)
     {
         MSG msg;
-        while (::PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
+        while (::PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE) != 0)
         {
             ::TranslateMessage(&msg);
             ::DispatchMessageW(&msg);
@@ -216,12 +217,12 @@ namespace NS
     // ゲームパッド
     // =========================================================================
 
-    std::wstring WindowsPlatformApplicationMisc::GetGamepadControllerName(int32_t ControllerId)
+    std::wstring WindowsPlatformApplicationMisc::GetGamepadControllerName(int32_t controllerId)
     {
-        if (ControllerId >= 0 && ControllerId < 4)
+        if (controllerId >= 0 && controllerId < 4)
         {
             XINPUT_CAPABILITIES caps = {};
-            if (XInputGetCapabilities(static_cast<DWORD>(ControllerId), XINPUT_FLAG_GAMEPAD, &caps) == ERROR_SUCCESS)
+            if (XInputGetCapabilities(static_cast<DWORD>(controllerId), XINPUT_FLAG_GAMEPAD, &caps) == ERROR_SUCCESS)
             {
                 return L"XInput Controller";
             }

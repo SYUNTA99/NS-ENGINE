@@ -229,7 +229,7 @@ namespace NS
     WindowSizeLimits GenericApplicationMessageHandler::GetSizeLimitsForWindow(
         const std::shared_ptr<GenericWindow>& /*Window*/) const
     {
-        return WindowSizeLimits();
+        return {};
     }
     void GenericApplicationMessageHandler::OnWindowAction(const std::shared_ptr<GenericWindow>& /*Window*/,
                                                           WindowAction /*ActionType*/)

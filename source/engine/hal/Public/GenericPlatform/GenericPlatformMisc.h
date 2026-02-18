@@ -61,10 +61,10 @@ namespace NS
 
 #if PLATFORM_CPU_X86_FAMILY
         /// CPU機能ビット取得（x86/x64）
-        static uint32 GetFeatureBits_X86();
+        static uint32 GetFeatureBitsX86();
 
         /// 特定のCPU機能があるかチェック（x86/x64）
-        static bool CheckFeatureBit_X86(uint32 featureBit);
+        static bool CheckFeatureBitX86(uint32 featureBit);
 
         /// AVX2命令サポートの有無
         static bool HasAVX2InstructionSupport();

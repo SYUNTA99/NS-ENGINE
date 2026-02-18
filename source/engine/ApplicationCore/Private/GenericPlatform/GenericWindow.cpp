@@ -4,28 +4,28 @@
 
 namespace NS
 {
-    GenericWindow::GenericWindow() : m_windowMode(WindowMode::Windowed), m_dpiScaleFactor(1.0f) {}
+    GenericWindow::GenericWindow()  {}
 
     // ジオメトリ
-    void GenericWindow::ReshapeWindow(int32_t, int32_t, int32_t, int32_t) {}
-    void GenericWindow::MoveWindowTo(int32_t, int32_t) {}
-    bool GenericWindow::GetFullScreenInfo(int32_t&, int32_t&, int32_t&, int32_t&) const
+    void GenericWindow::ReshapeWindow(int32_t /*unused*/, int32_t /*unused*/, int32_t /*unused*/, int32_t /*unused*/) {}
+    void GenericWindow::MoveWindowTo(int32_t /*unused*/, int32_t /*unused*/) {}
+    bool GenericWindow::GetFullScreenInfo(int32_t& /*unused*/, int32_t& /*unused*/, int32_t& /*unused*/, int32_t& /*unused*/) const
     {
         return false;
     }
-    bool GenericWindow::GetRestoredDimensions(int32_t&, int32_t&, int32_t&, int32_t&) const
+    bool GenericWindow::GetRestoredDimensions(int32_t& /*unused*/, int32_t& /*unused*/, int32_t& /*unused*/, int32_t& /*unused*/) const
     {
         return false;
     }
-    void GenericWindow::AdjustCachedSize(PlatformRect&) const {}
+    void GenericWindow::AdjustCachedSize(PlatformRect& /*unused*/) const {}
 
     // ライフサイクル
     void GenericWindow::Destroy() {}
 
     // 状態管理
-    void GenericWindow::SetWindowMode(WindowMode::Type NewWindowMode)
+    void GenericWindow::SetWindowMode(WindowMode::Type newWindowMode)
     {
-        m_windowMode = NewWindowMode;
+        m_windowMode = newWindowMode;
     }
     WindowMode::Type GenericWindow::GetWindowMode() const
     {
@@ -36,25 +36,25 @@ namespace NS
     void GenericWindow::Minimize() {}
     void GenericWindow::Maximize() {}
     void GenericWindow::Restore() {}
-    void GenericWindow::BringToFront(bool) {}
-    void GenericWindow::HACK_ForceToFront() {}
+    void GenericWindow::BringToFront(bool /*unused*/) {}
+    void GenericWindow::HackForceToFront() {}
     void GenericWindow::SetWindowFocus() {}
-    void GenericWindow::Enable(bool) {}
+    void GenericWindow::Enable(bool /*unused*/) {}
     bool GenericWindow::IsEnabled() const
     {
         return false;
     }
 
     // プロパティ
-    void GenericWindow::SetOpacity(float) {}
-    void GenericWindow::SetText(const NS::TCHAR*) {}
+    void GenericWindow::SetOpacity(float /*unused*/) {}
+    void GenericWindow::SetText(const NS::TCHAR* /*unused*/) {}
     float GenericWindow::GetDPIScaleFactor() const
     {
         return m_dpiScaleFactor;
     }
-    void GenericWindow::SetDPIScaleFactor(float Value)
+    void GenericWindow::SetDPIScaleFactor(float value)
     {
-        m_dpiScaleFactor = Value;
+        m_dpiScaleFactor = value;
     }
     bool GenericWindow::IsManualManageDPIChanges() const
     {
@@ -76,8 +76,8 @@ namespace NS
     {
         return nullptr;
     }
-    void GenericWindow::DrawAttention(const WindowDrawAttentionParameters&) {}
-    void GenericWindow::SetNativeWindowButtonsVisibility(bool) {}
+    void GenericWindow::DrawAttention(const WindowDrawAttentionParameters& /*unused*/) {}
+    void GenericWindow::SetNativeWindowButtonsVisibility(bool /*unused*/) {}
 
     // クエリ
     bool GenericWindow::IsMaximized() const
@@ -100,7 +100,7 @@ namespace NS
     {
         return false;
     }
-    bool GenericWindow::IsPointInWindow(int32_t, int32_t) const
+    bool GenericWindow::IsPointInWindow(int32_t /*unused*/, int32_t /*unused*/) const
     {
         return false;
     }

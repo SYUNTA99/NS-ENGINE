@@ -7,7 +7,7 @@
 namespace NS
 {
     // グローバルアロケータ（初期はnullptr、起動時に設定）
-    Malloc* GMalloc = nullptr;
+    Malloc* g_gMalloc = nullptr;
 
     void* Malloc::TryAlloc(SIZE_T count, uint32 alignment)
     {
@@ -36,12 +36,12 @@ namespace NS
 
         // デフォルト実装：新規確保 + コピー + 解放
         void* newPtr = Alloc(newCount, alignment);
-        if (newPtr)
+        if (newPtr != nullptr)
         {
             SIZE_T oldSize = 0;
             if (GetAllocationSize(ptr, oldSize))
             {
-                SIZE_T copySize = (oldSize < newCount) ? oldSize : newCount;
+                SIZE_T const copySize = (oldSize < newCount) ? oldSize : newCount;
                 std::memcpy(newPtr, ptr, copySize);
             }
             else
@@ -57,7 +57,7 @@ namespace NS
     void* Malloc::AllocZeroed(SIZE_T count, uint32 alignment)
     {
         void* ptr = Alloc(count, alignment);
-        if (ptr)
+        if (ptr != nullptr)
         {
             std::memset(ptr, 0, count);
         }
@@ -67,7 +67,7 @@ namespace NS
     void* Malloc::TryAllocZeroed(SIZE_T count, uint32 alignment)
     {
         void* ptr = TryAlloc(count, alignment);
-        if (ptr)
+        if (ptr != nullptr)
         {
             std::memset(ptr, 0, count);
         }
@@ -123,16 +123,18 @@ namespace NS
         const uint8* preGuard = static_cast<const uint8*>(userPtr) - kGuardByteSize;
         for (SIZE_T i = 0; i < kGuardByteSize; ++i)
         {
-            if (preGuard[i] != kGuardByteFill)
+            if (preGuard[i] != kGuardByteFill) {
                 return false;
+}
         }
 
         // 後ガード検証
         const uint8* postGuard = static_cast<const uint8*>(userPtr) + requestedSize;
         for (SIZE_T i = 0; i < kGuardByteSize; ++i)
         {
-            if (postGuard[i] != kGuardByteFill)
+            if (postGuard[i] != kGuardByteFill) {
                 return false;
+}
         }
 
         return true;

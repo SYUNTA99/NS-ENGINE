@@ -14,30 +14,32 @@ namespace NS
     public:
         GenericPlatformSoftwareCursor();
         ~GenericPlatformSoftwareCursor() override = default;
+        NS_DISALLOW_COPY_AND_MOVE(GenericPlatformSoftwareCursor);
 
+    public:
         // =================================================================
         // ICursor overrides
         // =================================================================
-        MouseCursor::Type GetType() const override;
-        void SetType(MouseCursor::Type InType) override;
-        void GetSize(int32_t& Width, int32_t& Height) const override;
-        void GetPosition(Vector2D& OutPosition) const override;
-        void SetPosition(int32_t X, int32_t Y) override;
+        [[nodiscard]] MouseCursor::Type GetType() const override;
+        void SetType(MouseCursor::Type inType) override;
+        void GetSize(int32_t& width, int32_t& height) const override;
+        void GetPosition(Vector2D& outPosition) const override;
+        void SetPosition(int32_t x, int32_t y) override;
         void Show(bool bShow) override;
-        void Lock(const PlatformRect* Bounds) override;
+        void Lock(const PlatformRect* bounds) override;
 
         // =================================================================
         // レンダリングフック
         // =================================================================
 
         /// 現在のカーソル位置を取得（レンダラー用）
-        const Vector2D& GetCurrentPosition() const { return m_position; }
+        [[nodiscard]] const Vector2D& GetCurrentPosition() const { return m_position; }
 
         /// 現在のカーソル種別を取得（レンダラー用）
-        MouseCursor::Type GetCurrentType() const { return m_currentType; }
+        [[nodiscard]] MouseCursor::Type GetCurrentType() const { return m_currentType; }
 
         /// カーソルが表示中か
-        bool IsVisible() const { return m_bShow; }
+        [[nodiscard]] bool IsVisible() const { return m_bShow; }
 
     private:
         /// 位置を Lock 矩形内にクランプ

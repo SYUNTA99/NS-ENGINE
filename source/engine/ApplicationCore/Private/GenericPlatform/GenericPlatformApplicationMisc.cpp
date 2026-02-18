@@ -7,7 +7,7 @@
 namespace NS
 {
     // 静的メンバ定義
-    GenericPlatformApplicationMisc::PlatformFocusCallback GenericPlatformApplicationMisc::OnFocusCallback;
+    GenericPlatformApplicationMisc::PlatformFocusCallback GenericPlatformApplicationMisc::s_onFocusCallback;
 
     std::shared_ptr<GenericApplication> GenericPlatformApplicationMisc::CreateApplication()
     {

@@ -15,25 +15,29 @@ namespace NS
     {
         using Type = uint8_t;
 
-        constexpr Type None = 0;
-        constexpr Type Control = 1 << 0; // 0x01
-        constexpr Type Alt = 1 << 1;     // 0x02
-        constexpr Type Shift = 1 << 2;   // 0x04
-        constexpr Type Command = 1 << 3; // 0x08
+        constexpr Type kNone = 0;
+        constexpr Type kControl = 1 << 0; // 0x01
+        constexpr Type kAlt = 1 << 1;     // 0x02
+        constexpr Type kShift = 1 << 2;   // 0x04
+        constexpr Type kCommand = 1 << 3; // 0x08
 
         /// bool値からビットマスクを合成
         inline Type FromBools(bool bControl, bool bAlt, bool bShift, bool bCommand)
         {
-            Type Result = None;
-            if (bControl)
-                Result |= Control;
-            if (bAlt)
-                Result |= Alt;
-            if (bShift)
-                Result |= Shift;
-            if (bCommand)
-                Result |= Command;
-            return Result;
+            Type result = kNone;
+            if (bControl) {
+                result |= kControl;
+}
+            if (bAlt) {
+                result |= kAlt;
+}
+            if (bShift) {
+                result |= kShift;
+}
+            if (bCommand) {
+                result |= kCommand;
+}
+            return result;
         }
     } // namespace ModifierKey
 
@@ -60,77 +64,90 @@ namespace NS
                           bool bInAreCapsLocked)
             : m_bits(0)
         {
-            if (bInIsLeftShiftDown)
-                m_bits |= Bit_LeftShift;
-            if (bInIsRightShiftDown)
-                m_bits |= Bit_RightShift;
-            if (bInIsLeftControlDown)
-                m_bits |= Bit_LeftControl;
-            if (bInIsRightControlDown)
-                m_bits |= Bit_RightControl;
-            if (bInIsLeftAltDown)
-                m_bits |= Bit_LeftAlt;
-            if (bInIsRightAltDown)
-                m_bits |= Bit_RightAlt;
-            if (bInIsLeftCommandDown)
-                m_bits |= Bit_LeftCommand;
-            if (bInIsRightCommandDown)
-                m_bits |= Bit_RightCommand;
-            if (bInAreCapsLocked)
-                m_bits |= Bit_CapsLock;
+            if (bInIsLeftShiftDown) {
+                m_bits |= kBitLeftShift;
+}
+            if (bInIsRightShiftDown) {
+                m_bits |= kBitRightShift;
+}
+            if (bInIsLeftControlDown) {
+                m_bits |= kBitLeftControl;
+}
+            if (bInIsRightControlDown) {
+                m_bits |= kBitRightControl;
+}
+            if (bInIsLeftAltDown) {
+                m_bits |= kBitLeftAlt;
+}
+            if (bInIsRightAltDown) {
+                m_bits |= kBitRightAlt;
+}
+            if (bInIsLeftCommandDown) {
+                m_bits |= kBitLeftCommand;
+}
+            if (bInIsRightCommandDown) {
+                m_bits |= kBitRightCommand;
+}
+            if (bInAreCapsLocked) {
+                m_bits |= kBitCapsLock;
+}
         }
 
         // 複合判定
-        bool IsShiftDown() const { return (m_bits & (Bit_LeftShift | Bit_RightShift)) != 0; }
-        bool IsControlDown() const { return (m_bits & (Bit_LeftControl | Bit_RightControl)) != 0; }
-        bool IsAltDown() const { return (m_bits & (Bit_LeftAlt | Bit_RightAlt)) != 0; }
-        bool IsCommandDown() const { return (m_bits & (Bit_LeftCommand | Bit_RightCommand)) != 0; }
-        bool AreCapsLocked() const { return (m_bits & Bit_CapsLock) != 0; }
+        [[nodiscard]] bool IsShiftDown() const { return (m_bits & (kBitLeftShift | kBitRightShift)) != 0; }
+        [[nodiscard]] bool IsControlDown() const { return (m_bits & (kBitLeftControl | kBitRightControl)) != 0; }
+        [[nodiscard]] bool IsAltDown() const { return (m_bits & (kBitLeftAlt | kBitRightAlt)) != 0; }
+        [[nodiscard]] bool IsCommandDown() const { return (m_bits & (kBitLeftCommand | kBitRightCommand)) != 0; }
+        [[nodiscard]] bool AreCapsLocked() const { return (m_bits & kBitCapsLock) != 0; }
 
         /// ビットマスク判定（UE5タイポ保存: AreModifersDown）
-        bool AreModifersDown(ModifierKey::Type ModifersMask) const
+        [[nodiscard]] bool AreModifersDown(ModifierKey::Type modifersMask) const
         {
             bool bResult = true;
-            if ((ModifersMask & ModifierKey::Shift) != 0)
+            if ((modifersMask & ModifierKey::kShift) != 0) {
                 bResult &= IsShiftDown();
-            if ((ModifersMask & ModifierKey::Control) != 0)
+}
+            if ((modifersMask & ModifierKey::kControl) != 0) {
                 bResult &= IsControlDown();
-            if ((ModifersMask & ModifierKey::Alt) != 0)
+}
+            if ((modifersMask & ModifierKey::kAlt) != 0) {
                 bResult &= IsAltDown();
-            if ((ModifersMask & ModifierKey::Command) != 0)
+}
+            if ((modifersMask & ModifierKey::kCommand) != 0) {
                 bResult &= IsCommandDown();
+}
             return bResult;
         }
 
         /// いずれかの修飾キーが押下
-        bool AnyModifiersDown() const
+        [[nodiscard]] bool AnyModifiersDown() const
         {
             // CapsLockを除く全修飾キービット
-            constexpr uint16_t ModifierMask = Bit_LeftShift | Bit_RightShift | Bit_LeftControl | Bit_RightControl |
-                                              Bit_LeftAlt | Bit_RightAlt | Bit_LeftCommand | Bit_RightCommand;
-            return (m_bits & ModifierMask) != 0;
+            constexpr uint16_t kModifierMask = kBitLeftShift | kBitRightShift | kBitLeftControl | kBitRightControl |
+                                              kBitLeftAlt | kBitRightAlt | kBitLeftCommand | kBitRightCommand;
+            return (m_bits & kModifierMask) != 0;
         }
 
         // 個別判定
-        bool IsLeftShiftDown() const { return (m_bits & Bit_LeftShift) != 0; }
-        bool IsRightShiftDown() const { return (m_bits & Bit_RightShift) != 0; }
-        bool IsLeftControlDown() const { return (m_bits & Bit_LeftControl) != 0; }
-        bool IsRightControlDown() const { return (m_bits & Bit_RightControl) != 0; }
-        bool IsLeftAltDown() const { return (m_bits & Bit_LeftAlt) != 0; }
-        bool IsRightAltDown() const { return (m_bits & Bit_RightAlt) != 0; }
-        bool IsLeftCommandDown() const { return (m_bits & Bit_LeftCommand) != 0; }
-        bool IsRightCommandDown() const { return (m_bits & Bit_RightCommand) != 0; }
+        [[nodiscard]] bool IsLeftShiftDown() const { return (m_bits & kBitLeftShift) != 0; }
+        [[nodiscard]] bool IsRightShiftDown() const { return (m_bits & kBitRightShift) != 0; }
+        [[nodiscard]] bool IsLeftControlDown() const { return (m_bits & kBitLeftControl) != 0; }
+        [[nodiscard]] bool IsRightControlDown() const { return (m_bits & kBitRightControl) != 0; }
+        [[nodiscard]] bool IsLeftAltDown() const { return (m_bits & kBitLeftAlt) != 0; }
+        [[nodiscard]] bool IsRightAltDown() const { return (m_bits & kBitRightAlt) != 0; }
+        [[nodiscard]] bool IsLeftCommandDown() const { return (m_bits & kBitLeftCommand) != 0; }
+        [[nodiscard]] bool IsRightCommandDown() const { return (m_bits & kBitRightCommand) != 0; }
 
     private:
-        static constexpr uint16_t Bit_LeftShift = 1 << 0;
-        static constexpr uint16_t Bit_RightShift = 1 << 1;
-        static constexpr uint16_t Bit_LeftControl = 1 << 2;
-        static constexpr uint16_t Bit_RightControl = 1 << 3;
-        static constexpr uint16_t Bit_LeftAlt = 1 << 4;
-        static constexpr uint16_t Bit_RightAlt = 1 << 5;
-        static constexpr uint16_t Bit_LeftCommand = 1 << 6;
-        static constexpr uint16_t Bit_RightCommand = 1 << 7;
-        static constexpr uint16_t Bit_CapsLock = 1 << 8;
+        static constexpr uint16_t kBitLeftShift = 1 << 0;
+        static constexpr uint16_t kBitRightShift = 1 << 1;
+        static constexpr uint16_t kBitLeftControl = 1 << 2;
+        static constexpr uint16_t kBitRightControl = 1 << 3;
+        static constexpr uint16_t kBitLeftAlt = 1 << 4;
+        static constexpr uint16_t kBitRightAlt = 1 << 5;
+        static constexpr uint16_t kBitLeftCommand = 1 << 6;
+        static constexpr uint16_t kBitRightCommand = 1 << 7;
+        static constexpr uint16_t kBitCapsLock = 1 << 8;
 
         uint16_t m_bits;
     };

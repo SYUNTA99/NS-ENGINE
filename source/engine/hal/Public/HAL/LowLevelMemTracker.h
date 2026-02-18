@@ -274,7 +274,7 @@ namespace NS
         void PopTag();
 
         /// 現在のタグを取得
-        LLMTag GetCurrentTag() const;
+        [[nodiscard]] LLMTag GetCurrentTag() const;
 
         // =====================================================================
         // タグセット操作
@@ -317,7 +317,7 @@ namespace NS
         // =====================================================================
 
         /// タグの累計割り当て量を取得
-        int64 GetTagAmount(LLMTag tag) const;
+        [[nodiscard]] int64 GetTagAmount(LLMTag tag) const;
 
         /// 全タグの統計を取得
         uint32 GetTagStats(LLMTagStats* outStats, uint32 maxCount) const;
@@ -327,7 +327,7 @@ namespace NS
         // =====================================================================
 
         /// トラッキング有効かどうか
-        bool IsEnabled() const { return m_enabled; }
+        [[nodiscard]] bool IsEnabled() const { return m_enabled; }
 
         /// トラッキング有効/無効設定
         void SetEnabled(bool enabled) { m_enabled = enabled; }
@@ -442,7 +442,7 @@ namespace NS
         Max
     };
 
-    inline LLMTag RegisterLLMCustomTag(const TCHAR*, const TCHAR* = nullptr, LLMTag = LLMTag::Untagged)
+    inline LLMTag RegisterLLMCustomTag(const TCHAR* /*unused*/, const TCHAR*  /*unused*/= nullptr, LLMTag  /*unused*/= LLMTag::Untagged)
     {
         return LLMTag::Untagged;
     }
@@ -451,11 +451,11 @@ namespace NS
     {
         return false;
     }
-    inline const TCHAR* GetLLMTagName(LLMTag)
+    inline const TCHAR* GetLLMTagName(LLMTag /*unused*/)
     {
         return TEXT("Disabled");
     }
-    inline bool IsValidLLMTag(LLMTag)
+    inline bool IsValidLLMTag(LLMTag /*unused*/)
     {
         return false;
     }

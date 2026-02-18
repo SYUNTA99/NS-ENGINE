@@ -19,9 +19,9 @@
 
 namespace
 {
-    constexpr int SplashWidth = 600;
-    constexpr int SplashHeight = 300;
-    constexpr int ProgressBarHeight = 4;
+    constexpr int kSplashWidth = 600;
+    constexpr int kSplashHeight = 300;
+    constexpr int kProgressBarHeight = 4;
 } // anonymous namespace
 
 namespace NS
@@ -33,7 +33,9 @@ namespace NS
         WindowsSplash() = default;
 
         ~WindowsSplash() override { Hide(); }
+        NS_DISALLOW_COPY_AND_MOVE(WindowsSplash);
 
+    public:
         void Show() override
         {
             if (m_bIsShown)
@@ -56,7 +58,7 @@ namespace NS
 
             m_bShouldClose = true;
 
-            if (m_hWnd)
+            if (m_hWnd != nullptr)
             {
                 ::PostMessage(m_hWnd, WM_CLOSE, 0, 0);
             }
@@ -71,22 +73,22 @@ namespace NS
 
         bool IsShown() const override { return m_bIsShown; }
 
-        void SetSplashText(SplashTextType InType, const wchar_t* InText) override
+        void SetSplashText(SplashTextType inType, const wchar_t* inText) override
         {
             ::EnterCriticalSection(&m_cs);
-            m_texts[static_cast<int>(InType)] = InText ? InText : L"";
+            m_texts[static_cast<int>(inType)] = (inText != nullptr) ? inText : L"";
             ::LeaveCriticalSection(&m_cs);
 
-            if (m_hWnd)
+            if (m_hWnd != nullptr)
             {
                 ::InvalidateRect(m_hWnd, nullptr, FALSE);
             }
         }
 
-        void SetProgress(float InProgress) override
+        void SetProgress(float inProgress) override
         {
-            m_progress = InProgress;
-            if (m_hWnd)
+            m_progress = inProgress;
+            if (m_hWnd != nullptr)
             {
                 ::InvalidateRect(m_hWnd, nullptr, FALSE);
             }
@@ -116,10 +118,10 @@ namespace NS
             ::RegisterClassExW(&wc);
 
             // スクリーン中央に配置
-            int screenW = ::GetSystemMetrics(SM_CXSCREEN);
-            int screenH = ::GetSystemMetrics(SM_CYSCREEN);
-            int x = (screenW - SplashWidth) / 2;
-            int y = (screenH - SplashHeight) / 2;
+            int const screenW = ::GetSystemMetrics(SM_CXSCREEN);
+            int const screenH = ::GetSystemMetrics(SM_CYSCREEN);
+            int const x = (screenW - kSplashWidth) / 2;
+            int const y = (screenH - kSplashHeight) / 2;
 
             m_hWnd = ::CreateWindowExW(WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
                                        L"NSSplashWindow",
@@ -127,8 +129,8 @@ namespace NS
                                        WS_POPUP | WS_VISIBLE,
                                        x,
                                        y,
-                                       SplashWidth,
-                                       SplashHeight,
+                                       kSplashWidth,
+                                       kSplashHeight,
                                        nullptr,
                                        nullptr,
                                        ::GetModuleHandle(nullptr),
@@ -136,7 +138,7 @@ namespace NS
 
             // メッセージループ
             MSG msg;
-            while (::GetMessage(&msg, nullptr, 0, 0))
+            while (::GetMessage(&msg, nullptr, 0, 0) != 0)
             {
                 ::TranslateMessage(&msg);
                 ::DispatchMessage(&msg);
@@ -147,7 +149,7 @@ namespace NS
                 }
             }
 
-            if (m_hWnd)
+            if (m_hWnd != nullptr)
             {
                 ::DestroyWindow(m_hWnd);
                 m_hWnd = nullptr;
@@ -173,8 +175,10 @@ namespace NS
             {
             case WM_PAINT:
             {
-                if (!self)
+                if (self == nullptr)
+                {
                     break;
+                }
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hWnd, &ps);
                 self->OnPaint(hdc);
@@ -206,12 +210,12 @@ namespace NS
 
             ::EnterCriticalSection(&m_cs);
 
-            RECT textRect = {20, 20, SplashWidth - 20, SplashHeight - 40};
-            for (int i = 0; i < 4; ++i)
+            RECT textRect = {20, 20, kSplashWidth - 20, kSplashHeight - 40};
+            for (const auto& m_text : m_texts)
             {
-                if (!m_texts[i].empty())
+                if (!m_text.empty())
                 {
-                    ::DrawTextW(hdc, m_texts[i].c_str(), -1, &textRect, DT_LEFT | DT_SINGLELINE);
+                    ::DrawTextW(hdc, m_text.c_str(), -1, &textRect, DT_LEFT | DT_SINGLELINE);
                     textRect.top += 24;
                 }
             }
@@ -219,15 +223,15 @@ namespace NS
             ::LeaveCriticalSection(&m_cs);
 
             // プログレスバー
-            if (m_progress > 0.0f)
+            if (m_progress > 0.0F)
             {
-                RECT barBg = {0, SplashHeight - ProgressBarHeight, SplashWidth, SplashHeight};
+                RECT const barBg = {0, kSplashHeight - kProgressBarHeight, kSplashWidth, kSplashHeight};
                 HBRUSH barBgBrush = ::CreateSolidBrush(RGB(60, 60, 60));
                 ::FillRect(hdc, &barBg, barBgBrush);
                 ::DeleteObject(barBgBrush);
 
-                int fillWidth = static_cast<int>(SplashWidth * m_progress);
-                RECT barFill = {0, SplashHeight - ProgressBarHeight, fillWidth, SplashHeight};
+                int const fillWidth = static_cast<int>(kSplashWidth * m_progress);
+                RECT const barFill = {0, kSplashHeight - kProgressBarHeight, fillWidth, kSplashHeight};
                 HBRUSH barFillBrush = ::CreateSolidBrush(RGB(0, 120, 215));
                 ::FillRect(hdc, &barFill, barFillBrush);
                 ::DeleteObject(barFillBrush);
@@ -240,7 +244,7 @@ namespace NS
         std::thread m_splashThread;
         CRITICAL_SECTION m_cs = {};
         std::wstring m_texts[4];
-        std::atomic<float> m_progress{0.0f};
+        std::atomic<float> m_progress{0.0F};
     };
 
     // =========================================================================
@@ -249,8 +253,8 @@ namespace NS
 
     GenericPlatformSplash& GenericPlatformSplash::Get()
     {
-        static WindowsSplash s_instance;
-        return s_instance;
+        static WindowsSplash sInstance;
+        return sInstance;
     }
 
 } // namespace NS

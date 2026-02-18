@@ -45,12 +45,12 @@ namespace NS
 
         // ブランド文字列
         char brand[49] = {};
-        __cpuid(cpuInfo, 0x80000000);
-        if (static_cast<uint32>(cpuInfo[0]) >= 0x80000004)
+        __cpuid(cpuInfo, static_cast<int>(0x80000000U));
+        if (static_cast<uint32>(cpuInfo[0]) >= 0x80000004U)
         {
-            __cpuid(reinterpret_cast<int*>(brand), 0x80000002);
-            __cpuid(reinterpret_cast<int*>(brand + 16), 0x80000003);
-            __cpuid(reinterpret_cast<int*>(brand + 32), 0x80000004);
+            __cpuid(reinterpret_cast<int*>(brand), static_cast<int>(0x80000002U));
+            __cpuid(reinterpret_cast<int*>(brand + 16), static_cast<int>(0x80000003U));
+            __cpuid(reinterpret_cast<int*>(brand + 32), static_cast<int>(0x80000004U));
         }
         strncpy_s(s_cpuInfo.brand, sizeof(s_cpuInfo.brand), brand, _TRUNCATE);
 
@@ -67,15 +67,15 @@ namespace NS
         GetLogicalProcessorInformation(nullptr, &length);
         if (length > 0)
         {
-            auto buffer =
+            auto* buffer =
                 reinterpret_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION*>(HeapAlloc(GetProcessHeap(), 0, length));
-            if (buffer)
+            if (buffer != nullptr)
             {
-                if (GetLogicalProcessorInformation(buffer, &length))
+                if (GetLogicalProcessorInformation(buffer, &length) != 0)
                 {
                     uint32 coreCount = 0;
                     DWORD offset = 0;
-                    auto current = buffer;
+                    auto* current = buffer;
                     while (offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= length)
                     {
                         if (current->Relationship == RelationProcessorCore)
@@ -139,59 +139,83 @@ namespace NS
         __cpuid(cpuInfo, 1);
 
         // EDXのビット
-        if (cpuInfo[3] & (1 << 26))
+        if ((cpuInfo[3] & (1 << 26)) != 0)
+        {
             features |= CPUFeatureSSE2;
+        }
 
         // ECXのビット
-        if (cpuInfo[2] & (1 << 0))
+        if ((cpuInfo[2] & (1 << 0)) != 0)
+        {
             features |= CPUFeatureSSE3;
-        if (cpuInfo[2] & (1 << 9))
+        }
+        if ((cpuInfo[2] & (1 << 9)) != 0)
+        {
             features |= CPUFeatureSSSE3;
-        if (cpuInfo[2] & (1 << 19))
+        }
+        if ((cpuInfo[2] & (1 << 19)) != 0)
+        {
             features |= CPUFeatureSSE41;
-        if (cpuInfo[2] & (1 << 20))
+        }
+        if ((cpuInfo[2] & (1 << 20)) != 0)
+        {
             features |= CPUFeatureSSE42;
-        if (cpuInfo[2] & (1 << 23))
+        }
+        if ((cpuInfo[2] & (1 << 23)) != 0)
+        {
             features |= CPUFeaturePOPCNT;
-        if (cpuInfo[2] & (1 << 25))
+        }
+        if ((cpuInfo[2] & (1 << 25)) != 0)
+        {
             features |= CPUFeatureAESNI;
+        }
 
         // AVX（OSサポート確認も必要）
-        bool osxsaveSupported = (cpuInfo[2] & (1 << 27)) != 0;
-        bool avxSupported = (cpuInfo[2] & (1 << 28)) != 0;
+        bool const osxsaveSupported = (cpuInfo[2] & (1 << 27)) != 0;
+        bool const avxSupported = (cpuInfo[2] & (1 << 28)) != 0;
 
         if (avxSupported && osxsaveSupported)
         {
             // XSAVEが有効でOSがAVX状態を保存しているか確認
-            unsigned long long xcr0 = _xgetbv(0);
+            unsigned long long const xcr0 = _xgetbv(0);
             if ((xcr0 & 0x6) == 0x6)
             {
                 features |= CPUFeatureAVX;
 
                 // FMA3
-                if (cpuInfo[2] & (1 << 12))
+                if ((cpuInfo[2] & (1 << 12)) != 0)
+                {
                     features |= CPUFeatureFMA3;
+                }
 
                 // 拡張機能チェック
                 __cpuidex(cpuInfo, 7, 0);
 
                 // AVX2
-                if (cpuInfo[1] & (1 << 5))
+                if ((cpuInfo[1] & (1 << 5)) != 0)
+                {
                     features |= CPUFeatureAVX2;
+                }
                 // BMI1
-                if (cpuInfo[1] & (1 << 3))
+                if ((cpuInfo[1] & (1 << 3)) != 0)
+                {
                     features |= CPUFeatureBMI1;
+                }
                 // BMI2
-                if (cpuInfo[1] & (1 << 8))
+                if ((cpuInfo[1] & (1 << 8)) != 0)
+                {
                     features |= CPUFeatureBMI2;
+                }
                 // LZCNT
-                __cpuid(cpuInfo, 0x80000001);
-                if (cpuInfo[2] & (1 << 5))
+                __cpuid(cpuInfo, static_cast<int>(0x80000001U));
+                if ((cpuInfo[2] & (1 << 5)) != 0)
+                {
                     features |= CPUFeatureLZCNT;
+                }
 
                 // AVX512チェック（XSAVE状態も確認）
                 __cpuidex(cpuInfo, 7, 0);
-                if ((cpuInfo[1] & (1 << 16)) && ((xcr0 & 0xE6) == 0xE6))
+                if (((cpuInfo[1] & (1 << 16)) != 0) && ((xcr0 & 0xE6) == 0xE6))
                 {
                     features |= CPUFeatureAVX512;
                 }
@@ -237,34 +261,34 @@ namespace NS
     // COM管理
     // =========================================================================
 
-    static thread_local int32 s_comInitCount = 0;
+    static thread_local int32 g_sComInitCount = 0;
 
     void WindowsPlatformMisc::CoInitialize(COMModel model)
     {
-        if (s_comInitCount == 0)
+        if (g_sComInitCount == 0)
         {
-            DWORD flags = (model == COMModel::Multithreaded) ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED;
+            DWORD const flags = (model == COMModel::Multithreaded) ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED;
 
-            HRESULT hr = ::CoInitializeEx(nullptr, flags);
+            HRESULT const hr = ::CoInitializeEx(nullptr, flags);
 
             // S_OK または S_FALSE（既に初期化済み）は成功
             if (SUCCEEDED(hr))
             {
-                ++s_comInitCount;
+                ++g_sComInitCount;
             }
         }
         else
         {
-            ++s_comInitCount;
+            ++g_sComInitCount;
         }
     }
 
     void WindowsPlatformMisc::CoUninitialize()
     {
-        if (s_comInitCount > 0)
+        if (g_sComInitCount > 0)
         {
-            --s_comInitCount;
-            if (s_comInitCount == 0)
+            --g_sComInitCount;
+            if (g_sComInitCount == 0)
             {
                 ::CoUninitialize();
             }
@@ -273,7 +297,7 @@ namespace NS
 
     bool WindowsPlatformMisc::IsCOMInitialized()
     {
-        return s_comInitCount > 0;
+        return g_sComInitCount > 0;
     }
 
     // =========================================================================
@@ -283,7 +307,7 @@ namespace NS
     bool WindowsPlatformMisc::QueryRegKey(
         void* key, const TCHAR* subKey, const TCHAR* valueName, TCHAR* outData, SIZE_T outDataSize)
     {
-        if (!subKey || !outData || outDataSize == 0)
+        if ((subKey == nullptr) || (outData == nullptr) || outDataSize == 0)
         {
             return false;
         }
@@ -295,9 +319,10 @@ namespace NS
         }
 
         DWORD type = 0;
-        DWORD size = static_cast<DWORD>(outDataSize * sizeof(TCHAR));
-        bool success = (RegQueryValueExW(hKey, valueName, nullptr, &type, reinterpret_cast<LPBYTE>(outData), &size) ==
-                        ERROR_SUCCESS);
+        auto size = static_cast<DWORD>(outDataSize * sizeof(TCHAR));
+        bool const success =
+            (RegQueryValueExW(hKey, valueName, nullptr, &type, reinterpret_cast<LPBYTE>(outData), &size) ==
+             ERROR_SUCCESS);
 
         RegCloseKey(hKey);
         return success && (type == REG_SZ || type == REG_EXPAND_SZ);
@@ -331,7 +356,7 @@ namespace NS
 
     StorageDeviceType WindowsPlatformMisc::GetStorageDeviceType(const TCHAR* path)
     {
-        if (!path)
+        if (path == nullptr)
         {
             return StorageDeviceType::Unknown;
         }
@@ -343,7 +368,7 @@ namespace NS
         rootPath[2] = TEXT('\\');
         rootPath[3] = TEXT('\0');
 
-        UINT driveType = GetDriveTypeW(rootPath);
+        UINT const driveType = GetDriveTypeW(rootPath);
         if (driveType != DRIVE_FIXED)
         {
             return StorageDeviceType::Unknown;

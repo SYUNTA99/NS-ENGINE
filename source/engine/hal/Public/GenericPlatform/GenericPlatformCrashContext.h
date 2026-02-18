@@ -38,9 +38,11 @@ namespace NS
     public:
         explicit GenericPlatformCrashContext(CrashContextType type);
         virtual ~GenericPlatformCrashContext() = default;
+        NS_DISALLOW_COPY_AND_MOVE(GenericPlatformCrashContext);
+    public:
 
         /// コンテキスト種類を取得
-        CrashContextType GetType() const { return m_type; }
+        [[nodiscard]] CrashContextType GetType() const { return m_type; }
 
         /// コンテキスト情報をキャプチャ
         virtual void CaptureContext();
@@ -49,7 +51,7 @@ namespace NS
         virtual void SetErrorMessage(const TCHAR* message);
 
         /// エラーメッセージを取得
-        const TCHAR* GetErrorMessage() const { return m_errorMessage; }
+        [[nodiscard]] const TCHAR* GetErrorMessage() const { return m_errorMessage; }
 
         // =====================================================================
         // 静的メソッド
@@ -66,7 +68,7 @@ namespace NS
 
     protected:
         CrashContextType m_type;
-        TCHAR m_errorMessage[1024];
+        TCHAR m_errorMessage[1024]{};
 
         static TCHAR s_engineVersion[64];
         static CrashHandlerFunc s_crashHandler;

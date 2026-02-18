@@ -119,7 +119,7 @@ namespace NS
     // =========================================================================
 
     /// 無効なインデックス値
-    constexpr int32_t INDEX_NONE = -1;
+    constexpr int32_t kIndexNone = -1;
 
     // =========================================================================
     // InputDeviceId
@@ -128,22 +128,22 @@ namespace NS
     /// 入力デバイスID（強い型ID）
     struct InputDeviceId
     {
-        InputDeviceId() : m_id(INDEX_NONE) {}
-        explicit InputDeviceId(int32_t InId) : m_id(InId) {}
+        InputDeviceId() : m_id(kIndexNone) {}
+        explicit InputDeviceId(int32_t inId) : m_id(inId) {}
 
-        bool operator==(const InputDeviceId& Other) const { return m_id == Other.m_id; }
-        bool operator!=(const InputDeviceId& Other) const { return m_id != Other.m_id; }
+        bool operator==(const InputDeviceId& other) const { return m_id == other.m_id; }
+        bool operator!=(const InputDeviceId& other) const { return m_id != other.m_id; }
 
-        bool IsValid() const { return m_id != INDEX_NONE; }
-        int32_t GetId() const { return m_id; }
+        [[nodiscard]] bool IsValid() const { return m_id != kIndexNone; }
+        [[nodiscard]] int32_t GetId() const { return m_id; }
 
-        static const InputDeviceId NONE;
+        static const InputDeviceId kNone;
 
     private:
         int32_t m_id;
     };
 
-    inline const InputDeviceId InputDeviceId::NONE{};
+    inline const InputDeviceId InputDeviceId::kNone{};
 
     // =========================================================================
     // PlatformUserId
@@ -152,22 +152,22 @@ namespace NS
     /// プラットフォームユーザーID（強い型ID）
     struct PlatformUserId
     {
-        PlatformUserId() : m_id(INDEX_NONE) {}
-        explicit PlatformUserId(int32_t InId) : m_id(InId) {}
+        PlatformUserId() : m_id(kIndexNone) {}
+        explicit PlatformUserId(int32_t inId) : m_id(inId) {}
 
-        bool operator==(const PlatformUserId& Other) const { return m_id == Other.m_id; }
-        bool operator!=(const PlatformUserId& Other) const { return m_id != Other.m_id; }
+        bool operator==(const PlatformUserId& other) const { return m_id == other.m_id; }
+        bool operator!=(const PlatformUserId& other) const { return m_id != other.m_id; }
 
-        bool IsValid() const { return m_id != INDEX_NONE; }
-        int32_t GetId() const { return m_id; }
+        [[nodiscard]] bool IsValid() const { return m_id != kIndexNone; }
+        [[nodiscard]] int32_t GetId() const { return m_id; }
 
-        static const PlatformUserId NONE;
+        static const PlatformUserId kNone;
 
     private:
         int32_t m_id;
     };
 
-    inline const PlatformUserId PlatformUserId::NONE{};
+    inline const PlatformUserId PlatformUserId::kNone{};
 
     /// 互換マクロ
     #define PLATFORMUSERID_NONE ::NS::PlatformUserId::NONE

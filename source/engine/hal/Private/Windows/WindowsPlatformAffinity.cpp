@@ -9,6 +9,8 @@
 #endif
 #include <windows.h>
 
+#include <algorithm>
+
 #include "Windows/WindowsPlatformAffinity.h"
 
 namespace NS
@@ -33,7 +35,7 @@ namespace NS
         if (length > 0)
         {
             auto* buffer = static_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION*>(HeapAlloc(GetProcessHeap(), 0, length));
-            if (buffer && GetLogicalProcessorInformation(buffer, &length))
+            if ((buffer != nullptr) && (GetLogicalProcessorInformation(buffer, &length) != 0))
             {
                 DWORD offset = 0;
                 uint32 physicalCores = 0;
@@ -49,7 +51,7 @@ namespace NS
                 }
                 s_topology.physicalCoreCount = physicalCores;
             }
-            if (buffer)
+            if (buffer != nullptr)
             {
                 HeapFree(GetProcessHeap(), 0, buffer);
             }
@@ -66,22 +68,24 @@ namespace NS
         // GetSystemCpuSetInformation は Windows 10 1607+ で利用可能
         using GetSystemCpuSetInformationFn = BOOL(WINAPI*)(PSYSTEM_CPU_SET_INFORMATION, ULONG, PULONG, HANDLE, ULONG);
         HMODULE hKernel32 = ::GetModuleHandleW(L"kernel32.dll");
-        auto pGetSystemCpuSetInfo = hKernel32 ? reinterpret_cast<GetSystemCpuSetInformationFn>(
-                                                    ::GetProcAddress(hKernel32, "GetSystemCpuSetInformation"))
-                                              : nullptr;
+        auto pGetSystemCpuSetInfo = (hKernel32 != nullptr)
+                                        ? reinterpret_cast<GetSystemCpuSetInformationFn>(
+                                              ::GetProcAddress(hKernel32, "GetSystemCpuSetInformation"))
+                                        : nullptr;
 
-        if (pGetSystemCpuSetInfo)
+        if (pGetSystemCpuSetInfo != nullptr)
         {
             ULONG cpuSetInfoLength = 0;
             pGetSystemCpuSetInfo(nullptr, 0, &cpuSetInfoLength, GetCurrentProcess(), 0);
             if (cpuSetInfoLength > 0)
             {
                 auto* cpuSetBuffer = static_cast<uint8*>(HeapAlloc(GetProcessHeap(), 0, cpuSetInfoLength));
-                if (cpuSetBuffer && pGetSystemCpuSetInfo(reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer),
-                                                         cpuSetInfoLength,
-                                                         &cpuSetInfoLength,
-                                                         GetCurrentProcess(),
-                                                         0))
+                if ((cpuSetBuffer != nullptr) &&
+                    (pGetSystemCpuSetInfo(reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer),
+                                          cpuSetInfoLength,
+                                          &cpuSetInfoLength,
+                                          GetCurrentProcess(),
+                                          0) != 0))
                 {
                     uint8 minEfficiency = 0xFF;
                     uint8 maxEfficiency = 0;
@@ -94,11 +98,9 @@ namespace NS
                         info = reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer + offset2);
                         if (info->Type == CpuSetInformation)
                         {
-                            uint8 eff = info->CpuSet.EfficiencyClass;
-                            if (eff < minEfficiency)
-                                minEfficiency = eff;
-                            if (eff > maxEfficiency)
-                                maxEfficiency = eff;
+                            uint8 const eff = info->CpuSet.EfficiencyClass;
+                            minEfficiency = std::min(eff, minEfficiency);
+                            maxEfficiency = std::max(eff, maxEfficiency);
                         }
                         offset2 += info->Size;
                     }
@@ -118,7 +120,7 @@ namespace NS
                             info = reinterpret_cast<PSYSTEM_CPU_SET_INFORMATION>(cpuSetBuffer + offset2);
                             if (info->Type == CpuSetInformation)
                             {
-                                uint8 logicalIdx = info->CpuSet.LogicalProcessorIndex;
+                                uint8 const logicalIdx = info->CpuSet.LogicalProcessorIndex;
                                 if (logicalIdx < 64)
                                 {
                                     if (info->CpuSet.EfficiencyClass == maxEfficiency)
@@ -139,7 +141,7 @@ namespace NS
                         s_topology.efficiencyCoreCount = eCores;
                     }
                 }
-                if (cpuSetBuffer)
+                if (cpuSetBuffer != nullptr)
                 {
                     HeapFree(GetProcessHeap(), 0, cpuSetBuffer);
                 }
@@ -153,7 +155,8 @@ namespace NS
     {
         InitializeTopology();
 
-        const uint64 allCores = (s_topology.logicalProcessorCount >= 64) ? UINT64_MAX : ((1ULL << s_topology.logicalProcessorCount) - 1);
+        const uint64 kAllCores =
+            (s_topology.logicalProcessorCount >= 64) ? UINT64_MAX : ((1ULL << s_topology.logicalProcessorCount) - 1);
 
         // ハイブリッドCPU対応
         if (s_topology.isHybridCPU)
@@ -171,34 +174,30 @@ namespace NS
                 return s_topology.efficiencyCoreMask;
 
             default:
-                return allCores;
+                return kAllCores;
             }
         }
 
         // 通常CPU：全コア使用
-        return allCores;
+        return kAllCores;
     }
 
     ThreadPriority WindowsPlatformAffinity::GetDefaultPriority(ThreadType type)
     {
         switch (type)
         {
-        case ThreadType::MainGame:
-            return ThreadPriority::Normal;
         case ThreadType::Rendering:
-            return ThreadPriority::AboveNormal;
         case ThreadType::RHI:
             return ThreadPriority::AboveNormal;
         case ThreadType::Audio:
             return ThreadPriority::TimeCritical;
-        case ThreadType::TaskGraph:
-            return ThreadPriority::Normal;
-        case ThreadType::Pool:
-            return ThreadPriority::Normal;
         case ThreadType::Loading:
             return ThreadPriority::BelowNormal;
         case ThreadType::Background:
             return ThreadPriority::Lowest;
+        case ThreadType::MainGame:
+        case ThreadType::TaskGraph:
+        case ThreadType::Pool:
         default:
             return ThreadPriority::Normal;
         }
@@ -212,7 +211,7 @@ namespace NS
 
     bool WindowsPlatformAffinity::SetCurrentThreadAffinity(uint64 mask)
     {
-        DWORD_PTR result = ::SetThreadAffinityMask(GetCurrentThread(), static_cast<DWORD_PTR>(mask));
+        DWORD_PTR const result = ::SetThreadAffinityMask(GetCurrentThread(), static_cast<DWORD_PTR>(mask));
         return result != 0;
     }
 

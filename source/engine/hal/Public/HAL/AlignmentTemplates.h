@@ -46,7 +46,7 @@ namespace NS
         alignas(Alignment) uint8 pad[Size];
 
         void* GetData() { return pad; }
-        const void* GetData() const { return pad; }
+        [[nodiscard]] const void* GetData() const { return pad; }
     };
 
     /// 2の累乗かどうか

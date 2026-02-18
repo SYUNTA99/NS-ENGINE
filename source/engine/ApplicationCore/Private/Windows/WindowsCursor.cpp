@@ -37,12 +37,12 @@ namespace NS
         // カスタムカーソルのみ DestroyCursor で解放
         for (int32_t i = 0; i < MouseCursor::TotalCursorCount; ++i)
         {
-            if (m_bIsCustomCursor[i] && m_cursorHandles[i])
+            if (m_bIsCustomCursor[i] && (m_cursorHandles[i] != nullptr))
             {
                 ::DestroyCursor(m_cursorHandles[i]);
                 m_cursorHandles[i] = nullptr;
             }
-            if (m_cursorOverrideHandles[i])
+            if (m_cursorOverrideHandles[i] != nullptr)
             {
                 ::DestroyCursor(m_cursorOverrideHandles[i]);
                 m_cursorOverrideHandles[i] = nullptr;
@@ -58,31 +58,31 @@ namespace NS
     {
         // システムカーソルマッピング
         m_cursorHandles[MouseCursor::None] = nullptr;
-        m_cursorHandles[MouseCursor::Default] = ::LoadCursor(NULL, IDC_ARROW);
-        m_cursorHandles[MouseCursor::TextEditBeam] = ::LoadCursor(NULL, IDC_IBEAM);
-        m_cursorHandles[MouseCursor::ResizeLeftRight] = ::LoadCursor(NULL, IDC_SIZEWE);
-        m_cursorHandles[MouseCursor::ResizeUpDown] = ::LoadCursor(NULL, IDC_SIZENS);
-        m_cursorHandles[MouseCursor::ResizeSouthEast] = ::LoadCursor(NULL, IDC_SIZENWSE);
-        m_cursorHandles[MouseCursor::ResizeSouthWest] = ::LoadCursor(NULL, IDC_SIZENESW);
-        m_cursorHandles[MouseCursor::CardinalCross] = ::LoadCursor(NULL, IDC_SIZEALL);
-        m_cursorHandles[MouseCursor::Crosshairs] = ::LoadCursor(NULL, IDC_CROSS);
-        m_cursorHandles[MouseCursor::Hand] = ::LoadCursor(NULL, IDC_HAND);
-        m_cursorHandles[MouseCursor::SlashedCircle] = ::LoadCursor(NULL, IDC_NO);
+        m_cursorHandles[MouseCursor::Default] = ::LoadCursor(nullptr, IDC_ARROW);
+        m_cursorHandles[MouseCursor::TextEditBeam] = ::LoadCursor(nullptr, IDC_IBEAM);
+        m_cursorHandles[MouseCursor::ResizeLeftRight] = ::LoadCursor(nullptr, IDC_SIZEWE);
+        m_cursorHandles[MouseCursor::ResizeUpDown] = ::LoadCursor(nullptr, IDC_SIZENS);
+        m_cursorHandles[MouseCursor::ResizeSouthEast] = ::LoadCursor(nullptr, IDC_SIZENWSE);
+        m_cursorHandles[MouseCursor::ResizeSouthWest] = ::LoadCursor(nullptr, IDC_SIZENESW);
+        m_cursorHandles[MouseCursor::CardinalCross] = ::LoadCursor(nullptr, IDC_SIZEALL);
+        m_cursorHandles[MouseCursor::Crosshairs] = ::LoadCursor(nullptr, IDC_CROSS);
+        m_cursorHandles[MouseCursor::Hand] = ::LoadCursor(nullptr, IDC_HAND);
+        m_cursorHandles[MouseCursor::SlashedCircle] = ::LoadCursor(nullptr, IDC_NO);
 
         // カスタムカーソルファイル — カスタム .cur が存在しない場合はフォールバック
         // GrabHand → IDC_HAND フォールバック
-        m_cursorHandles[MouseCursor::GrabHand] = ::LoadCursor(NULL, IDC_HAND);
+        m_cursorHandles[MouseCursor::GrabHand] = ::LoadCursor(nullptr, IDC_HAND);
         // GrabHandClosed → IDC_HAND フォールバック
-        m_cursorHandles[MouseCursor::GrabHandClosed] = ::LoadCursor(NULL, IDC_HAND);
+        m_cursorHandles[MouseCursor::GrabHandClosed] = ::LoadCursor(nullptr, IDC_HAND);
         // EyeDropper → Crosshairs フォールバック
-        m_cursorHandles[MouseCursor::EyeDropper] = ::LoadCursor(NULL, IDC_CROSS);
+        m_cursorHandles[MouseCursor::EyeDropper] = ::LoadCursor(nullptr, IDC_CROSS);
         // Custom → デフォルト矢印
-        m_cursorHandles[MouseCursor::Custom] = ::LoadCursor(NULL, IDC_ARROW);
+        m_cursorHandles[MouseCursor::Custom] = ::LoadCursor(nullptr, IDC_ARROW);
     }
 
-    HCURSOR WindowsCursor::LoadCursorFromFile(const wchar_t* InPath)
+    HCURSOR WindowsCursor::LoadCursorFromFile(const wchar_t* inPath)
     {
-        HCURSOR result = static_cast<HCURSOR>(::LoadImageW(NULL, InPath, IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
+        auto result = static_cast<HCURSOR>(::LoadImageW(nullptr, inPath, IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE));
         return result;
     }
 
@@ -95,51 +95,51 @@ namespace NS
         return m_currentType;
     }
 
-    void WindowsCursor::SetType(MouseCursor::Type InType)
+    void WindowsCursor::SetType(MouseCursor::Type inType)
     {
-        if (InType >= MouseCursor::TotalCursorCount)
+        if (inType >= MouseCursor::TotalCursorCount)
         {
             return;
         }
 
-        m_currentType = InType;
+        m_currentType = inType;
 
         // オーバーライドを優先
-        HCURSOR cursor = m_cursorOverrideHandles[InType];
-        if (!cursor)
+        HCURSOR cursor = m_cursorOverrideHandles[inType];
+        if (cursor == nullptr)
         {
-            cursor = m_cursorHandles[InType];
+            cursor = m_cursorHandles[inType];
         }
 
-        if (cursor)
+        if (cursor != nullptr)
         {
             ::SetCursor(cursor);
         }
     }
 
-    void WindowsCursor::GetSize(int32_t& Width, int32_t& Height) const
+    void WindowsCursor::GetSize(int32_t& width, int32_t& height) const
     {
-        Width = ::GetSystemMetrics(SM_CXCURSOR);
-        Height = ::GetSystemMetrics(SM_CYCURSOR);
+        width = ::GetSystemMetrics(SM_CXCURSOR);
+        height = ::GetSystemMetrics(SM_CYCURSOR);
     }
 
     // =========================================================================
     // 位置制御
     // =========================================================================
 
-    void WindowsCursor::GetPosition(Vector2D& OutPosition) const
+    void WindowsCursor::GetPosition(Vector2D& outPosition) const
     {
         POINT cursorPos;
-        if (::GetCursorPos(&cursorPos))
+        if (::GetCursorPos(&cursorPos) != 0)
         {
-            OutPosition.X = static_cast<float>(cursorPos.x);
-            OutPosition.Y = static_cast<float>(cursorPos.y);
+            outPosition.x = static_cast<float>(cursorPos.x);
+            outPosition.y = static_cast<float>(cursorPos.y);
         }
     }
 
-    void WindowsCursor::SetPosition(int32_t X, int32_t Y)
+    void WindowsCursor::SetPosition(int32_t x, int32_t y)
     {
-        ::SetCursorPos(X, Y);
+        ::SetCursorPos(x, y);
     }
 
     // =========================================================================
@@ -163,15 +163,15 @@ namespace NS
         m_bShow = bShow;
     }
 
-    void WindowsCursor::Lock(const PlatformRect* Bounds)
+    void WindowsCursor::Lock(const PlatformRect* bounds)
     {
-        if (Bounds)
+        if (bounds != nullptr)
         {
             RECT clipRect;
-            clipRect.left = Bounds->Left;
-            clipRect.top = Bounds->Top;
-            clipRect.right = Bounds->Right;
-            clipRect.bottom = Bounds->Bottom;
+            clipRect.left = bounds->left;
+            clipRect.top = bounds->top;
+            clipRect.right = bounds->right;
+            clipRect.bottom = bounds->bottom;
             ::ClipCursor(&clipRect);
         }
         else
@@ -185,19 +185,19 @@ namespace NS
     // カーソル形状オーバーライド
     // =========================================================================
 
-    void WindowsCursor::SetTypeShape(MouseCursor::Type InCursorType, void* InCursorHandle)
+    void WindowsCursor::SetTypeShape(MouseCursor::Type inCursorType, void* inCursorHandle)
     {
-        if (InCursorType >= MouseCursor::TotalCursorCount)
+        if (inCursorType >= MouseCursor::TotalCursorCount)
         {
             return;
         }
 
-        m_cursorOverrideHandles[InCursorType] = static_cast<HCURSOR>(InCursorHandle);
+        m_cursorOverrideHandles[inCursorType] = static_cast<HCURSOR>(inCursorHandle);
 
         // 現在表示中のカーソルなら即座に反映
-        if (m_currentType == InCursorType)
+        if (m_currentType == inCursorType)
         {
-            SetType(InCursorType);
+            SetType(inCursorType);
         }
     }
 
@@ -205,10 +205,10 @@ namespace NS
     // カスタムカーソル作成
     // =========================================================================
 
-    void* WindowsCursor::CreateCursorFromFile(const std::wstring& InPath, Vector2D /*InHotSpot*/)
+    void* WindowsCursor::CreateCursorFromFile(const std::wstring& inPath, Vector2D /*InHotSpot*/)
     {
         // .ani/.cur は LoadImage でホットスポット情報を含むため InHotSpot は無視
-        HCURSOR cursor = LoadCursorFromFile(InPath.c_str());
+        HCURSOR cursor = LoadCursorFromFile(inPath.c_str());
         return static_cast<void*>(cursor);
     }
 
@@ -217,45 +217,45 @@ namespace NS
         return true;
     }
 
-    void* WindowsCursor::CreateCursorFromRGBABuffer(const uint8_t* InPixels,
-                                                    int32_t InWidth,
-                                                    int32_t InHeight,
-                                                    Vector2D InHotSpot)
+    void* WindowsCursor::CreateCursorFromRGBABuffer(const uint8_t* inPixels,
+                                                    int32_t inWidth,
+                                                    int32_t inHeight,
+                                                    Vector2D inHotSpot)
     {
-        if (!InPixels || InWidth <= 0 || InHeight <= 0)
+        if ((inPixels == nullptr) || inWidth <= 0 || inHeight <= 0)
         {
             return nullptr;
         }
 
         // 寸法上限チェック（整数オーバーフロー防止）
-        if (InWidth > 4096 || InHeight > 4096)
+        if (inWidth > 4096 || inHeight > 4096)
         {
             return nullptr;
         }
 
         // RGBA → BGRA チャンネルスワップ (Win32 DIBセクション要件)
-        const size_t pixelCount = static_cast<size_t>(InWidth) * static_cast<size_t>(InHeight);
-        std::vector<uint8_t> bgraPixels(pixelCount * 4);
-        for (size_t i = 0; i < pixelCount; ++i)
+        const size_t kPixelCount = static_cast<size_t>(inWidth) * static_cast<size_t>(inHeight);
+        std::vector<uint8_t> bgraPixels(kPixelCount * 4);
+        for (size_t i = 0; i < kPixelCount; ++i)
         {
-            bgraPixels[i * 4 + 0] = InPixels[i * 4 + 2]; // B ← R
-            bgraPixels[i * 4 + 1] = InPixels[i * 4 + 1]; // G ← G
-            bgraPixels[i * 4 + 2] = InPixels[i * 4 + 0]; // R ← B
-            bgraPixels[i * 4 + 3] = InPixels[i * 4 + 3]; // A ← A
+            bgraPixels[(i * 4) + 0] = inPixels[(i * 4) + 2]; // B ← R
+            bgraPixels[(i * 4) + 1] = inPixels[(i * 4) + 1]; // G ← G
+            bgraPixels[(i * 4) + 2] = inPixels[(i * 4) + 0]; // R ← B
+            bgraPixels[(i * 4) + 3] = inPixels[(i * 4) + 3]; // A ← A
         }
 
         // カラービットマップ
-        HBITMAP hColorBitmap = ::CreateBitmap(InWidth, InHeight, 1, 32, bgraPixels.data());
-        if (!hColorBitmap)
+        HBITMAP hColorBitmap = ::CreateBitmap(inWidth, inHeight, 1, 32, bgraPixels.data());
+        if (hColorBitmap == nullptr)
         {
             return nullptr;
         }
 
         // マスクビットマップ (1bpp, 全不透明)
-        const int32_t maskRowBytes = ((InWidth + 31) / 32) * 4;
-        std::vector<uint8_t> maskBits(maskRowBytes * InHeight, 0x00);
-        HBITMAP hMaskBitmap = ::CreateBitmap(InWidth, InHeight, 1, 1, maskBits.data());
-        if (!hMaskBitmap)
+        const int32_t kMaskRowBytes = ((inWidth + 31) / 32) * 4;
+        std::vector<uint8_t> maskBits(static_cast<size_t>(kMaskRowBytes) * inHeight, 0x00);
+        HBITMAP hMaskBitmap = ::CreateBitmap(inWidth, inHeight, 1, 1, maskBits.data());
+        if (hMaskBitmap == nullptr)
         {
             ::DeleteObject(hColorBitmap);
             return nullptr;
@@ -264,16 +264,16 @@ namespace NS
         // ICONINFO からカーソル生成
         ICONINFO iconInfo = {};
         iconInfo.fIcon = FALSE; // カーソル
-        float hx = std::clamp(InHotSpot.X, 0.0f, 1.0f);
-        float hy = std::clamp(InHotSpot.Y, 0.0f, 1.0f);
-        iconInfo.xHotspot =
-            static_cast<DWORD>(std::min(static_cast<long>(InWidth - 1), std::max(0L, std::lround(hx * (InWidth - 1)))));
-        iconInfo.yHotspot = static_cast<DWORD>(
-            std::min(static_cast<long>(InHeight - 1), std::max(0L, std::lround(hy * (InHeight - 1)))));
+        float const hx = std::clamp(inHotSpot.x, 0.0F, 1.0F);
+        float const hy = std::clamp(inHotSpot.y, 0.0F, 1.0F);
+        iconInfo.xHotspot = static_cast<DWORD>(
+            std::min(static_cast<long>(inWidth - 1), std::max(0L, std::lround(hx * static_cast<float>(inWidth - 1)))));
+        iconInfo.yHotspot = static_cast<DWORD>(std::min(
+            static_cast<long>(inHeight - 1), std::max(0L, std::lround(hy * static_cast<float>(inHeight - 1)))));
         iconInfo.hbmMask = hMaskBitmap;
         iconInfo.hbmColor = hColorBitmap;
 
-        HCURSOR hCursor = static_cast<HCURSOR>(::CreateIconIndirect(&iconInfo));
+        auto hCursor = static_cast<HCURSOR>(::CreateIconIndirect(&iconInfo));
 
         // GDI リソース解放
         ::DeleteObject(hColorBitmap);

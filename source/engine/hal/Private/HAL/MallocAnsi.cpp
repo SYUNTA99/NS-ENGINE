@@ -20,7 +20,7 @@ namespace NS
             return nullptr;
         }
 
-        uint32 actualAlignment = GetActualAlignment(count, alignment);
+        uint32 const actualAlignment = GetActualAlignment(count, alignment);
 
 #if PLATFORM_WINDOWS
         void* ptr = _aligned_malloc(count, actualAlignment);
@@ -30,7 +30,7 @@ namespace NS
         void* ptr = aligned_alloc(actualAlignment, alignedCount);
 #endif
 
-        if (!ptr)
+        if (ptr == nullptr)
         {
             m_lastError = MallocError::OutOfMemory;
         }
@@ -57,11 +57,11 @@ namespace NS
             return nullptr;
         }
 
-        uint32 actualAlignment = GetActualAlignment(newCount, alignment);
+        uint32 const actualAlignment = GetActualAlignment(newCount, alignment);
 
 #if PLATFORM_WINDOWS
         void* newPtr = _aligned_realloc(ptr, newCount, actualAlignment);
-        if (!newPtr)
+        if (newPtr == nullptr)
         {
             m_lastError = MallocError::OutOfMemory;
         }
@@ -118,7 +118,7 @@ namespace NS
 #endif
     }
 
-    uint32 MallocAnsi::GetActualAlignment(SIZE_T count, uint32 alignment) const
+    uint32 MallocAnsi::GetActualAlignment(SIZE_T count, uint32 alignment) 
     {
         if (alignment == kDefaultAlignment)
         {

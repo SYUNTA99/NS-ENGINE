@@ -57,8 +57,8 @@ namespace NS
         NS_DISALLOW_COPY_AND_MOVE(ScopedNamedEvent);
 
     private:
-        void BeginEvent(const ANSICHAR* name, NamedEventColor color);
-        void BeginEvent(const TCHAR* name, NamedEventColor color);
+        static void BeginEvent(const ANSICHAR* name, NamedEventColor color);
+        static void BeginEvent(const TCHAR* name, NamedEventColor color);
         void EndEvent();
     };
 

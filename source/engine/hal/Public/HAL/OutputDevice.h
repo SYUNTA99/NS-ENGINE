@@ -33,8 +33,11 @@ namespace NS
     class OutputDevice
     {
     public:
+        OutputDevice() = default;
         virtual ~OutputDevice() = default;
+        NS_DISALLOW_COPY_AND_MOVE(OutputDevice);
 
+    public:
         /// メッセージをシリアライズ（派生クラスで実装）
         /// @param message 出力メッセージ
         /// @param verbosity 詳細度レベル
@@ -56,7 +59,7 @@ namespace NS
         virtual void Flush() {}
 
         /// デバイスが任意のスレッドから使用可能かどうか
-        virtual bool CanBeUsedOnAnyThread() const { return false; }
+        [[nodiscard]] virtual bool CanBeUsedOnAnyThread() const { return false; }
     };
 
     /// デバッガ出力デバイス
@@ -67,10 +70,12 @@ namespace NS
     public:
         OutputDeviceDebug() = default;
         ~OutputDeviceDebug() override = default;
+        NS_DISALLOW_COPY_AND_MOVE(OutputDeviceDebug);
 
+    public:
         void Serialize(const TCHAR* message, LogVerbosity verbosity) override;
         void Flush() override;
-        bool CanBeUsedOnAnyThread() const override { return true; }
+        [[nodiscard]] bool CanBeUsedOnAnyThread() const override { return true; }
 
         /// デバッガが接続されているかどうか
         static bool IsDebuggerPresent();
@@ -84,9 +89,11 @@ namespace NS
     public:
         OutputDeviceConsole() = default;
         ~OutputDeviceConsole() override = default;
+        NS_DISALLOW_COPY_AND_MOVE(OutputDeviceConsole);
 
+    public:
         void Serialize(const TCHAR* message, LogVerbosity verbosity) override;
         void Flush() override;
-        bool CanBeUsedOnAnyThread() const override { return true; }
+        [[nodiscard]] bool CanBeUsedOnAnyThread() const override { return true; }
     };
 } // namespace NS

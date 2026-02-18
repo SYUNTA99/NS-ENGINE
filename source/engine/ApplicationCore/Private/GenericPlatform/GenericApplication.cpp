@@ -9,26 +9,26 @@ namespace NS
     // DisplayMetrics static members
     // =========================================================================
 
-    float DisplayMetrics::s_debugTitleSafeZoneRatio = 0.0f;
-    float DisplayMetrics::s_debugActionSafeZoneRatio = 0.0f;
+    float DisplayMetrics::s_debugTitleSafeZoneRatio = 0.0F;
+    float DisplayMetrics::s_debugActionSafeZoneRatio = 0.0F;
 
     // =========================================================================
     // コンストラクタ
     // =========================================================================
 
-    GenericApplication::GenericApplication(const std::shared_ptr<ICursor>& InCursor)
+    GenericApplication::GenericApplication(const std::shared_ptr<ICursor>& inCursor)
         : m_messageHandler(
               SharedRef<GenericApplicationMessageHandler>(std::make_shared<GenericApplicationMessageHandler>())),
-          m_cursor(InCursor ? InCursor : std::make_shared<NullCursor>())
+          m_cursor(inCursor ? inCursor : std::make_shared<NullCursor>())
     {}
 
     // =========================================================================
     // メッセージハンドラ
     // =========================================================================
 
-    void GenericApplication::SetMessageHandler(const SharedRef<GenericApplicationMessageHandler>& InMessageHandler)
+    void GenericApplication::SetMessageHandler(const SharedRef<GenericApplicationMessageHandler>& inMessageHandler)
     {
-        m_messageHandler = InMessageHandler;
+        m_messageHandler = inMessageHandler;
     }
 
     const SharedRef<GenericApplicationMessageHandler>& GenericApplication::GetMessageHandler() const
@@ -78,7 +78,7 @@ namespace NS
 
     ModifierKeysState GenericApplication::GetModifierKeys() const
     {
-        return ModifierKeysState();
+        return {};
     }
 
     void GenericApplication::SetHighPrecisionMouseMode(bool /*bEnable*/,
@@ -125,9 +125,9 @@ namespace NS
         return nullptr;
     }
 
-    void GenericApplication::GetInitialDisplayMetrics(DisplayMetrics& OutMetrics) const
+    void GenericApplication::GetInitialDisplayMetrics(DisplayMetrics& outMetrics) const
     {
-        DisplayMetrics::RebuildDisplayMetrics(OutMetrics);
+        DisplayMetrics::RebuildDisplayMetrics(outMetrics);
     }
 
     // =========================================================================
@@ -136,7 +136,7 @@ namespace NS
 
     PlatformRect GenericApplication::GetWorkArea(const PlatformRect& /*CurrentWindow*/) const
     {
-        return PlatformRect();
+        return {};
     }
 
     WindowTitleAlignment GenericApplication::GetWindowTitleAlignment() const
@@ -189,9 +189,9 @@ namespace NS
     // Protected
     // =========================================================================
 
-    void GenericApplication::BroadcastDisplayMetricsChanged(const DisplayMetrics& InMetrics)
+    void GenericApplication::BroadcastDisplayMetricsChanged(const DisplayMetrics& inMetrics)
     {
-        m_displayMetricsChangedEvent.Broadcast(InMetrics);
+        m_displayMetricsChangedEvent.Broadcast(inMetrics);
     }
 
 } // namespace NS

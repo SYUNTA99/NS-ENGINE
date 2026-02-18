@@ -20,6 +20,8 @@ namespace NS
     public:
         MallocAnsi() = default;
         ~MallocAnsi() override = default;
+        NS_DISALLOW_COPY_AND_MOVE(MallocAnsi);
+    public:
 
         // =====================================================================
         // Malloc インターフェース実装
@@ -33,13 +35,13 @@ namespace NS
         bool GetAllocationSize(void* ptr, SIZE_T& outSize) override;
 
         const TCHAR* GetDescriptiveName() override { return TEXT("MallocAnsi"); }
-        bool IsInternallyThreadSafe() const override { return true; }
+        [[nodiscard]] bool IsInternallyThreadSafe() const override { return true; }
 
     private:
         /// 実際のアライメントを計算
         /// @param count 要求サイズ
         /// @param alignment 要求アライメント（0の場合は自動決定）
         /// @return 使用するアライメント
-        uint32 GetActualAlignment(SIZE_T count, uint32 alignment) const;
+        [[nodiscard]] static uint32 GetActualAlignment(SIZE_T count, uint32 alignment) ;
     };
 } // namespace NS

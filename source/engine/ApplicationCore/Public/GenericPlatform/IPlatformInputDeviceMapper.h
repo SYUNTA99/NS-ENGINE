@@ -36,8 +36,11 @@ namespace NS
     class IPlatformInputDeviceMapper
     {
     public:
+        IPlatformInputDeviceMapper() = default;
         virtual ~IPlatformInputDeviceMapper() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IPlatformInputDeviceMapper);
 
+    public:
         /// シングルトン取得
         static IPlatformInputDeviceMapper& Get();
 
@@ -46,75 +49,79 @@ namespace NS
         // =================================================================
 
         /// プライマリプラットフォームユーザーを取得
-        virtual PlatformUserId GetPrimaryPlatformUser() const { return PlatformUserId(0); }
+        [[nodiscard]] virtual PlatformUserId GetPrimaryPlatformUser() const { return PlatformUserId(0); }
 
         /// デフォルト入力デバイスを取得
-        virtual InputDeviceId GetDefaultInputDevice() const { return InputDeviceId(0); }
+        [[nodiscard]] virtual InputDeviceId GetDefaultInputDevice() const { return InputDeviceId(0); }
 
         // =================================================================
         // マッピングクエリ
         // =================================================================
 
         /// デバイスIDからユーザーIDを取得
-        virtual PlatformUserId GetUserForInputDevice(InputDeviceId DeviceId) const = 0;
+        [[nodiscard]] virtual PlatformUserId GetUserForInputDevice(InputDeviceId deviceId) const = 0;
 
         /// ユーザーのプライマリ入力デバイスを取得
-        virtual InputDeviceId GetPrimaryInputDeviceForUser(PlatformUserId UserId) const = 0;
+        [[nodiscard]] virtual InputDeviceId GetPrimaryInputDeviceForUser(PlatformUserId userId) const = 0;
 
         /// ユーザーの全入力デバイスを取得
-        virtual bool GetAllInputDevicesForUser(PlatformUserId UserId, std::vector<InputDeviceId>& OutDevices) const = 0;
+        virtual bool GetAllInputDevicesForUser(PlatformUserId userId, std::vector<InputDeviceId>& outDevices) const = 0;
 
         /// 全入力デバイスを取得
-        virtual void GetAllInputDevices(std::vector<InputDeviceId>& OutDevices) const = 0;
+        virtual void GetAllInputDevices(std::vector<InputDeviceId>& outDevices) const = 0;
 
         /// 全接続中入力デバイスを取得
-        virtual void GetAllConnectedInputDevices(std::vector<InputDeviceId>& OutDevices) const = 0;
+        virtual void GetAllConnectedInputDevices(std::vector<InputDeviceId>& outDevices) const = 0;
 
         /// 全アクティブユーザーを取得
-        virtual void GetAllActiveUsers(std::vector<PlatformUserId>& OutUsers) const = 0;
+        virtual void GetAllActiveUsers(std::vector<PlatformUserId>& outUsers) const = 0;
 
         // =================================================================
         // 状態クエリ
         // =================================================================
 
         /// デバイスの接続状態を取得
-        virtual InputDeviceConnectionState GetInputDeviceConnectionState(InputDeviceId DeviceId) const = 0;
+        [[nodiscard]] virtual InputDeviceConnectionState GetInputDeviceConnectionState(
+            InputDeviceId deviceId) const = 0;
 
         /// デバイスIDが有効か
-        virtual bool IsValidInputDevice(InputDeviceId DeviceId) const = 0;
+        [[nodiscard]] virtual bool IsValidInputDevice(InputDeviceId deviceId) const = 0;
 
         /// ペアリングされていないデバイスの割り当て先ユーザー
-        virtual PlatformUserId GetUserForUnpairedInputDevices() const { return PlatformUserId(0); }
+        [[nodiscard]] virtual PlatformUserId GetUserForUnpairedInputDevices() const { return PlatformUserId(0); }
 
         /// ユーザーの全接続デバイスを取得
-        virtual void GetAllConnectedInputDevicesForUser(PlatformUserId UserId,
-                                                        std::vector<InputDeviceId>& OutDevices) const
+        virtual void GetAllConnectedInputDevicesForUser(PlatformUserId userId,
+                                                        std::vector<InputDeviceId>& outDevices) const
         {
             std::vector<InputDeviceId> allDevices;
-            GetAllInputDevicesForUser(UserId, allDevices);
-            OutDevices.clear();
+            GetAllInputDevicesForUser(userId, allDevices);
+            outDevices.clear();
             for (const auto& dev : allDevices)
             {
                 if (GetInputDeviceConnectionState(dev) == InputDeviceConnectionState::Connected)
                 {
-                    OutDevices.push_back(dev);
+                    outDevices.push_back(dev);
                 }
             }
         }
 
         /// 入力デバイスを持たない最初のユーザー
-        virtual PlatformUserId GetFirstPlatformUserWithNoInputDevice() const { return PlatformUserId::NONE; }
+        [[nodiscard]] virtual PlatformUserId GetFirstPlatformUserWithNoInputDevice() const
+        {
+            return PlatformUserId::kNone;
+        }
 
         /// 未ペアリングユーザーか
-        virtual bool IsUnpairedUserId(PlatformUserId UserId) const
+        [[nodiscard]] virtual bool IsUnpairedUserId(PlatformUserId userId) const
         {
-            return UserId == GetUserForUnpairedInputDevices();
+            return userId == GetUserForUnpairedInputDevices();
         }
 
         /// デバイスが未ペアリングユーザーに割り当てられているか
-        virtual bool IsInputDeviceMappedToUnpairedUser(InputDeviceId DeviceId) const
+        [[nodiscard]] virtual bool IsInputDeviceMappedToUnpairedUser(InputDeviceId deviceId) const
         {
-            return GetUserForInputDevice(DeviceId) == GetUserForUnpairedInputDevices();
+            return GetUserForInputDevice(deviceId) == GetUserForUnpairedInputDevices();
         }
 
         // =================================================================
@@ -122,31 +129,34 @@ namespace NS
         // =================================================================
 
         /// ControllerId からユーザーID/デバイスIDへ変換
-        virtual bool RemapControllerIdToPlatformUserAndDevice(int32_t ControllerId,
-                                                              PlatformUserId& OutUserId,
-                                                              InputDeviceId& OutDeviceId) const
+        virtual bool RemapControllerIdToPlatformUserAndDevice(int32_t controllerId,
+                                                              PlatformUserId& outUserId,
+                                                              InputDeviceId& outDeviceId) const
         {
-            OutUserId = PlatformUserId(ControllerId);
-            OutDeviceId = InputDeviceId(ControllerId);
+            outUserId = PlatformUserId(controllerId);
+            outDeviceId = InputDeviceId(controllerId);
             return true;
         }
 
         /// ユーザーID/デバイスID から ControllerId へ変換
-        virtual bool RemapUserAndDeviceToControllerId(PlatformUserId UserId,
-                                                      int32_t& OutControllerId,
-                                                      InputDeviceId /*OptionalDeviceId*/ = InputDeviceId::NONE) const
+        virtual bool RemapUserAndDeviceToControllerId(PlatformUserId userId,
+                                                      int32_t& outControllerId,
+                                                      InputDeviceId /*OptionalDeviceId*/ = InputDeviceId::kNone) const
         {
-            OutControllerId = UserId.GetId();
+            outControllerId = userId.GetId();
             return true;
         }
 
         /// ユーザーインデックス取得
-        virtual int32_t GetUserIndexForPlatformUser(PlatformUserId UserId) const { return UserId.GetId(); }
+        [[nodiscard]] virtual int32_t GetUserIndexForPlatformUser(PlatformUserId userId) const
+        {
+            return userId.GetId();
+        }
 
         /// インデックスからユーザーID取得
-        virtual PlatformUserId GetPlatformUserForUserIndex(int32_t LocalUserIndex) const
+        [[nodiscard]] virtual PlatformUserId GetPlatformUserForUserIndex(int32_t localUserIndex) const
         {
-            return PlatformUserId(LocalUserIndex);
+            return PlatformUserId(localUserIndex);
         }
 
         // =================================================================
@@ -154,10 +164,10 @@ namespace NS
         // =================================================================
 
         /// 最大プラットフォームユーザー数
-        virtual int32_t GetMaxPlatformUserCount() const { return 8; }
+        [[nodiscard]] virtual int32_t GetMaxPlatformUserCount() const { return 8; }
 
         /// 現在のデバイスマッピングポリシー
-        virtual InputDeviceMappingPolicy GetCurrentDeviceMappingPolicy() const
+        [[nodiscard]] virtual InputDeviceMappingPolicy GetCurrentDeviceMappingPolicy() const
         {
             return InputDeviceMappingPolicy::MapAllDevicesToPrimaryUser;
         }
@@ -170,39 +180,39 @@ namespace NS
         using PairingChangeDelegate =
             std::function<void(InputDeviceId, PlatformUserId /*NewUser*/, PlatformUserId /*OldUser*/)>;
 
-        void OnInputDeviceConnectionChange(ConnectionChangeDelegate Fn)
+        void OnInputDeviceConnectionChange(ConnectionChangeDelegate fn)
         {
-            m_connectionChangeDelegates.push_back(std::move(Fn));
+            m_connectionChangeDelegates.push_back(std::move(fn));
         }
-        void OnInputDevicePairingChange(PairingChangeDelegate Fn) { m_pairingChangeDelegates.push_back(std::move(Fn)); }
+        void OnInputDevicePairingChange(PairingChangeDelegate fn) { m_pairingChangeDelegates.push_back(std::move(fn)); }
 
     protected:
         // =================================================================
         // 内部管理 (派生クラス用)
         // =================================================================
 
-        virtual void Internal_MapInputDeviceToUser(InputDeviceId DeviceId, PlatformUserId UserId) = 0;
-        virtual void Internal_ChangeInputDeviceUserMapping(InputDeviceId DeviceId,
-                                                           PlatformUserId NewUserId,
-                                                           PlatformUserId OldUserId) = 0;
-        virtual void Internal_SetInputDeviceConnectionState(InputDeviceId DeviceId,
-                                                            InputDeviceConnectionState State) = 0;
+        virtual void InternalMapInputDeviceToUser(InputDeviceId deviceId, PlatformUserId userId) = 0;
+        virtual void InternalChangeInputDeviceUserMapping(InputDeviceId deviceId,
+                                                          PlatformUserId newUserId,
+                                                          PlatformUserId oldUserId) = 0;
+        virtual void InternalSetInputDeviceConnectionState(InputDeviceId deviceId,
+                                                           InputDeviceConnectionState state) = 0;
         virtual PlatformUserId AllocateNewUserId() = 0;
         virtual InputDeviceId AllocateNewInputDeviceId() = 0;
 
-        void BroadcastConnectionChange(InputDeviceConnectionState State, PlatformUserId UserId, InputDeviceId DeviceId)
+        void BroadcastConnectionChange(InputDeviceConnectionState state, PlatformUserId userId, InputDeviceId deviceId)
         {
             for (const auto& fn : m_connectionChangeDelegates)
             {
-                fn(State, UserId, DeviceId);
+                fn(state, userId, deviceId);
             }
         }
 
-        void BroadcastPairingChange(InputDeviceId DeviceId, PlatformUserId NewUser, PlatformUserId OldUser)
+        void BroadcastPairingChange(InputDeviceId deviceId, PlatformUserId newUser, PlatformUserId oldUser)
         {
             for (const auto& fn : m_pairingChangeDelegates)
             {
-                fn(DeviceId, NewUser, OldUser);
+                fn(deviceId, newUser, oldUser);
             }
         }
 

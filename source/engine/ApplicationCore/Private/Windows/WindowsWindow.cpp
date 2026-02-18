@@ -27,6 +27,7 @@
 #include "Windows/WindowsWindow.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,13 +40,13 @@ namespace NS
     // Static members
     // =========================================================================
 
-    const NS::TCHAR WindowsWindow::AppWindowClass[] = TEXT("NSEngineWindow");
+    const NS::TCHAR WindowsWindow::kAppWindowClass[] = TEXT("NSEngineWindow");
 
-    static WNDPROC s_appWndProc = ::DefWindowProcW;
+    static WNDPROC g_sAppWndProc = ::DefWindowProcW;
 
-    void WindowsWindow::SetWndProcCallback(WNDPROC Proc)
+    void WindowsWindow::SetWndProcCallback(WNDPROC proc)
     {
-        s_appWndProc = Proc ? Proc : ::DefWindowProcW;
+        g_sAppWndProc = (proc != nullptr) ? proc : ::DefWindowProcW;
     }
 
     // =========================================================================
@@ -57,18 +58,18 @@ namespace NS
         WNDCLASSEX wc = {};
         wc.cbSize = sizeof(WNDCLASSEX);
         wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-        wc.lpfnWndProc = s_appWndProc;
+        wc.lpfnWndProc = g_sAppWndProc;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = hInstance;
         wc.hIcon = hIcon;
-        wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
+        wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
         wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(NULL_BRUSH));
         wc.lpszMenuName = nullptr;
-        wc.lpszClassName = AppWindowClass;
+        wc.lpszClassName = kAppWindowClass;
         wc.hIconSm = hIcon;
 
-        if (!::RegisterClassEx(&wc))
+        if (::RegisterClassEx(&wc) == 0U)
         {
             // すでに登録済みの場合は無視（2回目の呼び出し対応）
             if (::GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
@@ -86,7 +87,7 @@ namespace NS
 
     std::shared_ptr<WindowsWindow> WindowsWindow::MakeWindow()
     {
-        return std::shared_ptr<WindowsWindow>(new WindowsWindow());
+        return std::make_shared<WindowsWindow>();
     }
 
     WindowsWindow::WindowsWindow()
@@ -103,35 +104,45 @@ namespace NS
     // 03-02: インスタンス初期化
     // =========================================================================
 
-    void WindowsWindow::Initialize(GenericApplication* const Application,
-                                   const GenericWindowDefinition& InDefinition,
+    void WindowsWindow::Initialize(GenericApplication* const kApplication,
+                                   const GenericWindowDefinition& inDefinition,
                                    HINSTANCE hInstance,
-                                   const std::shared_ptr<WindowsWindow>& InParent,
+                                   const std::shared_ptr<WindowsWindow>& inParent,
                                    bool bShowImmediately)
     {
-        m_owningApplication = Application;
-        m_definition = InDefinition;
+        m_owningApplication = kApplication;
+        m_definition = inDefinition;
 
         // --- ウィンドウスタイル設定 ---
         DWORD style = 0;
         DWORD exStyle = 0;
 
-        if (InDefinition.HasOSWindowBorder)
+        if (inDefinition.hasOsWindowBorder)
         {
             style = WS_OVERLAPPED;
 
-            if (InDefinition.IsRegularWindow)
+            if (inDefinition.isRegularWindow)
             {
-                if (InDefinition.HasCloseButton)
+                if (inDefinition.hasCloseButton)
+                {
                     style |= WS_SYSMENU;
-                if (InDefinition.SupportsMinimize)
+                }
+                if (inDefinition.supportsMinimize)
+                {
                     style |= WS_MINIMIZEBOX;
-                if (InDefinition.SupportsMaximize)
+                }
+                if (inDefinition.supportsMaximize)
+                {
                     style |= WS_MAXIMIZEBOX;
-                if (InDefinition.HasSizingFrame)
+                }
+                if (inDefinition.hasSizingFrame)
+                {
                     style |= WS_THICKFRAME;
+                }
                 else
+                {
                     style |= WS_BORDER;
+                }
 
                 style |= WS_CAPTION;
             }
@@ -144,59 +155,63 @@ namespace NS
         {
             style = WS_POPUP;
 
-            if (InDefinition.TransparencySupport == WindowTransparency::PerPixel)
+            if (inDefinition.transparencySupport == WindowTransparency::PerPixel)
             {
                 exStyle |= WS_EX_COMPOSITED;
             }
         }
 
-        if (!InDefinition.AcceptsInput)
+        if (!inDefinition.acceptsInput)
         {
             exStyle |= WS_EX_TRANSPARENT;
         }
 
-        if (InDefinition.IsTopmostWindow)
+        if (inDefinition.isTopmostWindow)
         {
             exStyle |= WS_EX_TOPMOST;
         }
 
-        if (!InDefinition.AppearsInTaskbar)
+        if (!inDefinition.appearsInTaskbar)
         {
             exStyle |= WS_EX_TOOLWINDOW;
         }
 
         // --- クライアント領域サイズ → ウィンドウ全体サイズ ---
-        int32_t clientW = static_cast<int32_t>(InDefinition.WidthDesiredOnScreen);
-        int32_t clientH = static_cast<int32_t>(InDefinition.HeightDesiredOnScreen);
-        int32_t windowX = static_cast<int32_t>(InDefinition.XDesiredPositionOnScreen);
-        int32_t windowY = static_cast<int32_t>(InDefinition.YDesiredPositionOnScreen);
+        auto const clientW = static_cast<int32_t>(inDefinition.widthDesiredOnScreen);
+        auto const clientH = static_cast<int32_t>(inDefinition.heightDesiredOnScreen);
+        auto windowX = static_cast<int32_t>(inDefinition.xDesiredPositionOnScreen);
+        auto windowY = static_cast<int32_t>(inDefinition.yDesiredPositionOnScreen);
 
         RECT borderRect = {0, 0, clientW, clientH};
         ::AdjustWindowRectEx(&borderRect, style, FALSE, exStyle);
 
-        int32_t windowW = borderRect.right - borderRect.left;
-        int32_t windowH = borderRect.bottom - borderRect.top;
+        int32_t const windowW = borderRect.right - borderRect.left;
+        int32_t const windowH = borderRect.bottom - borderRect.top;
 
         if (windowX < 0)
+        {
             windowX = CW_USEDEFAULT;
+        }
         if (windowY < 0)
+        {
             windowY = CW_USEDEFAULT;
+        }
 
-        HWND parentHWnd = InParent ? InParent->GetHWnd() : nullptr;
+        HWND parentHWnd = inParent ? inParent->GetHWnd() : nullptr;
 
         // --- CreateWindowEx ---
         m_hwnd = ::CreateWindowEx(exStyle,
-                                  AppWindowClass,
-                                  InDefinition.Title.c_str(),
+                                  kAppWindowClass,
+                                  inDefinition.title.c_str(),
                                   style,
                                   windowX,
                                   windowY,
                                   windowW,
                                   windowH,
                                   parentHWnd,
-                                  NULL,
+                                  nullptr,
                                   hInstance,
-                                  NULL);
+                                  nullptr);
 
         if (m_hwnd == nullptr)
         {
@@ -210,21 +225,21 @@ namespace NS
         ::SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
         // --- DWM 讒区・ ---
-        if (!InDefinition.HasOSWindowBorder)
+        if (!inDefinition.hasOsWindowBorder)
         {
             DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
             ::DwmSetWindowAttribute(m_hwnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
         }
 
-        if (InDefinition.TransparencySupport == WindowTransparency::PerPixel)
+        if (inDefinition.transparencySupport == WindowTransparency::PerPixel)
         {
-            MARGINS margins = {-1, -1, -1, -1};
+            MARGINS const margins = {-1, -1, -1, -1};
             ::DwmExtendFrameIntoClientArea(m_hwnd, &margins);
 
             // 角丸
-            if (InDefinition.CornerRadius > 0.0f)
+            if (inDefinition.cornerRadius > 0.0F)
             {
-                int32_t cr = static_cast<int32_t>(InDefinition.CornerRadius);
+                auto const cr = static_cast<int32_t>(inDefinition.cornerRadius);
                 HRGN rgn = ::CreateRoundRectRgn(0, 0, clientW + 1, clientH + 1, cr, cr);
                 if (::SetWindowRgn(m_hwnd, rgn, FALSE) == 0)
                 {
@@ -232,13 +247,13 @@ namespace NS
                 }
             }
         }
-        else if (InDefinition.TransparencySupport == WindowTransparency::PerWindow)
+        else if (inDefinition.transparencySupport == WindowTransparency::PerWindow)
         {
             // PerWindow 透過：SetLayeredWindowAttributes は SetOpacity で処理
-            LONG_PTR curExStyle = ::GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
+            LONG_PTR const curExStyle = ::GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
             ::SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, curExStyle | WS_EX_LAYERED);
             ::SetLayeredWindowAttributes(
-                m_hwnd, 0, static_cast<BYTE>(std::clamp(InDefinition.Opacity, 0.0f, 1.0f) * 255.0f), LWA_ALPHA);
+                m_hwnd, 0, static_cast<BYTE>(std::clamp(inDefinition.opacity, 0.0F, 1.0F) * 255.0F), LWA_ALPHA);
         }
 
         // --- タッチ入力登録 ---
@@ -263,7 +278,7 @@ namespace NS
 
     void WindowsWindow::Destroy()
     {
-        if (m_hwnd)
+        if (m_hwnd != nullptr)
         {
             ::RevokeDragDrop(m_hwnd);
             ::RemoveClipboardFormatListener(m_hwnd);
@@ -271,7 +286,7 @@ namespace NS
             m_hwnd = nullptr;
         }
 
-        if (m_waitableTimer)
+        if (m_waitableTimer != nullptr)
         {
             ::CloseHandle(m_waitableTimer);
             m_waitableTimer = nullptr;
@@ -290,11 +305,7 @@ namespace NS
         {
             m_bIsFirstTimeVisible = false;
 
-            if (m_definition.ActivationPolicy == WindowActivationPolicy::Never)
-            {
-                ::ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
-            }
-            else if (m_definition.FocusWhenFirstShown)
+            if (m_definition.focusWhenFirstShown && m_definition.activationPolicy != WindowActivationPolicy::Never)
             {
                 ::ShowWindow(m_hwnd, SW_SHOW);
             }
@@ -338,12 +349,12 @@ namespace NS
 
     bool WindowsWindow::IsMaximized() const
     {
-        return !!::IsZoomed(m_hwnd);
+        return !(::IsZoomed(m_hwnd) == 0);
     }
 
     bool WindowsWindow::IsMinimized() const
     {
-        return !!::IsIconic(m_hwnd);
+        return !(::IsIconic(m_hwnd) == 0);
     }
 
     bool WindowsWindow::IsVisible() const
@@ -355,18 +366,18 @@ namespace NS
     // 03-03: SetWindowMode
     // =========================================================================
 
-    void WindowsWindow::SetWindowMode(WindowMode::Type NewWindowMode)
+    void WindowsWindow::SetWindowMode(WindowMode::Type newWindowMode)
     {
-        if (NewWindowMode == m_windowMode)
+        if (newWindowMode == m_windowMode)
         {
             return;
         }
 
-        WindowMode::Type PreviousMode = m_windowMode;
-        m_windowMode = NewWindowMode;
+        WindowMode::Type const previousMode = m_windowMode;
+        m_windowMode = newWindowMode;
 
         // Windowed → Fullscreen/WindowedFullscreen: 座標を保存
-        if (PreviousMode == WindowMode::Windowed)
+        if (previousMode == WindowMode::Windowed)
         {
             ::GetWindowPlacement(m_hwnd, &m_preFullscreenWindowPlacement);
         }
@@ -376,15 +387,15 @@ namespace NS
         mi.cbSize = sizeof(MONITORINFO);
         ::GetMonitorInfo(hMonitor, &mi);
 
-        switch (NewWindowMode)
+        switch (newWindowMode)
         {
         case WindowMode::Fullscreen:
         case WindowMode::WindowedFullscreen:
         {
             ::SetWindowLongPtr(m_hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
-            HWND insertAfter = (NewWindowMode == WindowMode::WindowedFullscreen) ? HWND_TOPMOST : HWND_TOP;
-            RECT& rc = mi.rcMonitor;
+            HWND insertAfter = (newWindowMode == WindowMode::WindowedFullscreen) ? HWND_TOPMOST : HWND_TOP;
+            RECT const& rc = mi.rcMonitor;
             ::SetWindowPos(m_hwnd,
                            insertAfter,
                            rc.left,
@@ -428,7 +439,7 @@ namespace NS
         }
     }
 
-    void WindowsWindow::HACK_ForceToFront()
+    void WindowsWindow::HackForceToFront()
     {
         ::AllowSetForegroundWindow(::GetCurrentProcessId());
         ::SetForegroundWindow(m_hwnd);
@@ -446,22 +457,22 @@ namespace NS
 
     bool WindowsWindow::IsEnabled() const
     {
-        return !!::IsWindowEnabled(m_hwnd);
+        return !(::IsWindowEnabled(m_hwnd) == 0);
     }
 
     // =========================================================================
     // 03-03: Opacity / Text / DrawAttention
     // =========================================================================
 
-    void WindowsWindow::SetOpacity(float InOpacity)
+    void WindowsWindow::SetOpacity(float inOpacity)
     {
-        LONG_PTR exStyle = ::GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
+        LONG_PTR const exStyle = ::GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
 
-        if (InOpacity < 1.0f)
+        if (inOpacity < 1.0F)
         {
             ::SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
             ::SetLayeredWindowAttributes(
-                m_hwnd, 0, static_cast<BYTE>(std::clamp(InOpacity, 0.0f, 1.0f) * 255.0f), LWA_ALPHA);
+                m_hwnd, 0, static_cast<BYTE>(std::clamp(inOpacity, 0.0F, 1.0F) * 255.0F), LWA_ALPHA);
         }
         else
         {
@@ -470,18 +481,18 @@ namespace NS
         }
     }
 
-    void WindowsWindow::SetText(const NS::TCHAR* InText)
+    void WindowsWindow::SetText(const NS::TCHAR* inText)
     {
-        ::SetWindowText(m_hwnd, InText);
+        ::SetWindowText(m_hwnd, inText);
     }
 
-    void WindowsWindow::DrawAttention(const WindowDrawAttentionParameters& Params)
+    void WindowsWindow::DrawAttention(const WindowDrawAttentionParameters& params)
     {
         FLASHWINFO fi = {};
         fi.cbSize = sizeof(FLASHWINFO);
         fi.hwnd = m_hwnd;
 
-        if (Params.RequestType == WindowDrawAttentionRequestType::UntilActivated)
+        if (params.requestType == WindowDrawAttentionRequestType::UntilActivated)
         {
             fi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
         }
@@ -497,56 +508,56 @@ namespace NS
     // 03-03: ジオメトリ
     // =========================================================================
 
-    void WindowsWindow::ReshapeWindow(int32_t X, int32_t Y, int32_t Width, int32_t Height)
+    void WindowsWindow::ReshapeWindow(int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        AdjustWindowRegion(Width, Height);
-        ::SetWindowPos(m_hwnd, nullptr, X, Y, m_virtualWidth, m_virtualHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+        AdjustWindowRegion(width, height);
+        ::SetWindowPos(m_hwnd, nullptr, x, y, m_virtualWidth, m_virtualHeight, SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    void WindowsWindow::MoveWindowTo(int32_t X, int32_t Y)
+    void WindowsWindow::MoveWindowTo(int32_t x, int32_t y)
     {
-        ::SetWindowPos(m_hwnd, nullptr, X, Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        ::SetWindowPos(m_hwnd, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    bool WindowsWindow::GetFullScreenInfo(int32_t& X, int32_t& Y, int32_t& Width, int32_t& Height) const
+    bool WindowsWindow::GetFullScreenInfo(int32_t& x, int32_t& y, int32_t& width, int32_t& height) const
     {
         HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi = {};
         mi.cbSize = sizeof(MONITORINFO);
-        if (::GetMonitorInfo(hMonitor, &mi))
+        if (::GetMonitorInfo(hMonitor, &mi) != 0)
         {
-            X = mi.rcMonitor.left;
-            Y = mi.rcMonitor.top;
-            Width = mi.rcMonitor.right - mi.rcMonitor.left;
-            Height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+            x = mi.rcMonitor.left;
+            y = mi.rcMonitor.top;
+            width = mi.rcMonitor.right - mi.rcMonitor.left;
+            height = mi.rcMonitor.bottom - mi.rcMonitor.top;
             return true;
         }
         return false;
     }
 
-    bool WindowsWindow::GetRestoredDimensions(int32_t& X, int32_t& Y, int32_t& Width, int32_t& Height) const
+    bool WindowsWindow::GetRestoredDimensions(int32_t& x, int32_t& y, int32_t& width, int32_t& height) const
     {
         WINDOWPLACEMENT wp = {};
         wp.length = sizeof(WINDOWPLACEMENT);
-        if (::GetWindowPlacement(m_hwnd, &wp))
+        if (::GetWindowPlacement(m_hwnd, &wp) != 0)
         {
-            X = wp.rcNormalPosition.left;
-            Y = wp.rcNormalPosition.top;
-            Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
-            Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+            x = wp.rcNormalPosition.left;
+            y = wp.rcNormalPosition.top;
+            width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+            height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
             return true;
         }
         return false;
     }
 
-    void WindowsWindow::AdjustCachedSize(PlatformRect& Size) const
+    void WindowsWindow::AdjustCachedSize(PlatformRect& size) const
     {
         // 仮想サイズ最適化
         // キャッシュサイズを仮想サイズに矯正
-        if (m_definition.SizeWillChangeOften && m_virtualWidth > 0 && m_virtualHeight > 0)
+        if (m_definition.sizeWillChangeOften && m_virtualWidth > 0 && m_virtualHeight > 0)
         {
-            Size.Right = Size.Left + m_virtualWidth;
-            Size.Bottom = Size.Top + m_virtualHeight;
+            size.right = size.left + m_virtualWidth;
+            size.bottom = size.top + m_virtualHeight;
         }
     }
 
@@ -555,12 +566,12 @@ namespace NS
         return ::GetForegroundWindow() == m_hwnd;
     }
 
-    bool WindowsWindow::IsPointInWindow(int32_t X, int32_t Y) const
+    bool WindowsWindow::IsPointInWindow(int32_t x, int32_t y) const
     {
         RECT rc = {};
         ::GetClientRect(m_hwnd, &rc);
-        POINT pt = {X, Y};
-        return !!::PtInRect(&rc, pt);
+        POINT const pt = {x, y};
+        return !(::PtInRect(&rc, pt) == 0);
     }
 
     // =========================================================================
@@ -577,18 +588,18 @@ namespace NS
         ::SetWindowPlacement(m_hwnd, &m_preFullscreenWindowPlacement);
     }
 
-    void WindowsWindow::OnTransparencySupportChanged(WindowTransparency NewTransparency)
+    void WindowsWindow::OnTransparencySupportChanged(WindowTransparency newTransparency)
     {
-        m_definition.TransparencySupport = NewTransparency;
+        m_definition.transparencySupport = newTransparency;
 
         LONG_PTR exStyle = ::GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
 
-        if (NewTransparency == WindowTransparency::PerPixel)
+        if (newTransparency == WindowTransparency::PerPixel)
         {
             exStyle |= WS_EX_COMPOSITED;
             ::SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle);
 
-            MARGINS margins = {-1, -1, -1, -1};
+            MARGINS const margins = {-1, -1, -1, -1};
             ::DwmExtendFrameIntoClientArea(m_hwnd, &margins);
         }
         else
@@ -602,27 +613,27 @@ namespace NS
     // 03-03: ウィンドウ領域調整 (仮想サイズ最適化)
     // =========================================================================
 
-    void WindowsWindow::AdjustWindowRegion(int32_t Width, int32_t Height)
+    void WindowsWindow::AdjustWindowRegion(int32_t width, int32_t height)
     {
-        if (!m_definition.SizeWillChangeOften)
+        if (!m_definition.sizeWillChangeOften)
         {
-            m_virtualWidth = Width;
-            m_virtualHeight = Height;
+            m_virtualWidth = width;
+            m_virtualHeight = height;
             return;
         }
 
         // VirtualSize = Max(NewSize, Min(OldSize, ExpectedMaxSize))
-        int32_t expectedMaxW = m_definition.ExpectedMaxWidth;
-        int32_t expectedMaxH = m_definition.ExpectedMaxHeight;
+        int32_t const expectedMaxW = m_definition.expectedMaxWidth;
+        int32_t const expectedMaxH = m_definition.expectedMaxHeight;
 
-        int32_t minRetainedW = (expectedMaxW >= 0) ? (std::min)(m_virtualWidth, expectedMaxW) : m_virtualWidth;
-        int32_t minRetainedH = (expectedMaxH >= 0) ? (std::min)(m_virtualHeight, expectedMaxH) : m_virtualHeight;
+        int32_t const minRetainedW = (expectedMaxW >= 0) ? (std::min)(m_virtualWidth, expectedMaxW) : m_virtualWidth;
+        int32_t const minRetainedH = (expectedMaxH >= 0) ? (std::min)(m_virtualHeight, expectedMaxH) : m_virtualHeight;
 
-        m_virtualWidth = (std::max)(Width, minRetainedW);
-        m_virtualHeight = (std::max)(Height, minRetainedH);
+        m_virtualWidth = (std::max)(width, minRetainedW);
+        m_virtualHeight = (std::max)(height, minRetainedH);
 
         // クリッピング領域設定
-        HRGN rgn = ::CreateRectRgn(0, 0, Width, Height);
+        HRGN rgn = ::CreateRectRgn(0, 0, width, height);
         if (::SetWindowRgn(m_hwnd, rgn, FALSE) == 0)
         {
             ::DeleteObject(rgn);
@@ -633,9 +644,9 @@ namespace NS
     // 03-04: WindowZone → Win32 ヒットテストコード
     // =========================================================================
 
-    int32_t WindowsWindow::WindowZoneToHitTest(WindowZone::Type Zone)
+    int32_t WindowsWindow::WindowZoneToHitTest(WindowZone::Type zone)
     {
-        switch (Zone)
+        switch (zone)
         {
         case WindowZone::TitleBar:
             return HTCAPTION;
@@ -681,9 +692,9 @@ namespace NS
         return m_dpiScaleFactor;
     }
 
-    void WindowsWindow::SetDPIScaleFactor(float Value)
+    void WindowsWindow::SetDPIScaleFactor(float value)
     {
-        m_dpiScaleFactor = Value;
+        m_dpiScaleFactor = value;
     }
 
     bool WindowsWindow::IsManualManageDPIChanges() const
@@ -702,7 +713,7 @@ namespace NS
 
     int32_t WindowsWindow::GetWindowBorderSize() const
     {
-        if (m_definition.HasOSWindowBorder)
+        if (m_definition.hasOsWindowBorder)
         {
             return ::GetSystemMetrics(SM_CXSIZEFRAME);
         }
@@ -711,7 +722,7 @@ namespace NS
 
     int32_t WindowsWindow::GetWindowTitleBarSize() const
     {
-        if (m_definition.HasOSWindowBorder)
+        if (m_definition.hasOsWindowBorder)
         {
             return ::GetSystemMetrics(SM_CYCAPTION);
         }
@@ -730,8 +741,8 @@ namespace NS
     /// OLE ドラッグデータ
     struct DragDropOLEData
     {
-        std::wstring Text;
-        std::vector<std::wstring> Files;
+        std::wstring text;
+        std::vector<std::wstring> files;
         bool bHasText = false;
         bool bHasFiles = false;
     };
@@ -753,10 +764,10 @@ namespace NS
             STGMEDIUM stgText = {};
             if (SUCCEEDED(pDataObj->GetData(&fmtText, &stgText)))
             {
-                auto* text = static_cast<const wchar_t*>(::GlobalLock(stgText.hGlobal));
-                if (text)
+                const auto* text = static_cast<const wchar_t*>(::GlobalLock(stgText.hGlobal));
+                if (text != nullptr)
                 {
-                    data.Text = text;
+                    data.text = text;
                     data.bHasText = true;
                     ::GlobalUnlock(stgText.hGlobal);
                 }
@@ -773,20 +784,20 @@ namespace NS
             STGMEDIUM stgDrop = {};
             if (SUCCEEDED(pDataObj->GetData(&fmtDrop, &stgDrop)))
             {
-                auto hDrop = static_cast<HDROP>(::GlobalLock(stgDrop.hGlobal));
-                if (hDrop)
+                auto* hDrop = static_cast<HDROP>(::GlobalLock(stgDrop.hGlobal));
+                if (hDrop != nullptr)
                 {
-                    UINT fileCount = ::DragQueryFileW(hDrop, 0xFFFFFFFF, nullptr, 0);
-                    data.Files.reserve(fileCount);
+                    UINT const fileCount = ::DragQueryFileW(hDrop, 0xFFFFFFFF, nullptr, 0);
+                    data.files.reserve(fileCount);
                     for (UINT i = 0; i < fileCount; ++i)
                     {
-                        UINT len = ::DragQueryFileW(hDrop, i, nullptr, 0);
+                        UINT const len = ::DragQueryFileW(hDrop, i, nullptr, 0);
                         std::wstring path(len + 1, L'\0');
                         ::DragQueryFileW(hDrop, i, path.data(), len + 1);
                         path.resize(len);
-                        data.Files.push_back(std::move(path));
+                        data.files.push_back(std::move(path));
                     }
-                    data.bHasFiles = !data.Files.empty();
+                    data.bHasFiles = !data.files.empty();
                     ::GlobalUnlock(stgDrop.hGlobal);
                 }
                 ::ReleaseStgMedium(&stgDrop);
@@ -796,9 +807,9 @@ namespace NS
         }
 
         /// DropEffect 螟画鋤
-        DWORD DropEffectToDWORD(DropEffect::Type Effect)
+        DWORD DropEffectToDWORD(DropEffect::Type effect)
         {
-            switch (Effect)
+            switch (effect)
             {
             case DropEffect::Copy:
                 return DROPEFFECT_COPY;
@@ -817,32 +828,34 @@ namespace NS
                                                        POINTL /*pt*/,
                                                        DWORD* pdwEffect)
     {
-        if (!pDataObj || !pdwEffect)
+        if ((pDataObj == nullptr) || (pdwEffect == nullptr))
         {
-            if (pdwEffect)
+            if (pdwEffect != nullptr)
+            {
                 *pdwEffect = DROPEFFECT_NONE;
+            }
             return S_OK;
         }
 
         m_dragDropData = std::make_unique<DragDropOLEData>(ParseOLEData(pDataObj));
 
         DropEffect::Type effect = DropEffect::None;
-        if (m_owningApplication)
+        if (m_owningApplication != nullptr)
         {
-            auto& handler = m_owningApplication->GetMessageHandler();
+            const auto& handler = m_owningApplication->GetMessageHandler();
             auto self = std::static_pointer_cast<GenericWindow>(shared_from_this());
 
             if (m_dragDropData->bHasText && m_dragDropData->bHasFiles)
             {
-                effect = handler->OnDragEnterExternal(self, m_dragDropData->Text.c_str(), m_dragDropData->Files);
+                effect = handler->OnDragEnterExternal(self, m_dragDropData->text.c_str(), m_dragDropData->files);
             }
             else if (m_dragDropData->bHasFiles)
             {
-                effect = handler->OnDragEnterFiles(self, m_dragDropData->Files);
+                effect = handler->OnDragEnterFiles(self, m_dragDropData->files);
             }
             else if (m_dragDropData->bHasText)
             {
-                effect = handler->OnDragEnterText(self, m_dragDropData->Text.c_str());
+                effect = handler->OnDragEnterText(self, m_dragDropData->text.c_str());
             }
         }
 
@@ -853,23 +866,25 @@ namespace NS
     HRESULT STDMETHODCALLTYPE WindowsWindow::DragOver(DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
     {
         DropEffect::Type effect = DropEffect::None;
-        if (m_owningApplication)
+        if (m_owningApplication != nullptr)
         {
-            auto& handler = m_owningApplication->GetMessageHandler();
+            const auto& handler = m_owningApplication->GetMessageHandler();
             auto self = std::static_pointer_cast<GenericWindow>(shared_from_this());
             effect = handler->OnDragOver(self);
         }
 
-        if (pdwEffect)
+        if (pdwEffect != nullptr)
+        {
             *pdwEffect = DropEffectToDWORD(effect);
+        }
         return S_OK;
     }
 
     HRESULT STDMETHODCALLTYPE WindowsWindow::DragLeave()
     {
-        if (m_owningApplication)
+        if (m_owningApplication != nullptr)
         {
-            auto& handler = m_owningApplication->GetMessageHandler();
+            const auto& handler = m_owningApplication->GetMessageHandler();
             auto self = std::static_pointer_cast<GenericWindow>(shared_from_this());
             handler->OnDragLeave(self);
         }
@@ -883,16 +898,18 @@ namespace NS
                                                   DWORD* pdwEffect)
     {
         DropEffect::Type effect = DropEffect::None;
-        if (m_owningApplication)
+        if (m_owningApplication != nullptr)
         {
-            auto& handler = m_owningApplication->GetMessageHandler();
+            const auto& handler = m_owningApplication->GetMessageHandler();
             auto self = std::static_pointer_cast<GenericWindow>(shared_from_this());
             effect = handler->OnDragDrop(self);
         }
         m_dragDropData.reset();
 
-        if (pdwEffect)
+        if (pdwEffect != nullptr)
+        {
             *pdwEffect = DropEffectToDWORD(effect);
+        }
         return S_OK;
     }
 
@@ -902,8 +919,10 @@ namespace NS
 
     HRESULT STDMETHODCALLTYPE WindowsWindow::QueryInterface(REFIID riid, void** ppvObject)
     {
-        if (!ppvObject)
+        if (ppvObject == nullptr)
+        {
             return E_INVALIDARG;
+        }
 
         if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IDropTarget))
         {
@@ -923,7 +942,7 @@ namespace NS
 
     ULONG STDMETHODCALLTYPE WindowsWindow::Release()
     {
-        LONG count = ::InterlockedDecrement(&m_oleRefCount);
+        LONG const count = ::InterlockedDecrement(&m_oleRefCount);
         if (count < 0)
         {
             ::InterlockedExchange(&m_oleRefCount, 0);

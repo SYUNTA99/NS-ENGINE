@@ -16,7 +16,10 @@ namespace NS
     class IConsoleManager
     {
     public:
+        IConsoleManager() = default;
         virtual ~IConsoleManager() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IConsoleManager);
+    public:
 
         /// シングルトン取得
         static IConsoleManager& Get();
@@ -123,7 +126,7 @@ namespace NS
     public:
         TAutoConsoleVariable(const TCHAR* name, T defaultValue, const TCHAR* help,
                              ConsoleVariableFlags flags = ConsoleVariableFlags::None)
-            : m_variable(nullptr), m_name(name), m_defaultValue(defaultValue), m_help(help), m_flags(flags)
+            :  m_name(name), m_defaultValue(defaultValue), m_help(help), m_flags(flags)
         {
         }
 
@@ -138,7 +141,7 @@ namespace NS
         T GetValue()
         {
             EnsureRegistered();
-            if (!m_variable)
+            if (m_variable == nullptr)
             {
                 return m_defaultValue;
             }
@@ -169,25 +172,22 @@ namespace NS
     private:
         void EnsureRegistered()
         {
-            if (!m_variable)
+            if (m_variable == nullptr)
             {
-                if constexpr (std::is_same_v<T, int32>)
-                {
-                    m_variable = GetConsoleManager().RegisterConsoleVariable(m_name, m_defaultValue, m_help, m_flags);
-                }
-                else if constexpr (std::is_same_v<T, float>)
-                {
-                    m_variable = GetConsoleManager().RegisterConsoleVariable(m_name, m_defaultValue, m_help, m_flags);
-                }
-                else if constexpr (std::is_same_v<T, bool>)
+                if constexpr (std::is_same_v<T, bool>)
                 {
                     // boolはintとして登録（0/1）
                     m_variable = GetConsoleManager().RegisterConsoleVariable(m_name, m_defaultValue ? 1 : 0, m_help, m_flags);
                 }
+                else
+                {
+                    // int32/float: オーバーロード解決で型に応じた登録関数を呼び出す
+                    m_variable = GetConsoleManager().RegisterConsoleVariable(m_name, m_defaultValue, m_help, m_flags);
+                }
             }
         }
 
-        IConsoleVariable* m_variable;
+        IConsoleVariable* m_variable{nullptr};
         const TCHAR* m_name;
         T m_defaultValue;
         const TCHAR* m_help;

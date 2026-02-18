@@ -28,13 +28,14 @@ namespace
     /// EnumDisplayMonitors コールバックデータ
     struct MonitorEnumData
     {
-        std::vector<NS::MonitorInfo>* OutMonitors = nullptr;
+        std::vector<NS::MonitorInfo>* outMonitors = nullptr;
     };
 
     /// モニター DPI 取得 (Per-Monitor V2 対応)
     int32_t GetMonitorDPI(HMONITOR hMonitor)
     {
-        UINT dpiX = 96, dpiY = 96;
+        UINT dpiX = 96;
+        UINT dpiY = 96;
         if (SUCCEEDED(::GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)))
         {
             return static_cast<int32_t>(dpiX);
@@ -49,53 +50,54 @@ namespace
 
         MONITORINFOEXW monInfo = {};
         monInfo.cbSize = sizeof(monInfo);
-        if (!::GetMonitorInfoW(hMonitor, &monInfo))
+        if (::GetMonitorInfoW(hMonitor, &monInfo) == 0)
         {
             return TRUE;
         }
 
         NS::MonitorInfo info;
-        info.Name = monInfo.szDevice;
+        info.name = monInfo.szDevice;
         info.bIsPrimary = (monInfo.dwFlags & MONITORINFOF_PRIMARY) != 0;
-        info.DPI = GetMonitorDPI(hMonitor);
+        info.dpi = GetMonitorDPI(hMonitor);
 
         // ディスプレイ矩形
-        info.DisplayRect.Left = monInfo.rcMonitor.left;
-        info.DisplayRect.Top = monInfo.rcMonitor.top;
-        info.DisplayRect.Right = monInfo.rcMonitor.right;
-        info.DisplayRect.Bottom = monInfo.rcMonitor.bottom;
+        info.displayRect.left = monInfo.rcMonitor.left;
+        info.displayRect.top = monInfo.rcMonitor.top;
+        info.displayRect.right = monInfo.rcMonitor.right;
+        info.displayRect.bottom = monInfo.rcMonitor.bottom;
 
         // ワークエリア
-        info.WorkArea.Left = monInfo.rcWork.left;
-        info.WorkArea.Top = monInfo.rcWork.top;
-        info.WorkArea.Right = monInfo.rcWork.right;
-        info.WorkArea.Bottom = monInfo.rcWork.bottom;
+        info.workArea.left = monInfo.rcWork.left;
+        info.workArea.top = monInfo.rcWork.top;
+        info.workArea.right = monInfo.rcWork.right;
+        info.workArea.bottom = monInfo.rcWork.bottom;
 
         // ネイティブ解像度
-        info.NativeWidth = monInfo.rcMonitor.right - monInfo.rcMonitor.left;
-        info.NativeHeight = monInfo.rcMonitor.bottom - monInfo.rcMonitor.top;
+        info.nativeWidth = monInfo.rcMonitor.right - monInfo.rcMonitor.left;
+        info.nativeHeight = monInfo.rcMonitor.bottom - monInfo.rcMonitor.top;
 
         // デバイス情報からID取得
         DISPLAY_DEVICEW dd = {};
         dd.cb = sizeof(dd);
-        if (::EnumDisplayDevicesW(monInfo.szDevice, 0, &dd, EDD_GET_DEVICE_INTERFACE_NAME))
+        if (::EnumDisplayDevicesW(monInfo.szDevice, 0, &dd, EDD_GET_DEVICE_INTERFACE_NAME) != 0)
         {
-            info.ID = dd.DeviceID;
+            info.id = dd.DeviceID;
         }
 
         // 最大解像度を列挙
         DEVMODEW dm = {};
         dm.dmSize = sizeof(dm);
-        int32_t maxW = 0, maxH = 0;
-        for (DWORD i = 0; ::EnumDisplaySettingsW(monInfo.szDevice, i, &dm); ++i)
+        int32_t maxW = 0;
+        int32_t maxH = 0;
+        for (DWORD i = 0; ::EnumDisplaySettingsW(monInfo.szDevice, i, &dm) != 0; ++i)
         {
             maxW = std::max(maxW, static_cast<int32_t>(dm.dmPelsWidth));
             maxH = std::max(maxH, static_cast<int32_t>(dm.dmPelsHeight));
         }
-        info.MaxResolutionWidth = maxW > 0 ? maxW : info.NativeWidth;
-        info.MaxResolutionHeight = maxH > 0 ? maxH : info.NativeHeight;
+        info.maxResolutionWidth = maxW > 0 ? maxW : info.nativeWidth;
+        info.maxResolutionHeight = maxH > 0 ? maxH : info.nativeHeight;
 
-        data->OutMonitors->push_back(std::move(info));
+        data->outMonitors->push_back(std::move(info));
         return TRUE;
     }
 } // anonymous namespace
@@ -106,82 +108,82 @@ namespace NS
     // DisplayMetrics 実装 (Phase 9 Windows版で上書き)
     // =========================================================================
 
-    void DisplayMetrics::RebuildDisplayMetrics(DisplayMetrics& OutMetrics)
+    void DisplayMetrics::RebuildDisplayMetrics(DisplayMetrics& outMetrics)
     {
-        OutMetrics.MonitorInfoArray.clear();
+        outMetrics.monitorInfoArray.clear();
 
         // モニター列挙
         MonitorEnumData data;
-        data.OutMonitors = &OutMetrics.MonitorInfoArray;
+        data.outMonitors = &outMetrics.monitorInfoArray;
         ::EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, reinterpret_cast<LPARAM>(&data));
 
         // プライマリディスプレイ情報
-        OutMetrics.PrimaryDisplayWidth = ::GetSystemMetrics(SM_CXSCREEN);
-        OutMetrics.PrimaryDisplayHeight = ::GetSystemMetrics(SM_CYSCREEN);
+        outMetrics.primaryDisplayWidth = ::GetSystemMetrics(SM_CXSCREEN);
+        outMetrics.primaryDisplayHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
         // プライマリワークエリア
         RECT workArea;
-        if (::SystemParametersInfoW(SPI_GETWORKAREA, 0, &workArea, 0))
+        if (::SystemParametersInfoW(SPI_GETWORKAREA, 0, &workArea, 0) != 0)
         {
-            OutMetrics.PrimaryDisplayWorkAreaRect.Left = workArea.left;
-            OutMetrics.PrimaryDisplayWorkAreaRect.Top = workArea.top;
-            OutMetrics.PrimaryDisplayWorkAreaRect.Right = workArea.right;
-            OutMetrics.PrimaryDisplayWorkAreaRect.Bottom = workArea.bottom;
+            outMetrics.primaryDisplayWorkAreaRect.left = workArea.left;
+            outMetrics.primaryDisplayWorkAreaRect.top = workArea.top;
+            outMetrics.primaryDisplayWorkAreaRect.right = workArea.right;
+            outMetrics.primaryDisplayWorkAreaRect.bottom = workArea.bottom;
         }
 
         // 仮想デスクトップ
-        OutMetrics.VirtualDisplayRect.Left = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
-        OutMetrics.VirtualDisplayRect.Top = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
-        OutMetrics.VirtualDisplayRect.Right =
-            OutMetrics.VirtualDisplayRect.Left + ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        OutMetrics.VirtualDisplayRect.Bottom =
-            OutMetrics.VirtualDisplayRect.Top + ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        outMetrics.virtualDisplayRect.left = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+        outMetrics.virtualDisplayRect.top = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+        outMetrics.virtualDisplayRect.right =
+            outMetrics.virtualDisplayRect.left + ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        outMetrics.virtualDisplayRect.bottom =
+            outMetrics.virtualDisplayRect.top + ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
         // セーフゾーン適用
-        ApplyDefaultSafeZones(OutMetrics);
+        ApplyDefaultSafeZones(outMetrics);
     }
 
-    void DisplayMetrics::ApplyDefaultSafeZones(DisplayMetrics& OutMetrics)
+    void DisplayMetrics::ApplyDefaultSafeZones(DisplayMetrics& outMetrics)
     {
         // タイトルセーフゾーン (画面端から 10% 内側がデフォルト)
-        float titleRatio = s_debugTitleSafeZoneRatio;
-        if (titleRatio > 0.0f)
+        float const titleRatio = s_debugTitleSafeZoneRatio;
+        if (titleRatio > 0.0F)
         {
-            float padX = static_cast<float>(OutMetrics.PrimaryDisplayWidth) * titleRatio * 0.5f;
-            float padY = static_cast<float>(OutMetrics.PrimaryDisplayHeight) * titleRatio * 0.5f;
-            OutMetrics.TitleSafePaddingSize = {padX, padY, padX, padY};
+            float const padX = static_cast<float>(outMetrics.primaryDisplayWidth) * titleRatio * 0.5F;
+            float const padY = static_cast<float>(outMetrics.primaryDisplayHeight) * titleRatio * 0.5F;
+            outMetrics.titleSafePaddingSize = {.x=padX, .y=padY, .z=padX, .w=padY};
         }
         else
         {
-            OutMetrics.TitleSafePaddingSize = {0.0f, 0.0f, 0.0f, 0.0f};
+            outMetrics.titleSafePaddingSize = {.x=0.0F, .y=0.0F, .z=0.0F, .w=0.0F};
         }
 
         // アクションセーフゾーン (画面端から 5% 内側がデフォルト)
-        float actionRatio = s_debugActionSafeZoneRatio;
-        if (actionRatio > 0.0f)
+        float const actionRatio = s_debugActionSafeZoneRatio;
+        if (actionRatio > 0.0F)
         {
-            float padX = static_cast<float>(OutMetrics.PrimaryDisplayWidth) * actionRatio * 0.5f;
-            float padY = static_cast<float>(OutMetrics.PrimaryDisplayHeight) * actionRatio * 0.5f;
-            OutMetrics.ActionSafePaddingSize = {padX, padY, padX, padY};
+            float const padX = static_cast<float>(outMetrics.primaryDisplayWidth) * actionRatio * 0.5F;
+            float const padY = static_cast<float>(outMetrics.primaryDisplayHeight) * actionRatio * 0.5F;
+            outMetrics.actionSafePaddingSize = {.x=padX, .y=padY, .z=padX, .w=padY};
         }
         else
         {
-            OutMetrics.ActionSafePaddingSize = {0.0f, 0.0f, 0.0f, 0.0f};
+            outMetrics.actionSafePaddingSize = {.x=0.0F, .y=0.0F, .z=0.0F, .w=0.0F};
         }
     }
 
-    PlatformRect DisplayMetrics::GetMonitorWorkAreaFromPoint(int32_t X, int32_t Y)
+    PlatformRect DisplayMetrics::GetMonitorWorkAreaFromPoint(int32_t x, int32_t y)
     {
-        POINT pt = {X, Y};
+        POINT const pt = {x, y};
         HMONITOR hMon = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 
         MONITORINFO monInfo = {};
         monInfo.cbSize = sizeof(monInfo);
-        if (::GetMonitorInfoW(hMon, &monInfo))
+        if (::GetMonitorInfoW(hMon, &monInfo) != 0)
         {
-            return {monInfo.rcWork.left, monInfo.rcWork.top, monInfo.rcWork.right, monInfo.rcWork.bottom};
+            return {.left=monInfo.rcWork.left, .top=monInfo.rcWork.top, .right=monInfo.rcWork.right, .bottom=monInfo.rcWork.bottom};
         }
-        return {0, 0, 1920, 1080};
+        return {.left=0, .top=0, .right=1920, .bottom=1080};
     }
 
 } // namespace NS

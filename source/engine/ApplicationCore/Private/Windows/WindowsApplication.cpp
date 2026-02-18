@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include <utility> // std::swap
 
 #pragma comment(lib, "xinput.lib")
@@ -33,17 +34,21 @@ namespace
     // XInput デッドゾーン
 
     // XInput デッドゾーン
-    constexpr float XInputLeftThumbDeadZone = XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE / 32767.0f;
-    constexpr float XInputRightThumbDeadZone = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE / 32767.0f;
-    constexpr float XInputTriggerThreshold = XINPUT_GAMEPAD_TRIGGER_THRESHOLD / 255.0f;
+    constexpr float kXInputLeftThumbDeadZone = XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE / 32767.0F;
+    constexpr float kXInputRightThumbDeadZone = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE / 32767.0F;
+    constexpr float kXInputTriggerThreshold = XINPUT_GAMEPAD_TRIGGER_THRESHOLD / 255.0F;
 
-    float ApplyDeadZone(float Value, float DeadZone)
+    float ApplyDeadZone(float value, float deadZone)
     {
-        if (Value > DeadZone)
-            return (Value - DeadZone) / (1.0f - DeadZone);
-        if (Value < -DeadZone)
-            return (Value + DeadZone) / (1.0f - DeadZone);
-        return 0.0f;
+        if (value > deadZone)
+        {
+            return (value - deadZone) / (1.0F - deadZone);
+        }
+        if (value < -deadZone)
+        {
+            return (value + deadZone) / (1.0F - deadZone);
+        }
+        return 0.0F;
     }
 
     NS::MouseButtons::Type XButtonToMouseButton(WPARAM wParam)
@@ -71,10 +76,10 @@ namespace NS
         // ウィンドウクラス登録
         WindowsWindow::Initialize(hInstance, hIcon);
 
-        auto App = std::shared_ptr<WindowsApplication>(new WindowsApplication(hInstance, hIcon));
-        g_windowsApp = App.get();
+        auto app = std::shared_ptr<WindowsApplication>(new WindowsApplication(hInstance, hIcon));
+        g_windowsApp = app.get();
 
-        return App;
+        return app;
     }
 
     WindowsApplication::WindowsApplication(HINSTANCE hInstance, HICON /*hIcon*/)
@@ -83,7 +88,7 @@ namespace NS
           m_hInstance(hInstance)
     {
         // OLE 初期化
-        HRESULT hr = ::OleInitialize(NULL);
+        HRESULT const hr = ::OleInitialize(nullptr);
         m_bOleInitialized = SUCCEEDED(hr);
         if (!m_bOleInitialized)
         {
@@ -107,9 +112,9 @@ namespace NS
         m_deferredMessages.reserve(64);
 
         // ITaskbarList3 初期化 (ComPtr RAII)
-        HRESULT hrTb =
+        HRESULT const hrTb =
             ::CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_taskbarList));
-        if (SUCCEEDED(hrTb) && m_taskbarList)
+        if (SUCCEEDED(hrTb) && (m_taskbarList != nullptr))
         {
             m_taskbarList->HrInit();
         }
@@ -121,11 +126,11 @@ namespace NS
         g_windowsApp = nullptr;
 
         // ウィンドウを逆順で破棄
-        for (auto it = m_windows.rbegin(); it != m_windows.rend(); ++it)
+        for (auto& m_window : std::ranges::reverse_view(m_windows))
         {
-            if (*it)
+            if (m_window)
             {
-                (*it)->Destroy();
+                m_window->Destroy();
             }
         }
         m_windows.clear();
@@ -144,7 +149,7 @@ namespace NS
         }
 
         // ウィンドウクラス解除
-        ::UnregisterClass(WindowsWindow::AppWindowClass, m_hInstance);
+        ::UnregisterClass(WindowsWindow::kAppWindowClass, m_hInstance);
     }
 
     // =========================================================================
@@ -152,34 +157,34 @@ namespace NS
 
     std::shared_ptr<GenericWindow> WindowsApplication::MakeWindow()
     {
-        auto Window = WindowsWindow::MakeWindow();
-        m_windows.push_back(Window);
-        return Window;
+        auto window = WindowsWindow::MakeWindow();
+        m_windows.push_back(window);
+        return window;
     }
 
-    void WindowsApplication::InitializeWindow(const std::shared_ptr<GenericWindow>& Window,
-                                              const GenericWindowDefinition& Definition,
-                                              const std::shared_ptr<GenericWindow>& Parent,
+    void WindowsApplication::InitializeWindow(const std::shared_ptr<GenericWindow>& window,
+                                              const GenericWindowDefinition& definition,
+                                              const std::shared_ptr<GenericWindow>& parent,
                                               bool bShowImmediately)
     {
-        auto WinWindow = std::static_pointer_cast<WindowsWindow>(Window);
-        auto WinParent = Parent ? std::static_pointer_cast<WindowsWindow>(Parent) : nullptr;
+        auto winWindow = std::static_pointer_cast<WindowsWindow>(window);
+        auto winParent = parent ? std::static_pointer_cast<WindowsWindow>(parent) : nullptr;
 
-        WinWindow->Initialize(this, Definition, m_hInstance, WinParent, bShowImmediately);
+        winWindow->Initialize(this, definition, m_hInstance, winParent, bShowImmediately);
 
         // Initialize 失敗時は管理リストから除去（無効エントリ蓄積防止）
-        if (WinWindow->GetHWnd() == nullptr)
+        if (winWindow->GetHWnd() == nullptr)
         {
-            m_windows.erase(std::remove(m_windows.begin(), m_windows.end(), WinWindow), m_windows.end());
+            m_windows.erase(std::remove(m_windows.begin(), m_windows.end(), winWindow), m_windows.end());
         }
     }
 
-    void WindowsApplication::SetCapture(const std::shared_ptr<GenericWindow>& Window)
+    void WindowsApplication::SetCapture(const std::shared_ptr<GenericWindow>& window)
     {
-        if (Window)
+        if (window)
         {
-            auto WinWindow = std::static_pointer_cast<WindowsWindow>(Window);
-            ::SetCapture(WinWindow->GetHWnd());
+            auto winWindow = std::static_pointer_cast<WindowsWindow>(window);
+            ::SetCapture(winWindow->GetHWnd());
         }
         else
         {
@@ -202,11 +207,11 @@ namespace NS
 
     std::shared_ptr<WindowsWindow> WindowsApplication::FindWindowByHWND(HWND hwnd) const
     {
-        for (const auto& Window : m_windows)
+        for (const auto& window : m_windows)
         {
-            if (Window && Window->GetHWnd() == hwnd)
+            if (window && window->GetHWnd() == hwnd)
             {
-                return Window;
+                return window;
             }
         }
         return nullptr;
@@ -215,14 +220,14 @@ namespace NS
     // =========================================================================
     // 06-02: メッセージハンドラ管理
 
-    void WindowsApplication::AddMessageHandler(IWindowsMessageHandler& Handler)
+    void WindowsApplication::AddMessageHandler(IWindowsMessageHandler& handler)
     {
-        m_messageHandlers.push_back(&Handler);
+        m_messageHandlers.push_back(&handler);
     }
 
-    void WindowsApplication::RemoveMessageHandler(IWindowsMessageHandler& Handler)
+    void WindowsApplication::RemoveMessageHandler(IWindowsMessageHandler& handler)
     {
-        m_messageHandlers.erase(std::remove(m_messageHandlers.begin(), m_messageHandlers.end(), &Handler),
+        m_messageHandlers.erase(std::remove(m_messageHandlers.begin(), m_messageHandlers.end(), &handler),
                                 m_messageHandlers.end());
     }
 
@@ -232,16 +237,16 @@ namespace NS
     void WindowsApplication::PumpMessages(float /*TimeDelta*/)
     {
         MSG msg = {};
-        while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        while (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) != 0)
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
         }
     }
 
-    void WindowsApplication::Tick(float TimeDelta)
+    void WindowsApplication::Tick(float timeDelta)
     {
-        PollGameDeviceState(TimeDelta);
+        PollGameDeviceState(timeDelta);
     }
 
     // =========================================================================
@@ -250,7 +255,7 @@ namespace NS
 
     LRESULT CALLBACK WindowsApplication::AppWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
-        if (g_windowsApp)
+        if (g_windowsApp != nullptr)
         {
             // 外部メッセージハンドラを先に処理
             auto handlers = g_windowsApp->m_messageHandlers; // コピーしてイテレーション安全
@@ -263,7 +268,7 @@ namespace NS
                 }
             }
 
-            int32_t result = g_windowsApp->ProcessMessage(hwnd, msg, wParam, lParam);
+            int32_t const result = g_windowsApp->ProcessMessage(hwnd, msg, wParam, lParam);
             if (result != -1)
             {
                 return result;
@@ -279,14 +284,14 @@ namespace NS
 
     int32_t WindowsApplication::ProcessMessage(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam)
     {
-        if (!m_messageHandler.Get())
+        if (m_messageHandler.Get() == nullptr)
         {
             return -1;
         }
 
-        auto Window = FindWindowByHWND(hwnd);
-        const bool bShouldProcessUserInput = m_messageHandler->ShouldProcessUserInputMessages(Window);
-        auto HandledResult = [](bool bHandled) -> int32_t { return bHandled ? 0 : -1; };
+        auto window = FindWindowByHWND(hwnd);
+        const bool kBShouldProcessUserInput = m_messageHandler->ShouldProcessUserInputMessages(window);
+        auto handledResult = [](bool bHandled) -> int32_t { return bHandled ? 0 : -1; };
 
         switch (msg)
         {
@@ -295,223 +300,238 @@ namespace NS
         case WM_CHAR:
         case WM_SYSCHAR:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            bool bIsRepeat = (lParam & (1 << 30)) != 0;
-            return HandledResult(m_messageHandler->OnKeyChar(static_cast<NS::TCHAR>(wParam), bIsRepeat));
+            bool const bIsRepeat = (lParam & (1 << 30)) != 0;
+            return handledResult(m_messageHandler->OnKeyChar(static_cast<NS::TCHAR>(wParam), bIsRepeat));
         }
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            int32_t keyCode = static_cast<int32_t>(wParam);
-            bool bIsRepeat = (lParam & (1 << 30)) != 0;
-            uint32_t charCode = ::MapVirtualKey(keyCode, MAPVK_VK_TO_CHAR);
+            auto const keyCode = static_cast<int32_t>(wParam);
+            bool const bIsRepeat = (lParam & (1 << 30)) != 0;
+            uint32_t const charCode = ::MapVirtualKey(keyCode, MAPVK_VK_TO_CHAR);
             UpdateModifierKeyState(wParam, lParam, true);
-            return HandledResult(m_messageHandler->OnKeyDown(keyCode, charCode, bIsRepeat));
+            return handledResult(m_messageHandler->OnKeyDown(keyCode, charCode, bIsRepeat));
         }
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            int32_t keyCode = static_cast<int32_t>(wParam);
-            uint32_t charCode = ::MapVirtualKey(keyCode, MAPVK_VK_TO_CHAR);
+            auto const keyCode = static_cast<int32_t>(wParam);
+            uint32_t const charCode = ::MapVirtualKey(keyCode, MAPVK_VK_TO_CHAR);
             UpdateModifierKeyState(wParam, lParam, false);
-            return HandledResult(m_messageHandler->OnKeyUp(keyCode, charCode, false));
+            return handledResult(m_messageHandler->OnKeyUp(keyCode, charCode, false));
         }
 
         // =============================================================
         // 06-05: マウスボタン
         // =============================================================
         case WM_LBUTTONDOWN:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDown(
-                Window,
-                MouseButtons::Left,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDown(window,
+                                              MouseButtons::Left,
+                                              Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                       .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_MBUTTONDOWN:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDown(
-                Window,
-                MouseButtons::Middle,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDown(window,
+                                              MouseButtons::Middle,
+                                              Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                       .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_RBUTTONDOWN:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDown(
-                Window,
-                MouseButtons::Right,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDown(window,
+                                              MouseButtons::Right,
+                                              Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                       .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_XBUTTONDOWN:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-        {
-            const bool bHandled = m_messageHandler->OnMouseDown(
-                Window,
-                XButtonToMouseButton(wParam),
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))});
-            return bHandled ? TRUE : -1;
-        }
+            {
+                const bool kBHandled =
+                    m_messageHandler->OnMouseDown(window,
+                                                  XButtonToMouseButton(wParam),
+                                                  Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                           .y = static_cast<float>(GET_Y_LPARAM(lParam))});
+                return kBHandled ? TRUE : -1;
+            }
 
         case WM_LBUTTONUP:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseUp(
-                MouseButtons::Left,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(m_messageHandler->OnMouseUp(MouseButtons::Left,
+                                                             Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                                      .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_MBUTTONUP:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseUp(
-                MouseButtons::Middle,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(m_messageHandler->OnMouseUp(MouseButtons::Middle,
+                                                             Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                                      .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_RBUTTONUP:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseUp(
-                MouseButtons::Right,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(m_messageHandler->OnMouseUp(MouseButtons::Right,
+                                                             Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                                      .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_XBUTTONUP:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-        {
-            const bool bHandled = m_messageHandler->OnMouseUp(
-                XButtonToMouseButton(wParam),
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))});
-            return bHandled ? TRUE : -1;
-        }
+            {
+                const bool kBHandled =
+                    m_messageHandler->OnMouseUp(XButtonToMouseButton(wParam),
+                                                Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                         .y = static_cast<float>(GET_Y_LPARAM(lParam))});
+                return kBHandled ? TRUE : -1;
+            }
 
         case WM_LBUTTONDBLCLK:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDoubleClick(
-                Window,
-                MouseButtons::Left,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDoubleClick(window,
+                                                     MouseButtons::Left,
+                                                     Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                              .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_MBUTTONDBLCLK:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDoubleClick(
-                Window,
-                MouseButtons::Middle,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDoubleClick(window,
+                                                     MouseButtons::Middle,
+                                                     Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                              .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
         case WM_RBUTTONDBLCLK:
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            return HandledResult(m_messageHandler->OnMouseDoubleClick(
-                Window,
-                MouseButtons::Right,
-                Vector2D{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))}));
+            return handledResult(
+                m_messageHandler->OnMouseDoubleClick(window,
+                                                     MouseButtons::Right,
+                                                     Vector2D{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                                              .y = static_cast<float>(GET_Y_LPARAM(lParam))}));
 
         // =============================================================
         // 06-05: マウス移動・ホイール
         // =============================================================
         case WM_MOUSEMOVE:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
             // WM_MOUSEMOVE の lParam はクライアント座標
-            Vector2D cursorPos{static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam))};
-            return HandledResult(m_messageHandler->OnMouseMove(cursorPos));
+            Vector2D const cursorPos{.x = static_cast<float>(GET_X_LPARAM(lParam)),
+                                     .y = static_cast<float>(GET_Y_LPARAM(lParam))};
+            return handledResult(m_messageHandler->OnMouseMove(cursorPos));
         }
         case WM_NCMOUSEMOVE:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
             // WM_NCMOUSEMOVE の lParam はスクリーン座標 -> クライアント座標に変換
             POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
             ::ScreenToClient(hwnd, &pt);
-            return HandledResult(
-                m_messageHandler->OnMouseMove(Vector2D{static_cast<float>(pt.x), static_cast<float>(pt.y)}));
+            return handledResult(
+                m_messageHandler->OnMouseMove(Vector2D{.x = static_cast<float>(pt.x), .y = static_cast<float>(pt.y)}));
         }
 
         case WM_MOUSEWHEEL:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            float delta = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
+            float const delta = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
             // WM_MOUSEWHEEL の lParam はスクリーン座標なので、クライアント座標に変換
             POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
             ::ScreenToClient(hwnd, &pt);
-            return HandledResult(
-                m_messageHandler->OnMouseWheel(delta, Vector2D{static_cast<float>(pt.x), static_cast<float>(pt.y)}));
+            return handledResult(m_messageHandler->OnMouseWheel(
+                delta, Vector2D{.x = static_cast<float>(pt.x), .y = static_cast<float>(pt.y)}));
         }
 
         // =============================================================
         // 06-06: ウィンドウイベント
         case WM_SIZE:
         {
-            if (Window)
+            if (window)
             {
-                int32_t w = LOWORD(lParam);
-                int32_t h = HIWORD(lParam);
-                bool bWasMinimized = (wParam == SIZE_MINIMIZED);
-                m_messageHandler->OnSizeChanged(Window, w, h, bWasMinimized);
+                int32_t const w = LOWORD(lParam);
+                int32_t const h = HIWORD(lParam);
+                bool const bWasMinimized = (wParam == SIZE_MINIMIZED);
+                m_messageHandler->OnSizeChanged(window, w, h, bWasMinimized);
 
                 if (wParam == SIZE_MAXIMIZED)
-                    m_messageHandler->OnWindowAction(Window, WindowAction::Maximize);
+                {
+                    m_messageHandler->OnWindowAction(window, WindowAction::Maximize);
+                }
                 else if (wParam == SIZE_RESTORED)
-                    m_messageHandler->OnWindowAction(Window, WindowAction::Restore);
+                {
+                    m_messageHandler->OnWindowAction(window, WindowAction::Restore);
+                }
             }
             return 0;
         }
         case WM_MOVE:
         {
-            if (Window)
+            if (window)
             {
-                int32_t x = static_cast<int16_t>(LOWORD(lParam));
-                int32_t y = static_cast<int16_t>(HIWORD(lParam));
-                m_messageHandler->OnMovedWindow(Window, x, y);
+                int32_t const x = static_cast<int16_t>(LOWORD(lParam));
+                int32_t const y = static_cast<int16_t>(HIWORD(lParam));
+                m_messageHandler->OnMovedWindow(window, x, y);
             }
             return 0;
         }
         case WM_ACTIVATE:
         {
-            if (Window)
+            if (window)
             {
                 WindowActivation::Type activation =
                     (LOWORD(wParam) != WA_INACTIVE) ? WindowActivation::Activate : WindowActivation::Deactivate;
                 if (LOWORD(wParam) == WA_CLICKACTIVE)
+                {
                     activation = WindowActivation::ActivateByMouse;
-                m_messageHandler->OnWindowActivationChanged(Window, activation);
+                }
+                m_messageHandler->OnWindowActivationChanged(window, activation);
             }
             return 0;
         }
@@ -522,17 +542,17 @@ namespace NS
         }
         case WM_CLOSE:
         {
-            if (Window)
+            if (window)
             {
-                m_messageHandler->OnWindowClose(Window);
+                m_messageHandler->OnWindowClose(window);
             }
             return 0;
         }
         case WM_PAINT:
         {
-            if (Window)
+            if (window)
             {
-                m_messageHandler->OnOSPaint(Window);
+                m_messageHandler->OnOSPaint(window);
             }
             break; // DefWindowProc handles BeginPaint/EndPaint
         }
@@ -542,12 +562,12 @@ namespace NS
         // =============================================================
         case WM_NCHITTEST:
         {
-            if (Window && !Window->GetDefinition().HasOSWindowBorder)
+            if (window && !window->GetDefinition().hasOsWindowBorder)
             {
                 POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
                 ::ScreenToClient(hwnd, &pt);
 
-                WindowZone::Type zone = m_messageHandler->GetWindowZoneForPoint(Window, pt.x, pt.y);
+                WindowZone::Type const zone = m_messageHandler->GetWindowZoneForPoint(window, pt.x, pt.y);
                 return WindowsWindow::WindowZoneToHitTest(zone);
             }
             break;
@@ -556,36 +576,44 @@ namespace NS
         case WM_NCRBUTTONDOWN:
         case WM_NCMBUTTONDOWN:
         {
-            if (Window)
+            if (window)
             {
-                m_messageHandler->OnWindowAction(Window, WindowAction::ClickedNonClientArea);
+                m_messageHandler->OnWindowAction(window, WindowAction::ClickedNonClientArea);
             }
             break;
         }
 
         case WM_GETMINMAXINFO:
         {
-            if (Window)
+            if (window)
             {
-                MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
-                WindowSizeLimits limits = m_messageHandler->GetSizeLimitsForWindow(Window);
-                float dpi = Window->GetDPIScaleFactor();
+                auto* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
+                WindowSizeLimits const limits = m_messageHandler->GetSizeLimitsForWindow(window);
+                float const dpi = window->GetDPIScaleFactor();
 
-                if (limits.GetMinWidth().has_value())
-                    mmi->ptMinTrackSize.x = static_cast<LONG>(limits.GetMinWidth().value() * dpi);
-                if (limits.GetMinHeight().has_value())
-                    mmi->ptMinTrackSize.y = static_cast<LONG>(limits.GetMinHeight().value() * dpi);
-                if (limits.GetMaxWidth().has_value())
-                    mmi->ptMaxTrackSize.x = static_cast<LONG>(limits.GetMaxWidth().value() * dpi);
-                if (limits.GetMaxHeight().has_value())
-                    mmi->ptMaxTrackSize.y = static_cast<LONG>(limits.GetMaxHeight().value() * dpi);
+                if (auto minW = limits.GetMinWidth())
+                {
+                    mmi->ptMinTrackSize.x = static_cast<LONG>(*minW * dpi);
+                }
+                if (auto minH = limits.GetMinHeight())
+                {
+                    mmi->ptMinTrackSize.y = static_cast<LONG>(*minH * dpi);
+                }
+                if (auto maxW = limits.GetMaxWidth())
+                {
+                    mmi->ptMaxTrackSize.x = static_cast<LONG>(*maxW * dpi);
+                }
+                if (auto maxH = limits.GetMaxHeight())
+                {
+                    mmi->ptMaxTrackSize.y = static_cast<LONG>(*maxH * dpi);
+                }
             }
             return 0;
         }
 
         case WM_NCCALCSIZE:
         {
-            if (wParam == TRUE && Window && !Window->GetDefinition().HasOSWindowBorder)
+            if (wParam == TRUE && window && !window->GetDefinition().hasOsWindowBorder)
             {
                 // ボーダーレスウィンドウ: 非クライアント領域を0に
                 return 0;
@@ -604,15 +632,15 @@ namespace NS
         // =============================================================
         case WM_DPICHANGED:
         {
-            if (Window)
+            if (window)
             {
-                float newDPI = static_cast<float>(LOWORD(wParam)) / 96.0f;
+                float const newDPI = static_cast<float>(LOWORD(wParam)) / 96.0F;
 
-                m_messageHandler->SignalSystemDPIChanged(Window);
+                m_messageHandler->SignalSystemDPIChanged(window);
 
-                if (!Window->IsManualManageDPIChanges())
+                if (!window->IsManualManageDPIChanges())
                 {
-                    Window->SetDPIScaleFactor(newDPI);
+                    window->SetDPIScaleFactor(newDPI);
 
                     RECT* prc = reinterpret_cast<RECT*>(lParam);
                     ::SetWindowPos(hwnd,
@@ -623,11 +651,11 @@ namespace NS
                                    prc->bottom - prc->top,
                                    SWP_NOZORDER | SWP_NOACTIVATE);
 
-                    m_messageHandler->HandleDPIScaleChanged(Window);
+                    m_messageHandler->HandleDPIScaleChanged(window);
                 }
                 else
                 {
-                    Window->SetDPIScaleFactor(newDPI);
+                    window->SetDPIScaleFactor(newDPI);
                 }
             }
             return 0;
@@ -635,20 +663,26 @@ namespace NS
 
         case WM_ENTERSIZEMOVE:
         {
-            if (Window)
-                m_messageHandler->BeginReshapingWindow(Window);
+            if (window)
+            {
+                m_messageHandler->BeginReshapingWindow(window);
+            }
             return 0;
         }
         case WM_EXITSIZEMOVE:
         {
-            if (Window)
-                m_messageHandler->FinishedReshapingWindow(Window);
+            if (window)
+            {
+                m_messageHandler->FinishedReshapingWindow(window);
+            }
             return 0;
         }
         case WM_SIZING:
         {
-            if (Window)
-                m_messageHandler->OnResizingWindow(Window);
+            if (window)
+            {
+                m_messageHandler->OnResizingWindow(window);
+            }
             break;
         }
 
@@ -662,7 +696,7 @@ namespace NS
 
         case WM_SETCURSOR:
         {
-            if (Window && !Window->GetDefinition().HasOSWindowBorder)
+            if (window && !window->GetDefinition().hasOsWindowBorder)
             {
                 m_messageHandler->OnCursorSet();
                 return 0;
@@ -672,14 +706,14 @@ namespace NS
 
         case WM_SYSCOMMAND:
         {
-            uint32_t cmd = static_cast<uint32_t>(wParam) & 0xFFF0;
-            if (cmd == SC_RESTORE && Window)
+            uint32_t const cmd = static_cast<uint32_t>(wParam) & 0xFFF0;
+            if (cmd == SC_RESTORE && window)
             {
-                m_messageHandler->OnWindowAction(Window, WindowAction::Restore);
+                m_messageHandler->OnWindowAction(window, WindowAction::Restore);
             }
-            else if (cmd == SC_MAXIMIZE && Window)
+            else if (cmd == SC_MAXIMIZE && window)
             {
-                m_messageHandler->OnWindowAction(Window, WindowAction::Maximize);
+                m_messageHandler->OnWindowAction(window, WindowAction::Maximize);
             }
             break;
         }
@@ -699,7 +733,7 @@ namespace NS
                         reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, buffer, &dwSize, sizeof(RAWINPUTHEADER)) ==
                     dwSize)
                 {
-                    RAWINPUT* raw = reinterpret_cast<RAWINPUT*>(buffer);
+                    auto* raw = reinterpret_cast<RAWINPUT*>(buffer);
                     if (raw->header.dwType == RIM_TYPEMOUSE)
                     {
                         ProcessRawMouseInput(raw->data.mouse);
@@ -732,21 +766,14 @@ namespace NS
 
         // =============================================================
         // 追加ウィンドウイベント
-        case WM_CAPTURECHANGED:
-        {
-            // マウスキャプチャが失われた
-            return 0;
-        }
         case WM_CLIPBOARDUPDATE:
         {
             OnClipboardContentChanged().Broadcast();
             return 0;
         }
-        case WM_SETTINGCHANGE:
-        {
-            // システム設定変更（DPI等の再取得）
+        case WM_CAPTURECHANGED: // マウスキャプチャが失われた
+        case WM_SETTINGCHANGE:  // システム設定変更（DPI等の再取得）
             return 0;
-        }
 
 #if UE_WINDOWS_USING_UIA
         // =============================================================
@@ -772,12 +799,12 @@ namespace NS
         // =============================================================
         case WM_TOUCH:
         {
-            if (!bShouldProcessUserInput)
+            if (!kBShouldProcessUserInput)
             {
                 return -1;
             }
-            HTOUCHINPUT touchHandle = reinterpret_cast<HTOUCHINPUT>(lParam);
-            UINT touchCount = LOWORD(wParam);
+            auto touchHandle = reinterpret_cast<HTOUCHINPUT>(lParam);
+            UINT const touchCount = LOWORD(wParam);
             if (touchCount == 0 || touchCount > 256)
             {
                 ::CloseTouchInputHandle(touchHandle);
@@ -785,10 +812,10 @@ namespace NS
             }
 
             std::vector<TOUCHINPUT> touches(touchCount);
-            if (::GetTouchInputInfo(touchHandle, touchCount, touches.data(), sizeof(TOUCHINPUT)))
+            if (::GetTouchInputInfo(touchHandle, touchCount, touches.data(), sizeof(TOUCHINPUT)) != 0)
             {
-                PlatformUserId userId(0);
-                InputDeviceId deviceId(0);
+                PlatformUserId const userId(0);
+                InputDeviceId const deviceId(0);
 
                 for (UINT i = 0; i < touchCount; ++i)
                 {
@@ -796,19 +823,19 @@ namespace NS
                     // TOUCHINPUT uses hundredths of a pixel (CENTIPOINT)
                     POINT pt = {ti.x / 100, ti.y / 100};
                     ::ScreenToClient(hwnd, &pt);
-                    Vector2D location{static_cast<float>(pt.x), static_cast<float>(pt.y)};
-                    float force = 1.0f;
-                    int32_t touchIndex = static_cast<int32_t>(ti.dwID);
+                    Vector2D const location{.x = static_cast<float>(pt.x), .y = static_cast<float>(pt.y)};
+                    float const force = 1.0F;
+                    auto const touchIndex = static_cast<int32_t>(ti.dwID);
 
-                    if (ti.dwFlags & TOUCHEVENTF_DOWN)
+                    if ((ti.dwFlags & TOUCHEVENTF_DOWN) != 0U)
                     {
-                        m_messageHandler->OnTouchStarted(Window, location, force, touchIndex, userId, deviceId);
+                        m_messageHandler->OnTouchStarted(window, location, force, touchIndex, userId, deviceId);
                     }
-                    else if (ti.dwFlags & TOUCHEVENTF_MOVE)
+                    else if ((ti.dwFlags & TOUCHEVENTF_MOVE) != 0U)
                     {
                         m_messageHandler->OnTouchMoved(location, force, touchIndex, userId, deviceId);
                     }
-                    else if (ti.dwFlags & TOUCHEVENTF_UP)
+                    else if ((ti.dwFlags & TOUCHEVENTF_UP) != 0U)
                     {
                         m_messageHandler->OnTouchEnded(location, touchIndex, userId, deviceId);
                     }
@@ -831,24 +858,24 @@ namespace NS
     // 06-06: Deferred Events
     // =========================================================================
 
-    void WindowsApplication::DeferMessage(const std::shared_ptr<WindowsWindow>& Window,
+    void WindowsApplication::DeferMessage(const std::shared_ptr<WindowsWindow>& window,
                                           HWND hWnd,
-                                          uint32_t Msg,
+                                          uint32_t msg,
                                           WPARAM wParam,
                                           LPARAM lParam,
-                                          int32_t X,
-                                          int32_t Y,
-                                          uint32_t RawInputFlags)
+                                          int32_t x,
+                                          int32_t y,
+                                          uint32_t rawInputFlags)
     {
         DeferredWindowsMessage deferred;
-        deferred.NativeWindow = Window;
+        deferred.nativeWindow = window;
         deferred.hWnd = hWnd;
-        deferred.Msg = Msg;
+        deferred.msg = msg;
         deferred.wParam = wParam;
         deferred.lParam = lParam;
-        deferred.X = X;
-        deferred.Y = Y;
-        deferred.RawInputFlags = RawInputFlags;
+        deferred.x = x;
+        deferred.y = y;
+        deferred.rawInputFlags = rawInputFlags;
         m_deferredMessages.push_back(deferred);
     }
 
@@ -865,16 +892,16 @@ namespace NS
         // m_deferredMessages は messages の旧キャパシティを引き継ぐ
     }
 
-    void WindowsApplication::ProcessDeferredMessage(const DeferredWindowsMessage& DeferMsg)
+    void WindowsApplication::ProcessDeferredMessage(const DeferredWindowsMessage& deferMsg)
     {
-        auto Window = DeferMsg.NativeWindow.lock();
-        if (!Window)
+        auto window = deferMsg.nativeWindow.lock();
+        if (!window)
         {
             return; // ウィンドウ破棄済み
         }
 
         // 遅延メッセージのルーティング（現在は即時処理と同じ）
-        ProcessMessage(DeferMsg.hWnd, DeferMsg.Msg, DeferMsg.wParam, DeferMsg.lParam);
+        ProcessMessage(deferMsg.hWnd, deferMsg.msg, deferMsg.wParam, deferMsg.lParam);
     }
 
     // =========================================================================
@@ -882,31 +909,43 @@ namespace NS
 
     void WindowsApplication::UpdateModifierKeyState(WPARAM wParam, LPARAM lParam, bool bKeyDown)
     {
-        bool bIsExtended = (lParam & (1 << 24)) != 0;
+        bool const bIsExtended = (lParam & (1 << 24)) != 0;
 
         switch (wParam)
         {
         case VK_SHIFT:
         {
-            UINT scanCode = static_cast<UINT>((lParam >> 16) & 0xFF);
-            UINT vk = ::MapVirtualKey(scanCode, MAPVK_VSC_TO_VK_EX);
+            UINT const scanCode = static_cast<UINT>((lParam >> 16) & 0xFF);
+            UINT const vk = ::MapVirtualKey(scanCode, MAPVK_VSC_TO_VK_EX);
             if (vk == VK_LSHIFT)
+            {
                 m_modifierKeyState[LeftShift] = bKeyDown;
+            }
             else if (vk == VK_RSHIFT)
+            {
                 m_modifierKeyState[RightShift] = bKeyDown;
+            }
             break;
         }
         case VK_CONTROL:
             if (bIsExtended)
+            {
                 m_modifierKeyState[RightControl] = bKeyDown;
+            }
             else
+            {
                 m_modifierKeyState[LeftControl] = bKeyDown;
+            }
             break;
         case VK_MENU:
             if (bIsExtended)
+            {
                 m_modifierKeyState[RightAlt] = bKeyDown;
+            }
             else
+            {
                 m_modifierKeyState[LeftAlt] = bKeyDown;
+            }
             break;
         case VK_LWIN:
             m_modifierKeyState[LeftCommand] = bKeyDown;
@@ -915,7 +954,7 @@ namespace NS
             m_modifierKeyState[RightCommand] = bKeyDown;
             break;
         case VK_CAPITAL:
-            m_modifierKeyState[CapsLock] = !!::GetKeyState(VK_CAPITAL);
+            m_modifierKeyState[CapsLock] = !(::GetKeyState(VK_CAPITAL) == 0);
             break;
         default:
             break;
@@ -924,15 +963,15 @@ namespace NS
 
     ModifierKeysState WindowsApplication::GetModifierKeys() const
     {
-        return ModifierKeysState(m_modifierKeyState[LeftShift] || m_modifierKeyState[RightShift],
-                                 m_modifierKeyState[LeftControl] || m_modifierKeyState[RightControl],
-                                 m_modifierKeyState[LeftAlt] || m_modifierKeyState[RightAlt],
-                                 m_modifierKeyState[LeftCommand] || m_modifierKeyState[RightCommand],
-                                 m_modifierKeyState[LeftShift],
-                                 m_modifierKeyState[RightShift],
-                                 m_modifierKeyState[LeftAlt],
-                                 m_modifierKeyState[RightAlt],
-                                 m_modifierKeyState[CapsLock]);
+        return {m_modifierKeyState[LeftShift] || m_modifierKeyState[RightShift],
+                m_modifierKeyState[LeftControl] || m_modifierKeyState[RightControl],
+                m_modifierKeyState[LeftAlt] || m_modifierKeyState[RightAlt],
+                m_modifierKeyState[LeftCommand] || m_modifierKeyState[RightCommand],
+                m_modifierKeyState[LeftShift],
+                m_modifierKeyState[RightShift],
+                m_modifierKeyState[LeftAlt],
+                m_modifierKeyState[RightAlt],
+                m_modifierKeyState[CapsLock]};
     }
 
     // =========================================================================
@@ -947,7 +986,7 @@ namespace NS
         rid.dwFlags = bEnable ? 0 : RIDEV_REMOVE;
         rid.hwndTarget = nullptr;
 
-        if (::RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE)))
+        if (::RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE)) != 0)
         {
             m_bUsingHighPrecisionMouse = bEnable;
         }
@@ -961,11 +1000,15 @@ namespace NS
     bool WindowsApplication::IsGamepadAttached() const
     {
         if (!m_bGamepadEnabled)
+        {
             return false;
+        }
         for (const auto& state : m_xinputStates)
         {
             if (state.bConnected)
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -988,7 +1031,7 @@ namespace NS
     {
         RECT workArea = {};
         ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        return {workArea.left, workArea.top, workArea.right, workArea.bottom};
+        return {.left = workArea.left, .top = workArea.top, .right = workArea.right, .bottom = workArea.bottom};
     }
 
     WindowTransparency WindowsApplication::GetWindowTransparencySupport() const
@@ -1000,33 +1043,39 @@ namespace NS
     // 06-07: XInput ゲームパッドポーリング
     // =========================================================================
 
-    void WindowsApplication::PollGameDeviceState(float TimeDelta)
+    void WindowsApplication::PollGameDeviceState(float timeDelta)
     {
         if (!m_bGamepadEnabled)
+        {
             return;
+        }
 
-        m_lastTimeDelta = TimeDelta;
+        m_lastTimeDelta = timeDelta;
         PollXInput();
     }
 
     // =========================================================================
     // 13-01: Raw Input マウス処理
 
-    void WindowsApplication::ProcessRawMouseInput(const RAWMOUSE& MouseData)
+    void WindowsApplication::ProcessRawMouseInput(const RAWMOUSE& mouseData)
     {
-        if (MouseData.usFlags & MOUSE_MOVE_ABSOLUTE)
+        if ((mouseData.usFlags & MOUSE_MOVE_ABSOLUTE) != 0)
         {
             // RDP/リモートデスクトップ 絶対座標 → 相対デルタ変換
-            int32_t screenW = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
-            int32_t screenH = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
-            int32_t screenX = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
-            int32_t screenY = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+            int32_t const screenW = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            int32_t const screenH = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+            int32_t const screenX = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+            int32_t const screenY = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
 
-            int32_t absX = static_cast<int32_t>((MouseData.lLastX / 65535.0f) * screenW + screenX);
-            int32_t absY = static_cast<int32_t>((MouseData.lLastY / 65535.0f) * screenH + screenY);
+            auto const absX =
+                static_cast<int32_t>((static_cast<float>(mouseData.lLastX) / 65535.0F) * static_cast<float>(screenW) +
+                                     static_cast<float>(screenX));
+            auto const absY =
+                static_cast<int32_t>((static_cast<float>(mouseData.lLastY) / 65535.0F) * static_cast<float>(screenH) +
+                                     static_cast<float>(screenY));
 
-            int32_t deltaX = absX - m_lastRawMouseX;
-            int32_t deltaY = absY - m_lastRawMouseY;
+            int32_t const deltaX = absX - m_lastRawMouseX;
+            int32_t const deltaY = absY - m_lastRawMouseY;
             m_lastRawMouseX = absX;
             m_lastRawMouseY = absY;
 
@@ -1041,7 +1090,7 @@ namespace NS
         else
         {
             // 相対移動（通常）
-            m_messageHandler->OnRawMouseMove(MouseData.lLastX, MouseData.lLastY);
+            m_messageHandler->OnRawMouseMove(mouseData.lLastX, mouseData.lLastY);
         }
     }
 
@@ -1058,47 +1107,59 @@ namespace NS
     // Force Feedback (XInput)
     // =========================================================================
 
-    void WindowsApplication::SetForceFeedbackChannelValue(int32_t ControllerId, int32_t ChannelType, float Value)
+    void WindowsApplication::SetForceFeedbackChannelValue(int32_t controllerId, int32_t channelType, float value)
     {
-        if (ControllerId < 0 || ControllerId >= MaxXInputControllers)
+        if (controllerId < 0 || controllerId >= kMaxXInputControllers)
+        {
             return;
-        if (!m_xinputStates[ControllerId].bConnected)
+        }
+        if (!m_xinputStates[controllerId].bConnected)
+        {
             return;
+        }
 
-        float clamped = std::clamp(Value, 0.0f, 1.0f);
-        WORD intensity = static_cast<WORD>(clamped * 65535.0f);
+        float const clamped = std::clamp(value, 0.0F, 1.0F);
+        WORD const intensity = static_cast<WORD>(clamped * 65535.0F);
 
         // 既存の振動状態を保持しつつ該当チャンネルのみ更新
-        auto& ctrl = m_xinputStates[ControllerId];
-        XINPUT_VIBRATION vib = ctrl.LastVibration;
+        auto& ctrl = m_xinputStates[controllerId];
+        XINPUT_VIBRATION vib = ctrl.lastVibration;
 
         // ChannelType: 0=LeftLarge, 1=LeftSmall, 2=RightLarge, 3=RightSmall
-        if (ChannelType == 0 || ChannelType == 2)
+        if (channelType == 0 || channelType == 2)
+        {
             vib.wLeftMotorSpeed = intensity;
+        }
         else
+        {
             vib.wRightMotorSpeed = intensity;
+        }
 
-        ctrl.LastVibration = vib;
-        ::XInputSetState(static_cast<DWORD>(ControllerId), &vib);
+        ctrl.lastVibration = vib;
+        ::XInputSetState(static_cast<DWORD>(controllerId), &vib);
     }
 
-    void WindowsApplication::SetForceFeedbackChannelValues(int32_t ControllerId, const ForceFeedbackValues& Values)
+    void WindowsApplication::SetForceFeedbackChannelValues(int32_t controllerId, const ForceFeedbackValues& values)
     {
-        if (ControllerId < 0 || ControllerId >= MaxXInputControllers)
+        if (controllerId < 0 || controllerId >= kMaxXInputControllers)
+        {
             return;
-        if (!m_xinputStates[ControllerId].bConnected)
+        }
+        if (!m_xinputStates[controllerId].bConnected)
+        {
             return;
+        }
 
         // 左モーター = max(LeftLarge, RightLarge), 右モーター = max(LeftSmall, RightSmall)
-        float leftMotor = std::clamp(std::max(Values.LeftLarge, Values.RightLarge), 0.0f, 1.0f);
-        float rightMotor = std::clamp(std::max(Values.LeftSmall, Values.RightSmall), 0.0f, 1.0f);
+        float const leftMotor = std::clamp(std::max(values.leftLarge, values.rightLarge), 0.0F, 1.0F);
+        float const rightMotor = std::clamp(std::max(values.leftSmall, values.rightSmall), 0.0F, 1.0F);
 
         XINPUT_VIBRATION vib = {};
-        vib.wLeftMotorSpeed = static_cast<WORD>(leftMotor * 65535.0f);
-        vib.wRightMotorSpeed = static_cast<WORD>(rightMotor * 65535.0f);
+        vib.wLeftMotorSpeed = static_cast<WORD>(leftMotor * 65535.0F);
+        vib.wRightMotorSpeed = static_cast<WORD>(rightMotor * 65535.0F);
 
-        m_xinputStates[ControllerId].LastVibration = vib;
-        ::XInputSetState(static_cast<DWORD>(ControllerId), &vib);
+        m_xinputStates[controllerId].lastVibration = vib;
+        ::XInputSetState(static_cast<DWORD>(controllerId), &vib);
     }
 
     // =========================================================================
@@ -1107,51 +1168,56 @@ namespace NS
 
     void WindowsApplication::PollXInput()
     {
-        for (int32_t i = 0; i < MaxXInputControllers; ++i)
+        for (int32_t i = 0; i < kMaxXInputControllers; ++i)
         {
             auto& ctrl = m_xinputStates[i];
 
             // 切断クールダウン
             if (!ctrl.bConnected)
             {
-                ctrl.DisconnectedCooldown -= m_lastTimeDelta;
-                if (ctrl.DisconnectedCooldown > 0.0f)
+                ctrl.disconnectedCooldown -= m_lastTimeDelta;
+                if (ctrl.disconnectedCooldown > 0.0F)
+                {
                     continue;
+                }
             }
 
             XINPUT_STATE state = {};
-            DWORD result = ::XInputGetState(static_cast<DWORD>(i), &state);
+            DWORD const result = ::XInputGetState(static_cast<DWORD>(i), &state);
 
             if (result == ERROR_SUCCESS)
             {
                 if (!ctrl.bConnected)
                 {
                     ctrl.bConnected = true;
-                    ctrl.DisconnectedCooldown = 0.0f;
+                    ctrl.disconnectedCooldown = 0.0F;
                 }
 
-                PlatformUserId userId(i);
-                InputDeviceId deviceId(i);
+                PlatformUserId const userId(i);
+                InputDeviceId const deviceId(i);
                 const XINPUT_GAMEPAD& gp = state.Gamepad;
-                const XINPUT_GAMEPAD& prev = ctrl.LastState.Gamepad;
+                const XINPUT_GAMEPAD& prev = ctrl.lastState.Gamepad;
 
                 // XInput デッドゾーン
-                float leftX = ApplyDeadZone(gp.sThumbLX / 32767.0f, XInputLeftThumbDeadZone);
-                float leftY = ApplyDeadZone(gp.sThumbLY / 32767.0f, XInputLeftThumbDeadZone);
-                float rightX = ApplyDeadZone(gp.sThumbRX / 32767.0f, XInputRightThumbDeadZone);
-                float rightY = ApplyDeadZone(gp.sThumbRY / 32767.0f, XInputRightThumbDeadZone);
+                float const leftX = ApplyDeadZone(static_cast<float>(gp.sThumbLX) / 32767.0F, kXInputLeftThumbDeadZone);
+                float const leftY = ApplyDeadZone(static_cast<float>(gp.sThumbLY) / 32767.0F, kXInputLeftThumbDeadZone);
+                float const rightX =
+                    ApplyDeadZone(static_cast<float>(gp.sThumbRX) / 32767.0F, kXInputRightThumbDeadZone);
+                float const rightY =
+                    ApplyDeadZone(static_cast<float>(gp.sThumbRY) / 32767.0F, kXInputRightThumbDeadZone);
 
-                m_messageHandler->OnControllerAnalog(GamepadKeyNames::LeftAnalogX, userId, deviceId, leftX);
-                m_messageHandler->OnControllerAnalog(GamepadKeyNames::LeftAnalogY, userId, deviceId, leftY);
-                m_messageHandler->OnControllerAnalog(GamepadKeyNames::RightAnalogX, userId, deviceId, rightX);
-                m_messageHandler->OnControllerAnalog(GamepadKeyNames::RightAnalogY, userId, deviceId, rightY);
+                m_messageHandler->OnControllerAnalog(GamepadKeyNames::g_leftAnalogX, userId, deviceId, leftX);
+                m_messageHandler->OnControllerAnalog(GamepadKeyNames::g_leftAnalogY, userId, deviceId, leftY);
+                m_messageHandler->OnControllerAnalog(GamepadKeyNames::g_rightAnalogX, userId, deviceId, rightX);
+                m_messageHandler->OnControllerAnalog(GamepadKeyNames::g_rightAnalogY, userId, deviceId, rightY);
 
                 // --- トリガー ---
-                float leftTrigger = gp.bLeftTrigger / 255.0f;
-                float rightTrigger = gp.bRightTrigger / 255.0f;
-                m_messageHandler->OnControllerAnalog(GamepadKeyNames::LeftTriggerAnalog, userId, deviceId, leftTrigger);
+                float const leftTrigger = static_cast<float>(gp.bLeftTrigger) / 255.0F;
+                float const rightTrigger = static_cast<float>(gp.bRightTrigger) / 255.0F;
                 m_messageHandler->OnControllerAnalog(
-                    GamepadKeyNames::RightTriggerAnalog, userId, deviceId, rightTrigger);
+                    GamepadKeyNames::g_leftTriggerAnalog, userId, deviceId, leftTrigger);
+                m_messageHandler->OnControllerAnalog(
+                    GamepadKeyNames::g_rightTriggerAnalog, userId, deviceId, rightTrigger);
 
                 // --- デジタルボタン ---
                 struct ButtonMapping
@@ -1159,27 +1225,27 @@ namespace NS
                     WORD mask;
                     const NS::TCHAR* name;
                 };
-                static const ButtonMapping buttons[] = {
-                    {XINPUT_GAMEPAD_DPAD_UP, GamepadKeyNames::DPadUp},
-                    {XINPUT_GAMEPAD_DPAD_DOWN, GamepadKeyNames::DPadDown},
-                    {XINPUT_GAMEPAD_DPAD_LEFT, GamepadKeyNames::DPadLeft},
-                    {XINPUT_GAMEPAD_DPAD_RIGHT, GamepadKeyNames::DPadRight},
-                    {XINPUT_GAMEPAD_START, GamepadKeyNames::SpecialRight},
-                    {XINPUT_GAMEPAD_BACK, GamepadKeyNames::SpecialLeft},
-                    {XINPUT_GAMEPAD_LEFT_THUMB, GamepadKeyNames::LeftThumb},
-                    {XINPUT_GAMEPAD_RIGHT_THUMB, GamepadKeyNames::RightThumb},
-                    {XINPUT_GAMEPAD_LEFT_SHOULDER, GamepadKeyNames::LeftShoulder},
-                    {XINPUT_GAMEPAD_RIGHT_SHOULDER, GamepadKeyNames::RightShoulder},
-                    {XINPUT_GAMEPAD_A, GamepadKeyNames::FaceButtonBottom},
-                    {XINPUT_GAMEPAD_B, GamepadKeyNames::FaceButtonRight},
-                    {XINPUT_GAMEPAD_X, GamepadKeyNames::FaceButtonLeft},
-                    {XINPUT_GAMEPAD_Y, GamepadKeyNames::FaceButtonTop},
+                static const ButtonMapping kButtons[] = {
+                    {.mask = XINPUT_GAMEPAD_DPAD_UP, .name = GamepadKeyNames::g_dPadUp},
+                    {.mask = XINPUT_GAMEPAD_DPAD_DOWN, .name = GamepadKeyNames::g_dPadDown},
+                    {.mask = XINPUT_GAMEPAD_DPAD_LEFT, .name = GamepadKeyNames::g_dPadLeft},
+                    {.mask = XINPUT_GAMEPAD_DPAD_RIGHT, .name = GamepadKeyNames::g_dPadRight},
+                    {.mask = XINPUT_GAMEPAD_START, .name = GamepadKeyNames::g_specialRight},
+                    {.mask = XINPUT_GAMEPAD_BACK, .name = GamepadKeyNames::g_specialLeft},
+                    {.mask = XINPUT_GAMEPAD_LEFT_THUMB, .name = GamepadKeyNames::g_leftThumb},
+                    {.mask = XINPUT_GAMEPAD_RIGHT_THUMB, .name = GamepadKeyNames::g_rightThumb},
+                    {.mask = XINPUT_GAMEPAD_LEFT_SHOULDER, .name = GamepadKeyNames::g_leftShoulder},
+                    {.mask = XINPUT_GAMEPAD_RIGHT_SHOULDER, .name = GamepadKeyNames::g_rightShoulder},
+                    {.mask = XINPUT_GAMEPAD_A, .name = GamepadKeyNames::g_faceButtonBottom},
+                    {.mask = XINPUT_GAMEPAD_B, .name = GamepadKeyNames::g_faceButtonRight},
+                    {.mask = XINPUT_GAMEPAD_X, .name = GamepadKeyNames::g_faceButtonLeft},
+                    {.mask = XINPUT_GAMEPAD_Y, .name = GamepadKeyNames::g_faceButtonTop},
                 };
 
-                for (const auto& btn : buttons)
+                for (const auto& btn : kButtons)
                 {
-                    bool pressed = (gp.wButtons & btn.mask) != 0;
-                    bool wasPrevPressed = (prev.wButtons & btn.mask) != 0;
+                    bool const pressed = (gp.wButtons & btn.mask) != 0;
+                    bool const wasPrevPressed = (prev.wButtons & btn.mask) != 0;
 
                     if (pressed && !wasPrevPressed)
                     {
@@ -1191,18 +1257,17 @@ namespace NS
                     }
                 }
 
-                ctrl.LastState = state;
+                ctrl.lastState = state;
             }
             else
             {
                 if (ctrl.bConnected)
                 {
                     ctrl.bConnected = false;
-                    ctrl.DisconnectedCooldown = 2.0f; // 2秒クールダウン
+                    ctrl.disconnectedCooldown = 2.0F; // 2秒クールダウン
                 }
             }
         }
     }
 
 } // namespace NS
-

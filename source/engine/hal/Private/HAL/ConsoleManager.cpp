@@ -16,6 +16,7 @@
 #include "HAL/PlatformString.h"
 
 #include <cwchar>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -32,24 +33,24 @@ namespace NS
         {
         public:
             ConsoleVariableBase(const TCHAR* help, ConsoleVariableFlags flags)
-                : m_help(help ? help : TEXT("")), m_flags(flags), m_legacyCallback(nullptr), m_nextCallbackHandle(1)
+                : m_help((help != nullptr) ? help : TEXT("")), m_flags(flags)
             {}
 
-            const TCHAR* GetHelp() const override { return m_help.c_str(); }
-            void SetHelp(const TCHAR* help) override { m_help = help ? help : TEXT(""); }
-            ConsoleVariableFlags GetFlags() const override { return m_flags; }
+            [[nodiscard]] const TCHAR* GetHelp() const override { return m_help.c_str(); }
+            void SetHelp(const TCHAR* help) override { m_help = (help != nullptr) ? help : TEXT(""); }
+            [[nodiscard]] ConsoleVariableFlags GetFlags() const override { return m_flags; }
             void SetFlags(ConsoleVariableFlags flags) override { m_flags = flags; }
 
             void SetOnChangedCallback(ConsoleVariableDelegate callback) override { m_legacyCallback = callback; }
 
             ConsoleVariableCallbackHandle AddOnChangedCallback(ConsoleVariableDelegate callback) override
             {
-                if (!callback)
+                if (callback == nullptr)
                 {
                     return kInvalidCallbackHandle;
                 }
-                ConsoleVariableCallbackHandle handle = m_nextCallbackHandle++;
-                m_callbacks.push_back({handle, callback});
+                ConsoleVariableCallbackHandle const handle = m_nextCallbackHandle++;
+                m_callbacks.push_back({.handle = handle, .callback = callback});
                 return handle;
             }
 
@@ -80,7 +81,7 @@ namespace NS
 
             void NotifyChanged()
             {
-                if (m_legacyCallback)
+                if (m_legacyCallback != nullptr)
                 {
                     m_legacyCallback(this);
                 }
@@ -98,9 +99,9 @@ namespace NS
 
             std::wstring m_help;
             ConsoleVariableFlags m_flags;
-            ConsoleVariableDelegate m_legacyCallback;
+            ConsoleVariableDelegate m_legacyCallback{nullptr};
             std::vector<CallbackEntry> m_callbacks;
-            ConsoleVariableCallbackHandle m_nextCallbackHandle;
+            ConsoleVariableCallbackHandle m_nextCallbackHandle{1};
         };
 
         // =================================================================
@@ -113,48 +114,74 @@ namespace NS
                 : ConsoleVariableBase(help, flags), m_value(defaultValue), m_defaultValue(defaultValue)
             {}
 
-            int32 GetInt() const override
+            [[nodiscard]] int32 GetInt() const override
             {
                 if constexpr (std::is_same_v<T, int32>)
+                {
                     return m_value;
+                }
                 else if constexpr (std::is_same_v<T, float>)
+                {
                     return static_cast<int32>(m_value);
+                }
                 else
+                {
                     return m_value ? 1 : 0;
+                }
             }
 
-            float GetFloat() const override
+            [[nodiscard]] float GetFloat() const override
             {
                 if constexpr (std::is_same_v<T, float>)
+                {
                     return m_value;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     return static_cast<float>(m_value);
+                }
                 else
-                    return m_value ? 1.0f : 0.0f;
+                {
+                    return m_value ? 1.0F : 0.0F;
+                }
             }
 
-            bool GetBool() const override
+            [[nodiscard]] bool GetBool() const override
             {
                 if constexpr (std::is_same_v<T, bool>)
+                {
                     return m_value;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     return m_value != 0;
+                }
                 else
-                    return m_value != 0.0f;
+                {
+                    return m_value != 0.0F;
+                }
             }
 
-            const TCHAR* GetString() const override { return TEXT(""); }
+            [[nodiscard]] const TCHAR* GetString() const override { return TEXT(""); }
 
             void Set(int32 value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 if constexpr (std::is_same_v<T, int32>)
+                {
                     m_value = value;
+                }
                 else if constexpr (std::is_same_v<T, float>)
+                {
                     m_value = static_cast<float>(value);
+                }
                 else if constexpr (std::is_same_v<T, bool>)
+                {
                     m_value = value != 0;
+                }
                 UpdateSetBy(flags);
                 NotifyChanged();
             }
@@ -162,27 +189,40 @@ namespace NS
             void Set(float value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 if constexpr (std::is_same_v<T, float>)
+                {
                     m_value = value;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     m_value = static_cast<int32>(value);
+                }
                 else if constexpr (std::is_same_v<T, bool>)
-                    m_value = value != 0.0f;
+                {
+                    m_value = value != 0.0F;
+                }
                 UpdateSetBy(flags);
                 NotifyChanged();
             }
 
             void Set(const TCHAR* value, ConsoleVariableFlags flags) override
             {
-                if (!value || !CanSetWithPriority(m_flags, flags))
+                if ((value == nullptr) || !CanSetWithPriority(m_flags, flags))
+                {
                     return;
-                if constexpr (std::is_same_v<T, int32>)
-                    Set(static_cast<int32>(std::wcstol(value, nullptr, 10)), flags);
-                else if constexpr (std::is_same_v<T, float>)
+                }
+                if constexpr (std::is_same_v<T, float>)
+                {
                     Set(static_cast<float>(std::wcstod(value, nullptr)), flags);
-                else if constexpr (std::is_same_v<T, bool>)
+                }
+                else
+                {
+                    // int32 および bool: 文字列→整数変換（boolは0/1として扱う）
                     Set(static_cast<int32>(std::wcstol(value, nullptr, 10)), flags);
+                }
             }
 
             void Reset() override
@@ -204,22 +244,30 @@ namespace NS
         {
         public:
             ConsoleVariableString(const TCHAR* defaultValue, const TCHAR* help, ConsoleVariableFlags flags)
-                : ConsoleVariableBase(help, flags), m_value(defaultValue ? defaultValue : TEXT("")),
-                  m_defaultValue(defaultValue ? defaultValue : TEXT(""))
+                : ConsoleVariableBase(help, flags), m_value((defaultValue != nullptr) ? defaultValue : TEXT("")),
+                  m_defaultValue((defaultValue != nullptr) ? defaultValue : TEXT(""))
             {}
 
-            int32 GetInt() const override { return static_cast<int32>(std::wcstol(m_value.c_str(), nullptr, 10)); }
-            float GetFloat() const override { return static_cast<float>(std::wcstod(m_value.c_str(), nullptr)); }
-            bool GetBool() const override
+            [[nodiscard]] int32 GetInt() const override
+            {
+                return static_cast<int32>(std::wcstol(m_value.c_str(), nullptr, 10));
+            }
+            [[nodiscard]] float GetFloat() const override
+            {
+                return static_cast<float>(std::wcstod(m_value.c_str(), nullptr));
+            }
+            [[nodiscard]] bool GetBool() const override
             {
                 return !m_value.empty() && m_value != TEXT("0") && m_value != TEXT("false");
             }
-            const TCHAR* GetString() const override { return m_value.c_str(); }
+            [[nodiscard]] const TCHAR* GetString() const override { return m_value.c_str(); }
 
             void Set(int32 value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 m_value = std::to_wstring(value);
                 UpdateSetBy(flags);
                 NotifyChanged();
@@ -228,7 +276,9 @@ namespace NS
             void Set(float value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 m_value = std::to_wstring(value);
                 UpdateSetBy(flags);
                 NotifyChanged();
@@ -237,8 +287,10 @@ namespace NS
             void Set(const TCHAR* value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
-                m_value = value ? value : TEXT("");
+                }
+                m_value = (value != nullptr) ? value : TEXT("");
                 UpdateSetBy(flags);
                 NotifyChanged();
             }
@@ -265,48 +317,74 @@ namespace NS
                 : ConsoleVariableBase(help, flags), m_ref(variable), m_defaultValue(variable)
             {}
 
-            int32 GetInt() const override
+            [[nodiscard]] int32 GetInt() const override
             {
                 if constexpr (std::is_same_v<T, int32>)
+                {
                     return m_ref;
+                }
                 else if constexpr (std::is_same_v<T, float>)
+                {
                     return static_cast<int32>(m_ref);
+                }
                 else
+                {
                     return m_ref ? 1 : 0;
+                }
             }
 
-            float GetFloat() const override
+            [[nodiscard]] float GetFloat() const override
             {
                 if constexpr (std::is_same_v<T, float>)
+                {
                     return m_ref;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     return static_cast<float>(m_ref);
+                }
                 else
-                    return m_ref ? 1.0f : 0.0f;
+                {
+                    return m_ref ? 1.0F : 0.0F;
+                }
             }
 
-            bool GetBool() const override
+            [[nodiscard]] bool GetBool() const override
             {
                 if constexpr (std::is_same_v<T, bool>)
+                {
                     return m_ref;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     return m_ref != 0;
+                }
                 else
-                    return m_ref != 0.0f;
+                {
+                    return m_ref != 0.0F;
+                }
             }
 
-            const TCHAR* GetString() const override { return TEXT(""); }
+            [[nodiscard]] const TCHAR* GetString() const override { return TEXT(""); }
 
             void Set(int32 value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 if constexpr (std::is_same_v<T, int32>)
+                {
                     m_ref = value;
+                }
                 else if constexpr (std::is_same_v<T, float>)
+                {
                     m_ref = static_cast<float>(value);
+                }
                 else if constexpr (std::is_same_v<T, bool>)
+                {
                     m_ref = value != 0;
+                }
                 UpdateSetBy(flags);
                 NotifyChanged();
             }
@@ -314,27 +392,40 @@ namespace NS
             void Set(float value, ConsoleVariableFlags flags) override
             {
                 if (!CanSetWithPriority(m_flags, flags))
+                {
                     return;
+                }
                 if constexpr (std::is_same_v<T, float>)
+                {
                     m_ref = value;
+                }
                 else if constexpr (std::is_same_v<T, int32>)
+                {
                     m_ref = static_cast<int32>(value);
+                }
                 else if constexpr (std::is_same_v<T, bool>)
-                    m_ref = value != 0.0f;
+                {
+                    m_ref = value != 0.0F;
+                }
                 UpdateSetBy(flags);
                 NotifyChanged();
             }
 
             void Set(const TCHAR* value, ConsoleVariableFlags flags) override
             {
-                if (!value || !CanSetWithPriority(m_flags, flags))
+                if ((value == nullptr) || !CanSetWithPriority(m_flags, flags))
+                {
                     return;
-                if constexpr (std::is_same_v<T, int32>)
-                    Set(static_cast<int32>(std::wcstol(value, nullptr, 10)), flags);
-                else if constexpr (std::is_same_v<T, float>)
+                }
+                if constexpr (std::is_same_v<T, float>)
+                {
                     Set(static_cast<float>(std::wcstod(value, nullptr)), flags);
-                else if constexpr (std::is_same_v<T, bool>)
+                }
+                else
+                {
+                    // int32 および bool: 文字列→整数変換（boolは0/1として扱う）
                     Set(static_cast<int32>(std::wcstol(value, nullptr, 10)), flags);
+                }
             }
 
             void Reset() override
@@ -356,14 +447,14 @@ namespace NS
         {
         public:
             ConsoleCommandImpl(const TCHAR* help, bool (*command)(const TCHAR*), ConsoleVariableFlags flags)
-                : m_help(help ? help : TEXT("")), m_command(command), m_flags(flags)
+                : m_help((help != nullptr) ? help : TEXT("")), m_command(command), m_flags(flags)
             {}
 
-            const TCHAR* GetHelp() const override { return m_help.c_str(); }
-            void SetHelp(const TCHAR* help) override { m_help = help ? help : TEXT(""); }
-            ConsoleVariableFlags GetFlags() const override { return m_flags; }
+            [[nodiscard]] const TCHAR* GetHelp() const override { return m_help.c_str(); }
+            void SetHelp(const TCHAR* help) override { m_help = (help != nullptr) ? help : TEXT(""); }
+            [[nodiscard]] ConsoleVariableFlags GetFlags() const override { return m_flags; }
             void SetFlags(ConsoleVariableFlags flags) override { m_flags = flags; }
-            bool Execute(const TCHAR* args) override { return m_command ? m_command(args) : false; }
+            bool Execute(const TCHAR* args) override { return (m_command != nullptr) ? m_command(args) : false; }
 
         private:
             std::wstring m_help;
@@ -379,30 +470,20 @@ namespace NS
         public:
             ConsoleManagerImpl() = default;
 
-            ~ConsoleManagerImpl() override
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                for (auto& pair : m_objects)
-                {
-                    delete pair.second;
-                }
-                m_objects.clear();
-            }
+            ~ConsoleManagerImpl() override = default;
+            NS_DISALLOW_COPY_AND_MOVE(ConsoleManagerImpl);
 
+        public:
             IConsoleVariable* RegisterConsoleVariable(const TCHAR* name,
                                                       int32 defaultValue,
                                                       const TCHAR* help,
                                                       ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new TConsoleVariable<int32>(defaultValue, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<TConsoleVariable<int32>>(defaultValue, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* RegisterConsoleVariable(const TCHAR* name,
@@ -410,15 +491,11 @@ namespace NS
                                                       const TCHAR* help,
                                                       ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new TConsoleVariable<float>(defaultValue, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<TConsoleVariable<float>>(defaultValue, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* RegisterConsoleVariable(const TCHAR* name,
@@ -426,15 +503,11 @@ namespace NS
                                                       const TCHAR* help,
                                                       ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new ConsoleVariableString(defaultValue, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<ConsoleVariableString>(defaultValue, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* RegisterConsoleVariableRef(const TCHAR* name,
@@ -442,15 +515,11 @@ namespace NS
                                                          const TCHAR* help,
                                                          ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new TConsoleVariableRef<int32>(variable, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<TConsoleVariableRef<int32>>(variable, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* RegisterConsoleVariableRef(const TCHAR* name,
@@ -458,15 +527,11 @@ namespace NS
                                                          const TCHAR* help,
                                                          ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new TConsoleVariableRef<float>(variable, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<TConsoleVariableRef<float>>(variable, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* RegisterConsoleVariableRef(const TCHAR* name,
@@ -474,15 +539,11 @@ namespace NS
                                                          const TCHAR* help,
                                                          ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* var = new TConsoleVariableRef<bool>(variable, help, flags);
-                m_objects[name] = var;
-                return var;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<TConsoleVariableRef<bool>>(variable, help, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleCommand* RegisterConsoleCommand(const TCHAR* name,
@@ -490,20 +551,16 @@ namespace NS
                                                     bool (*command)(const TCHAR*),
                                                     ConsoleVariableFlags flags) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                }
-                auto* cmd = new ConsoleCommandImpl(help, command, flags);
-                m_objects[name] = cmd;
-                return cmd;
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                auto ptr = std::make_unique<ConsoleCommandImpl>(help, command, flags);
+                auto* raw = ptr.get();
+                m_objects[name] = std::move(ptr);
+                return raw;
             }
 
             IConsoleVariable* FindConsoleVariable(const TCHAR* name) const override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> const lock(m_mutex);
                 auto it = m_objects.find(name);
                 if (it != m_objects.end())
                 {
@@ -514,29 +571,24 @@ namespace NS
 
             IConsoleObject* FindConsoleObject(const TCHAR* name) const override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> const lock(m_mutex);
                 auto it = m_objects.find(name);
                 if (it != m_objects.end())
                 {
-                    return it->second;
+                    return it->second.get();
                 }
                 return nullptr;
             }
 
             void UnregisterConsoleObject(const TCHAR* name) override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto it = m_objects.find(name);
-                if (it != m_objects.end())
-                {
-                    delete it->second;
-                    m_objects.erase(it);
-                }
+                std::lock_guard<std::mutex> const lock(m_mutex);
+                m_objects.erase(name);
             }
 
             bool ProcessInput(const TCHAR* input) override
             {
-                if (!input || input[0] == L'\0')
+                if ((input == nullptr) || input[0] == L'\0')
                 {
                     return false;
                 }
@@ -545,42 +597,42 @@ namespace NS
                 std::wstring inputStr(input);
 
                 // 先頭・末尾の空白を除去
-                size_t start = inputStr.find_first_not_of(L" \t");
+                size_t const start = inputStr.find_first_not_of(L" \t");
                 if (start == std::wstring::npos)
                 {
                     return false;
                 }
-                size_t end = inputStr.find_last_not_of(L" \t");
+                size_t const end = inputStr.find_last_not_of(L" \t");
                 inputStr = inputStr.substr(start, end - start + 1);
 
                 // 名前と値を分離
-                size_t spacePos = inputStr.find_first_of(L" \t");
-                std::wstring name = (spacePos != std::wstring::npos) ? inputStr.substr(0, spacePos) : inputStr;
+                size_t const spacePos = inputStr.find_first_of(L" \t");
+                std::wstring const name = (spacePos != std::wstring::npos) ? inputStr.substr(0, spacePos) : inputStr;
                 std::wstring valueStr;
                 if (spacePos != std::wstring::npos)
                 {
-                    size_t valueStart = inputStr.find_first_not_of(L" \t", spacePos);
+                    size_t const valueStart = inputStr.find_first_not_of(L" \t", spacePos);
                     if (valueStart != std::wstring::npos)
                     {
                         valueStr = inputStr.substr(valueStart);
                     }
                 }
 
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> const lock(m_mutex);
                 auto it = m_objects.find(name);
                 if (it == m_objects.end())
                 {
                     return false;
                 }
 
-                IConsoleObject* obj = it->second;
+                IConsoleObject* obj = it->second.get();
 
                 // コマンドの場合
                 IConsoleVariable* var = obj->AsVariable();
-                if (!var)
+                if (var == nullptr)
                 {
                     // IConsoleCommandとして実行
-                    auto* cmd = static_cast<IConsoleCommand*>(obj);
+                    auto* cmd = dynamic_cast<IConsoleCommand*>(obj);
                     return cmd->Execute(valueStr.c_str());
                 }
 
@@ -597,16 +649,16 @@ namespace NS
 
             void ForEachConsoleObject(void (*callback)(const TCHAR* name, IConsoleObject* object)) const override
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> const lock(m_mutex);
                 for (const auto& pair : m_objects)
                 {
-                    callback(pair.first.c_str(), pair.second);
+                    callback(pair.first.c_str(), pair.second.get());
                 }
             }
 
         private:
             mutable std::mutex m_mutex;
-            std::unordered_map<std::wstring, IConsoleObject*> m_objects;
+            std::unordered_map<std::wstring, std::unique_ptr<IConsoleObject>> m_objects;
         };
     } // namespace
 

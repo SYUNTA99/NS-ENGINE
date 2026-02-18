@@ -22,20 +22,20 @@ namespace NS
 
     void WindowsPlatformProcess::SleepNoStats(float seconds)
     {
-        if (!std::isfinite(seconds) || seconds <= 0.0f)
+        if (!std::isfinite(seconds) || seconds <= 0.0F)
         {
             ::Sleep(0);
             return;
         }
 
-        constexpr float MaxSleepSeconds = static_cast<float>(MAXDWORD) / 1000.0f;
-        if (seconds >= MaxSleepSeconds)
+        constexpr float kMaxSleepSeconds = static_cast<float>(MAXDWORD) / 1000.0F;
+        if (seconds >= kMaxSleepSeconds)
         {
             ::Sleep(MAXDWORD);
             return;
         }
 
-        ::Sleep(static_cast<DWORD>(seconds * 1000.0f));
+        ::Sleep(static_cast<DWORD>(seconds * 1000.0F));
     }
 
     void WindowsPlatformProcess::SleepInfinite()
@@ -55,7 +55,7 @@ namespace NS
 
     void WindowsPlatformProcess::FreeDllHandle(void* dllHandle)
     {
-        if (dllHandle)
+        if (dllHandle != nullptr)
         {
             ::FreeLibrary(static_cast<HMODULE>(dllHandle));
         }
@@ -63,21 +63,21 @@ namespace NS
 
     void* WindowsPlatformProcess::GetDllExport(void* dllHandle, const TCHAR* procName)
     {
-        if (!dllHandle || !procName || *procName == L'\0')
+        if ((dllHandle == nullptr) || (procName == nullptr) || *procName == L'\0')
         {
             return nullptr;
         }
 
-        const int requiredSize = ::WideCharToMultiByte(CP_ACP, 0, procName, -1, nullptr, 0, nullptr, nullptr);
-        if (requiredSize <= 0)
+        const int kRequiredSize = ::WideCharToMultiByte(CP_ACP, 0, procName, -1, nullptr, 0, nullptr, nullptr);
+        if (kRequiredSize <= 0)
         {
             return nullptr;
         }
 
-        std::string procNameAnsi(static_cast<size_t>(requiredSize), '\0');
-        const int convertedSize =
-            ::WideCharToMultiByte(CP_ACP, 0, procName, -1, procNameAnsi.data(), requiredSize, nullptr, nullptr);
-        if (convertedSize <= 0)
+        std::string procNameAnsi(static_cast<size_t>(kRequiredSize), '\0');
+        const int kConvertedSize =
+            ::WideCharToMultiByte(CP_ACP, 0, procName, -1, procNameAnsi.data(), kRequiredSize, nullptr, nullptr);
+        if (kConvertedSize <= 0)
         {
             return nullptr;
         }

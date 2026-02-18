@@ -15,22 +15,22 @@ namespace NS
 {
     void* Memory::Malloc(SIZE_T count, uint32 alignment)
     {
-        if (!GMalloc)
+        if (g_gMalloc == nullptr)
         {
             // GMalloc未初期化時はSystemMallocにフォールバック
             return SystemMalloc(count);
         }
-        return GMalloc->Alloc(count, alignment);
+        return g_gMalloc->Alloc(count, alignment);
     }
 
     void* Memory::Realloc(void* ptr, SIZE_T count, uint32 alignment)
     {
-        if (!GMalloc)
+        if (g_gMalloc == nullptr)
         {
             // GMalloc未初期化時は未サポート
             return nullptr;
         }
-        return GMalloc->Realloc(ptr, count, alignment);
+        return g_gMalloc->Realloc(ptr, count, alignment);
     }
 
     void Memory::Free(void* ptr)
@@ -40,31 +40,31 @@ namespace NS
             return;
         }
 
-        if (!GMalloc)
+        if (g_gMalloc == nullptr)
         {
             // GMalloc未初期化時はSystemFree
             SystemFree(ptr);
             return;
         }
-        GMalloc->Free(ptr);
+        g_gMalloc->Free(ptr);
     }
 
     SIZE_T Memory::GetAllocSize(void* ptr)
     {
-        if (ptr == nullptr || !GMalloc)
+        if (ptr == nullptr || (g_gMalloc == nullptr))
         {
             return 0;
         }
 
         SIZE_T size = 0;
-        GMalloc->GetAllocationSize(ptr, size);
+        g_gMalloc->GetAllocationSize(ptr, size);
         return size;
     }
 
     void* Memory::MallocZeroed(SIZE_T count, uint32 alignment)
     {
         void* ptr = Malloc(count, alignment);
-        if (ptr)
+        if (ptr != nullptr)
         {
             std::memset(ptr, 0, count);
         }
@@ -73,11 +73,11 @@ namespace NS
 
     SIZE_T Memory::QuantizeSize(SIZE_T count, uint32 alignment)
     {
-        if (!GMalloc)
+        if (g_gMalloc == nullptr)
         {
             return count;
         }
-        return GMalloc->QuantizeSize(count, alignment);
+        return g_gMalloc->QuantizeSize(count, alignment);
     }
 
     void* Memory::SystemMalloc(SIZE_T size)
@@ -111,23 +111,23 @@ namespace NS
 
     void Memory::Trim(bool trimThreadCaches)
     {
-        if (GMalloc)
+        if (g_gMalloc != nullptr)
         {
-            GMalloc->Trim(trimThreadCaches);
+            g_gMalloc->Trim(trimThreadCaches);
         }
     }
 
     bool Memory::TestMemory()
     {
-        if (!GMalloc)
+        if (g_gMalloc == nullptr)
         {
             return false;
         }
-        return GMalloc->ValidateHeap();
+        return g_gMalloc->ValidateHeap();
     }
 
     bool Memory::IsGMallocReady()
     {
-        return GMalloc != nullptr;
+        return g_gMalloc != nullptr;
     }
 } // namespace NS

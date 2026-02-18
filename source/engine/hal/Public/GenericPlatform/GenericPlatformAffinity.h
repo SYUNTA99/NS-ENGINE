@@ -42,17 +42,16 @@ namespace NS
     /// CPUトポロジ情報
     struct CPUTopology
     {
-        uint32 physicalCoreCount;     ///< 物理コア数
-        uint32 logicalProcessorCount; ///< 論理プロセッサ数（HT含む）
-        uint32 performanceCoreCount;  ///< Pコア数（ハイブリッドCPU）
-        uint32 efficiencyCoreCount;   ///< Eコア数（ハイブリッドCPU）
-        uint64 performanceCoreMask;   ///< Pコアのビットマスク
-        uint64 efficiencyCoreMask;    ///< Eコアのビットマスク
-        bool isHybridCPU;             ///< ハイブリッドCPU（Intel 12th+, ARM big.LITTLE）
+        uint32 physicalCoreCount{0};     ///< 物理コア数
+        uint32 logicalProcessorCount{0}; ///< 論理プロセッサ数（HT含む）
+        uint32 performanceCoreCount{0};  ///< Pコア数（ハイブリッドCPU）
+        uint32 efficiencyCoreCount{0};   ///< Eコア数（ハイブリッドCPU）
+        uint64 performanceCoreMask{0};   ///< Pコアのビットマスク
+        uint64 efficiencyCoreMask{0};    ///< Eコアのビットマスク
+        bool isHybridCPU{false};             ///< ハイブリッドCPU（Intel 12th+, ARM big.LITTLE）
 
         CPUTopology()
-            : physicalCoreCount(0), logicalProcessorCount(0), performanceCoreCount(0), efficiencyCoreCount(0),
-              performanceCoreMask(0), efficiencyCoreMask(0), isHybridCPU(false)
+             
         {}
     };
 

@@ -28,58 +28,61 @@ namespace NS
     class ITextInputMethodContext
     {
     public:
+        ITextInputMethodContext() = default;
         virtual ~ITextInputMethodContext() = default;
+        NS_DISALLOW_COPY_AND_MOVE(ITextInputMethodContext);
 
+    public:
         // =================================================================
         // コンポジション状態
         // =================================================================
 
         /// IME コンポジション中か
-        virtual bool IsComposing() const = 0;
+        [[nodiscard]] virtual bool IsComposing() const = 0;
 
         /// コンポジション範囲
-        virtual bool IsReadOnly() const = 0;
+        [[nodiscard]] virtual bool IsReadOnly() const = 0;
 
         // =================================================================
         // テキストアクセス
         // =================================================================
 
         /// テキスト全体を取得
-        virtual void GetTextInRange(int32_t BeginIndex, int32_t Length, std::wstring& OutString) const = 0;
+        virtual void GetTextInRange(int32_t beginIndex, int32_t length, std::wstring& outString) const = 0;
 
         /// 選択範囲を取得
-        virtual void GetSelectionRange(int32_t& OutBeginIndex,
-                                       int32_t& OutLength,
-                                       CaretPosition& OutCaretPosition) const = 0;
+        virtual void GetSelectionRange(int32_t& outBeginIndex,
+                                       int32_t& outLength,
+                                       CaretPosition& outCaretPosition) const = 0;
 
         /// 選択範囲を設定
-        virtual void SetSelectionRange(int32_t BeginIndex, int32_t Length, CaretPosition InCaretPosition) = 0;
+        virtual void SetSelectionRange(int32_t beginIndex, int32_t length, CaretPosition inCaretPosition) = 0;
 
         /// テキスト長
-        virtual int32_t GetTextLength() const = 0;
+        [[nodiscard]] virtual int32_t GetTextLength() const = 0;
 
         // =================================================================
         // 座標
         // =================================================================
 
         /// 文字インデックスからスクリーン座標を取得
-        virtual void GetTextBounds(int32_t BeginIndex, int32_t Length, PlatformRect& OutScreenBounds) const = 0;
+        virtual void GetTextBounds(int32_t beginIndex, int32_t length, PlatformRect& outScreenBounds) const = 0;
 
         /// スクリーン座標から文字インデックスへ変換
-        virtual int32_t GetCharacterIndexFromPoint(const Vector2D& Point) const = 0;
+        [[nodiscard]] virtual int32_t GetCharacterIndexFromPoint(const Vector2D& point) const = 0;
 
         // =================================================================
         // テキスト操作
         // =================================================================
 
         /// テキスト挿入
-        virtual void InsertTextAtCursor(const std::wstring& InString) = 0;
+        virtual void InsertTextAtCursor(const std::wstring& inString) = 0;
 
         /// コンポジション開始
         virtual void BeginComposition() = 0;
 
         /// コンポジション更新
-        virtual void UpdateCompositionRange(int32_t BeginIndex, int32_t Length) = 0;
+        virtual void UpdateCompositionRange(int32_t beginIndex, int32_t length) = 0;
 
         /// コンポジション終了
         virtual void EndComposition() = 0;
@@ -89,7 +92,7 @@ namespace NS
         // =================================================================
 
         /// 関連ウィンドウを取得
-        virtual std::shared_ptr<GenericWindow> GetWindow() const = 0;
+        [[nodiscard]] virtual std::shared_ptr<GenericWindow> GetWindow() const = 0;
     };
 
     // =========================================================================
@@ -100,8 +103,11 @@ namespace NS
     class ITextInputMethodChangeNotifier
     {
     public:
+        ITextInputMethodChangeNotifier() = default;
         virtual ~ITextInputMethodChangeNotifier() = default;
+        NS_DISALLOW_COPY_AND_MOVE(ITextInputMethodChangeNotifier);
 
+    public:
         /// レイアウト変更通知
         virtual void NotifyLayoutChanged() = 0;
 
@@ -123,25 +129,28 @@ namespace NS
     class ITextInputMethodSystem
     {
     public:
+        ITextInputMethodSystem() = default;
         virtual ~ITextInputMethodSystem() = default;
+        NS_DISALLOW_COPY_AND_MOVE(ITextInputMethodSystem);
 
+    public:
         /// コンテキスト登録
         virtual std::shared_ptr<ITextInputMethodChangeNotifier> RegisterContext(
-            const std::shared_ptr<ITextInputMethodContext>& Context) = 0;
+            const std::shared_ptr<ITextInputMethodContext>& context) = 0;
 
         /// コンテキスト登録解除
-        virtual void UnregisterContext(const std::shared_ptr<ITextInputMethodContext>& Context) = 0;
+        virtual void UnregisterContext(const std::shared_ptr<ITextInputMethodContext>& context) = 0;
 
         /// コンテキストをアクティブ化（IME入力開始）
-        virtual void ActivateContext(const std::shared_ptr<ITextInputMethodContext>& Context) = 0;
+        virtual void ActivateContext(const std::shared_ptr<ITextInputMethodContext>& context) = 0;
 
         /// コンテキストを非アクティブ化（IME入力停止）
-        virtual void DeactivateContext(const std::shared_ptr<ITextInputMethodContext>& Context) = 0;
+        virtual void DeactivateContext(const std::shared_ptr<ITextInputMethodContext>& context) = 0;
 
         /// デフォルトIMEウィンドウをアプリケーションに適用
-        virtual bool ApplyDefaults(const std::shared_ptr<GenericWindow>& InWindow)
+        virtual bool ApplyDefaults(const std::shared_ptr<GenericWindow>& inWindow)
         {
-            (void)InWindow;
+            (void)inWindow;
             return false;
         }
     };

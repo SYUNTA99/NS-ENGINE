@@ -42,20 +42,20 @@ namespace NS
         static void SetHighDPIMode();
 
         /// ポイント座標からDPIスケールファクターを取得
-        static float GetDPIScaleFactorAtPoint(int32_t X, int32_t Y);
+        static float GetDPIScaleFactorAtPoint(int32_t x, int32_t y);
 
         // =================================================================
         // スクリーンセーバー
         // =================================================================
 
-        static bool ControlScreensaver(ScreenSaverAction Action);
+        static bool ControlScreensaver(ScreenSaverAction action);
 
         // =================================================================
         // クリップボード
         // =================================================================
 
-        static void ClipboardCopy(const wchar_t* Str);
-        static void ClipboardPaste(std::wstring& Dest);
+        static void ClipboardCopy(const wchar_t* str);
+        static void ClipboardPaste(std::wstring& dest);
 
         // =================================================================
         // アプリケーション状態
@@ -72,7 +72,7 @@ namespace NS
         // =================================================================
 
         /// XInput コントローラー名を取得
-        static std::wstring GetGamepadControllerName(int32_t ControllerId);
+        static std::wstring GetGamepadControllerName(int32_t controllerId);
 
         // =================================================================
         // ユーティリティ

@@ -15,18 +15,18 @@ namespace NS
     class NullCursor : public ICursor
     {
     public:
-        MouseCursor::Type GetType() const override { return MouseCursor::Default; }
+        [[nodiscard]] MouseCursor::Type GetType() const override { return MouseCursor::Default; }
         void SetType(MouseCursor::Type /*InType*/) override {}
-        void GetSize(int32_t& Width, int32_t& Height) const override
+        void GetSize(int32_t& width, int32_t& height) const override
         {
-            Width = 0;
-            Height = 0;
+            width = 0;
+            height = 0;
         }
-        void GetPosition(Vector2D& OutPosition) const override { OutPosition = m_position; }
-        void SetPosition(int32_t X, int32_t Y) override
+        void GetPosition(Vector2D& outPosition) const override { outPosition = m_position; }
+        void SetPosition(int32_t x, int32_t y) override
         {
-            m_position.X = static_cast<float>(X);
-            m_position.Y = static_cast<float>(Y);
+            m_position.x = static_cast<float>(x);
+            m_position.y = static_cast<float>(y);
         }
         void Show(bool /*bShow*/) override {}
         void Lock(const PlatformRect* /*Bounds*/) override {}
@@ -54,7 +54,7 @@ namespace NS
         PlatformRect GetWorkArea(const PlatformRect& /*CurrentWindow*/) const override { return m_workArea; }
 
     private:
-        PlatformRect m_workArea = {0, 0, 1920, 1080};
+        PlatformRect m_workArea = {.left=0, .top=0, .right=1920, .bottom=1080};
     };
 
 } // namespace NS

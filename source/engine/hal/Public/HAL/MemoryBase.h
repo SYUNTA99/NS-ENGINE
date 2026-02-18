@@ -100,10 +100,10 @@ namespace NS
         void* originalPtr;    ///< アライメント調整前のポインタ
 
         /// 有効な割り当てかチェック
-        bool IsValidAllocation() const { return magic == kMagicAllocated; }
+        [[nodiscard]] bool IsValidAllocation() const { return magic == kMagicAllocated; }
 
         /// 解放済みかチェック
-        bool IsFreed() const { return magic == kMagicFreed; }
+        [[nodiscard]] bool IsFreed() const { return magic == kMagicFreed; }
 
         /// ガードバイト検証
         /// @param userPtr ユーザーに返したポインタ
@@ -139,8 +139,11 @@ namespace NS
     class Malloc
     {
     public:
+        Malloc() = default;
         virtual ~Malloc() = default;
+        NS_DISALLOW_COPY_AND_MOVE(Malloc);
 
+    public:
         // =====================================================================
         // 基本操作
         // =====================================================================
@@ -216,7 +219,7 @@ namespace NS
         virtual void Trim(bool trimThreadCaches);
 
         /// 最後のエラー取得
-        virtual MallocError GetLastError() const { return m_lastError; }
+        [[nodiscard]] virtual MallocError GetLastError() const { return m_lastError; }
 
         /// エラーをクリア
         virtual void ClearError() { m_lastError = MallocError::None; }
@@ -259,10 +262,10 @@ namespace NS
         virtual const TCHAR* GetDescriptiveName() = 0;
 
         /// スレッドセーフかどうか
-        virtual bool IsInternallyThreadSafe() const { return false; }
+        [[nodiscard]] virtual bool IsInternallyThreadSafe() const { return false; }
 
         /// サポートする最大アライメント
-        virtual uint32 GetMaxSupportedAlignment() const { return kMaxSupportedAlignment; }
+        [[nodiscard]] virtual uint32 GetMaxSupportedAlignment() const { return kMaxSupportedAlignment; }
 
     protected:
         /// アライメント検証
@@ -272,7 +275,9 @@ namespace NS
         bool ValidateAlignment(uint32 alignment)
         {
             if (alignment == 0)
+            {
                 return true;
+            }
             if (!IsPowerOfTwo(alignment))
             {
                 m_lastError = MallocError::InvalidAlignment;
@@ -286,10 +291,12 @@ namespace NS
         /// @param count 割り当てサイズ
         /// @param alignment 要求アライメント（0=自動）
         /// @return 実効アライメント
-        uint32 GetEffectiveAlignment(SIZE_T count, uint32 alignment)
+        static uint32 GetEffectiveAlignment(SIZE_T count, uint32 alignment)
         {
             if (alignment != 0)
+            {
                 return alignment;
+            }
             // 16バイト以上の割り当ては16バイトアライメント
             return (count >= 16) ? 16 : kMinAlignment;
         }
@@ -302,7 +309,9 @@ namespace NS
         bool DetectDoubleFree(void* ptr)
         {
             if (!ptr)
+            {
                 return false;
+            }
 
             auto* header = GetAllocationHeader(ptr);
             if (header && header->IsFreed())
@@ -320,7 +329,9 @@ namespace NS
         bool DetectCorruption(void* ptr)
         {
             if (!ptr)
+            {
                 return false;
+            }
 
             auto* header = GetAllocationHeader(ptr);
             if (!header || !header->IsValidAllocation())
@@ -344,7 +355,9 @@ namespace NS
         static AllocationHeader* GetAllocationHeader(void* userPtr)
         {
             if (!userPtr)
+            {
                 return nullptr;
+            }
             return reinterpret_cast<AllocationHeader*>(static_cast<uint8*>(userPtr) - kGuardByteSize -
                                                        sizeof(AllocationHeader));
         }
@@ -371,6 +384,6 @@ namespace NS
     // =========================================================================
 
     /// グローバルアロケータ（起動時に設定）
-    extern Malloc* GMalloc;
+    extern Malloc* g_gMalloc;
 
 } // namespace NS

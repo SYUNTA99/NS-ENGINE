@@ -15,11 +15,11 @@ namespace NS
     template <typename CharType> struct TChar
     {
         // 文字定数
-        static constexpr CharType LineFeed = CharType(0x0A);       ///< LF (\n)
-        static constexpr CharType CarriageReturn = CharType(0x0D); ///< CR (\r)
-        static constexpr CharType Tab = CharType(0x09);            ///< Tab (\t)
-        static constexpr CharType Space = CharType(0x20);          ///< Space
-        static constexpr CharType NullChar = CharType(0x00);       ///< Null終端
+        static constexpr CharType kLineFeed = CharType(0x0A);       ///< LF (\n)
+        static constexpr CharType kCarriageReturn = CharType(0x0D); ///< CR (\r)
+        static constexpr CharType kTab = CharType(0x09);            ///< Tab (\t)
+        static constexpr CharType kSpace = CharType(0x20);          ///< Space
+        static constexpr CharType kNullChar = CharType(0x00);       ///< Null終端
 
         /// 大文字に変換
         static FORCEINLINE CharType ToUpper(CharType c)
@@ -51,7 +51,7 @@ namespace NS
         /// 空白文字かどうか
         static FORCEINLINE bool IsWhitespace(CharType c)
         {
-            return c == Space || c == Tab || c == LineFeed || c == CarriageReturn;
+            return c == kSpace || c == kTab || c == kLineFeed || c == kCarriageReturn;
         }
 
         /// 16進数字かどうか

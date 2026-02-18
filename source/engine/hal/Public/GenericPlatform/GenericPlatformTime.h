@@ -10,17 +10,17 @@ namespace NS
     /// 日時構造体
     struct DateTime
     {
-        int32 year;        ///< 年（例: 2024）
-        int32 month;       ///< 月（1-12）
-        int32 day;         ///< 日（1-31）
-        int32 dayOfWeek;   ///< 曜日（0=日曜, 6=土曜）
-        int32 hour;        ///< 時（0-23）
-        int32 minute;      ///< 分（0-59）
-        int32 second;      ///< 秒（0-59）
-        int32 millisecond; ///< ミリ秒（0-999）
+        int32 year{0};        ///< 年（例: 2024）
+        int32 month{0};       ///< 月（1-12）
+        int32 day{0};         ///< 日（1-31）
+        int32 dayOfWeek{0};   ///< 曜日（0=日曜, 6=土曜）
+        int32 hour{0};        ///< 時（0-23）
+        int32 minute{0};      ///< 分（0-59）
+        int32 second{0};      ///< 秒（0-59）
+        int32 millisecond{0}; ///< ミリ秒（0-999）
 
         /// デフォルト初期化
-        DateTime() : year(0), month(0), day(0), dayOfWeek(0), hour(0), minute(0), second(0), millisecond(0) {}
+        DateTime() = default;
     };
 
     /// プラットフォーム非依存の時間管理インターフェース
@@ -116,7 +116,10 @@ namespace NS
         ///
         /// @param cycles サイクル数
         /// @return 秒数
-        static FORCEINLINE double CyclesToSeconds(uint64 cycles) { return cycles * GetSecondsPerCycle64(); }
+        static FORCEINLINE double CyclesToSeconds(uint64 cycles)
+        {
+            return static_cast<double>(cycles) * GetSecondsPerCycle64();
+        }
 
         /// 秒をサイクルに変換
         ///

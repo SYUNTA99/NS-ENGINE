@@ -4,6 +4,7 @@
 
 #include "HAL/PlatformTypes.h"
 #include "common/utility/types.h"
+#include <memory>
 
 namespace NS
 {
@@ -11,7 +12,7 @@ namespace NS
     ///
     /// ## 所有権
     ///
-    /// OpenRead/OpenWriteで取得したハンドルは呼び出し側がdelete責任を持つ。
+    /// OpenRead/OpenWriteはunique_ptrで返却し、所有権は呼び出し側に移転する。
     ///
     /// ## スレッドセーフティ
     ///
@@ -19,8 +20,11 @@ namespace NS
     class IFileHandle
     {
     public:
+        IFileHandle() = default;
         virtual ~IFileHandle() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IFileHandle);
 
+    public:
         /// 現在のファイル位置を取得
         ///
         /// @return 現在位置（バイト単位）
@@ -71,19 +75,21 @@ namespace NS
     /// IPlatformFile& fs = GetPlatformFile();
     /// if (fs.FileExists(L"config.ini"))
     /// {
-    ///     IFileHandle* file = fs.OpenRead(L"config.ini");
+    ///     auto file = fs.OpenRead(L"config.ini");
     ///     if (file)
     ///     {
     ///         // ... 読み取り処理 ...
-    ///         delete file;
     ///     }
     /// }
     /// ```
     class IPlatformFile
     {
     public:
+        IPlatformFile() = default;
         virtual ~IPlatformFile() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IPlatformFile);
 
+    public:
         // =====================================================================
         // 存在チェック
         // =====================================================================
@@ -174,8 +180,7 @@ namespace NS
         ///
         /// @param filename ファイルパス
         /// @return ファイルハンドル、失敗時nullptr
-        /// @note 戻り値は呼び出し側がdeleteする責任
-        virtual IFileHandle* OpenRead(const TCHAR* filename) = 0;
+        virtual std::unique_ptr<IFileHandle> OpenRead(const TCHAR* filename) = 0;
 
         /// ファイルを書き込み用に開く
         ///
@@ -183,8 +188,7 @@ namespace NS
         /// @param append true=追記モード、false=上書きモード
         /// @param allowRead true=読み取りも許可
         /// @return ファイルハンドル、失敗時nullptr
-        /// @note 戻り値は呼び出し側がdeleteする責任
-        virtual IFileHandle* OpenWrite(const TCHAR* filename, bool append = false, bool allowRead = false) = 0;
+        virtual std::unique_ptr<IFileHandle> OpenWrite(const TCHAR* filename, bool append = false, bool allowRead = false) = 0;
     };
 
     /// グローバルプラットフォームファイルシステム取得

@@ -62,8 +62,8 @@ namespace NS
         // ファイルオープン
         // =====================================================================
 
-        IFileHandle* OpenRead(const TCHAR* filename) override;
-        IFileHandle* OpenWrite(const TCHAR* filename, bool append, bool allowRead) override;
+        std::unique_ptr<IFileHandle> OpenRead(const TCHAR* filename) override;
+        std::unique_ptr<IFileHandle> OpenWrite(const TCHAR* filename, bool append, bool allowRead) override;
     };
 
     /// 現在のプラットフォームのファイルシステム

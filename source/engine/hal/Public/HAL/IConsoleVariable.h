@@ -99,16 +99,19 @@ namespace NS
     class IConsoleObject
     {
     public:
+        IConsoleObject() = default;
         virtual ~IConsoleObject() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IConsoleObject);
 
+    public:
         /// ヘルプテキスト取得
-        virtual const TCHAR* GetHelp() const = 0;
+        [[nodiscard]] virtual const TCHAR* GetHelp() const = 0;
 
         /// ヘルプテキスト設定
         virtual void SetHelp(const TCHAR* help) = 0;
 
         /// フラグ取得
-        virtual ConsoleVariableFlags GetFlags() const = 0;
+        [[nodiscard]] virtual ConsoleVariableFlags GetFlags() const = 0;
 
         /// フラグ設定
         virtual void SetFlags(ConsoleVariableFlags flags) = 0;
@@ -125,16 +128,16 @@ namespace NS
     {
     public:
         /// 整数値として取得
-        virtual int32 GetInt() const = 0;
+        [[nodiscard]] virtual int32 GetInt() const = 0;
 
         /// 浮動小数点値として取得
-        virtual float GetFloat() const = 0;
+        [[nodiscard]] virtual float GetFloat() const = 0;
 
         /// ブール値として取得
-        virtual bool GetBool() const = 0;
+        [[nodiscard]] virtual bool GetBool() const = 0;
 
         /// 文字列として取得
-        virtual const TCHAR* GetString() const = 0;
+        [[nodiscard]] virtual const TCHAR* GetString() const = 0;
 
         /// 整数値を設定
         virtual void Set(int32 value, ConsoleVariableFlags flags = ConsoleVariableFlags::SetByCode) = 0;
@@ -158,7 +161,10 @@ namespace NS
         virtual void ClearOnChangedCallbacks() = 0;
 
         /// 現在の設定元を取得
-        virtual ConsoleVariableFlags GetSetBy() const { return GetFlags() & ConsoleVariableFlags::SetByMask; }
+        [[nodiscard]] virtual ConsoleVariableFlags GetSetBy() const
+        {
+            return GetFlags() & ConsoleVariableFlags::SetByMask;
+        }
 
         /// デフォルト値にリセット
         virtual void Reset() = 0;

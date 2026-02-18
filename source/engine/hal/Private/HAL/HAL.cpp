@@ -21,20 +21,4 @@ static_assert(sizeof(NS::SIZE_T) == sizeof(std::size_t), "SIZE_T size mismatch")
 static_assert(sizeof(NS::UPTRINT) == sizeof(void*), "UPTRINT size mismatch");
 static_assert(sizeof(NS::TCHAR) == sizeof(wchar_t), "TCHAR size mismatch");
 
-namespace NS
-{
-    namespace HAL
-    {
-        // モジュール初期化（将来の拡張用）
-        void Initialize()
-        {
-            // 現時点では何もしない
-        }
 
-        // モジュールシャットダウン（将来の拡張用）
-        void Shutdown()
-        {
-            // 現時点では何もしない
-        }
-    } // namespace HAL
-} // namespace NS

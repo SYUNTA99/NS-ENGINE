@@ -72,16 +72,16 @@ namespace NS
         }
 
         HANDLE process = GetCurrentProcess();
-        DWORD64 address = static_cast<DWORD64>(programCounter);
+        auto const address = static_cast<DWORD64>(programCounter);
 
         // シンボル情報用バッファ
         alignas(SYMBOL_INFO) char symbolBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(char)];
-        SYMBOL_INFO* symbol = reinterpret_cast<SYMBOL_INFO*>(symbolBuffer);
+        auto* symbol = reinterpret_cast<SYMBOL_INFO*>(symbolBuffer);
         symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
         symbol->MaxNameLen = MAX_SYM_NAME;
 
         DWORD64 displacement = 0;
-        if (SymFromAddr(process, address, &displacement, symbol))
+        if (SymFromAddr(process, address, &displacement, symbol) != 0)
         {
             SafeStrCopy(outInfo.functionName, kMaxSymbolNameLength, symbol->Name);
         }
@@ -91,7 +91,7 @@ namespace NS
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD lineDisplacement = 0;
 
-        if (SymGetLineFromAddr64(process, address, &lineDisplacement, &line))
+        if (SymGetLineFromAddr64(process, address, &lineDisplacement, &line) != 0)
         {
             SafeStrCopy(outInfo.filename, kMaxFilenameLength, line.FileName);
             outInfo.lineNumber = static_cast<int32>(line.LineNumber);
@@ -101,7 +101,7 @@ namespace NS
         IMAGEHLP_MODULE64 module;
         module.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
 
-        if (SymGetModuleInfo64(process, address, &module))
+        if (SymGetModuleInfo64(process, address, &module) != 0)
         {
             SafeStrCopy(outInfo.moduleName, kMaxModuleNameLength, module.ModuleName);
             outInfo.offsetInModule = address - module.BaseOfImage;

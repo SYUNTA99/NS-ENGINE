@@ -106,5 +106,5 @@ namespace NS
         static const WIDECHAR* Strrchr(const WIDECHAR* str, WIDECHAR c);
     };
 
-    typedef GenericPlatformString PlatformString;
+    using PlatformString = GenericPlatformString;
 } // namespace NS

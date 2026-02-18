@@ -30,7 +30,7 @@ namespace NS
 
     void GenericPlatformCrashContext::SetErrorMessage(const TCHAR* message)
     {
-        if (message)
+        if (message != nullptr)
         {
             wcsncpy_s(m_errorMessage, message, _TRUNCATE);
         }
@@ -38,7 +38,7 @@ namespace NS
 
     void GenericPlatformCrashContext::SetEngineVersion(const TCHAR* version)
     {
-        if (version)
+        if (version != nullptr)
         {
             wcsncpy_s(s_engineVersion, version, _TRUNCATE);
         }
@@ -76,7 +76,7 @@ namespace NS
     {
         CaptureFromException(exceptionPointers);
 
-        if (s_crashHandler)
+        if (s_crashHandler != nullptr)
         {
             s_crashHandler(exceptionPointers);
         }
@@ -86,8 +86,8 @@ namespace NS
 
     void WindowsPlatformCrashContext::CaptureFromException(void* exceptionPointers)
     {
-        EXCEPTION_POINTERS* ep = static_cast<EXCEPTION_POINTERS*>(exceptionPointers);
-        if (!ep)
+        auto* ep = static_cast<EXCEPTION_POINTERS*>(exceptionPointers);
+        if (ep == nullptr)
         {
             return;
         }
@@ -95,7 +95,7 @@ namespace NS
         // 例外コードから種類を判定
         CrashContextType type = CrashContextType::Crash;
 
-        if (ep->ExceptionRecord)
+        if (ep->ExceptionRecord != nullptr)
         {
             switch (ep->ExceptionRecord->ExceptionCode)
             {
@@ -115,7 +115,7 @@ namespace NS
         WindowsPlatformCrashContext context(type);
 
         // 例外情報を保存
-        if (ep->ExceptionRecord)
+        if (ep->ExceptionRecord != nullptr)
         {
             context.m_exceptionCode = ep->ExceptionRecord->ExceptionCode;
             context.m_exceptionAddress = reinterpret_cast<uint64>(ep->ExceptionRecord->ExceptionAddress);

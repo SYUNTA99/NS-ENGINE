@@ -4,6 +4,7 @@
 
 #include "ApplicationCore/ApplicationCoreTypes.h"
 #include "ApplicationCore/InputTypes.h"
+#include <algorithm>
 #include <cstdint>
 #include <string>
 
@@ -13,33 +14,40 @@ namespace NS
     class ICursor
     {
     public:
+        ICursor() = default;
         virtual ~ICursor() = default;
+        NS_DISALLOW_COPY_AND_MOVE(ICursor);
 
+    public:
         // =================================================================
         // 型・サイズ
         // =================================================================
-        virtual MouseCursor::Type GetType() const = 0;
-        virtual void SetType(MouseCursor::Type InType) = 0;
-        virtual void GetSize(int32_t& Width, int32_t& Height) const = 0;
+        [[nodiscard]] virtual MouseCursor::Type GetType() const = 0;
+        virtual void SetType(MouseCursor::Type inType) = 0;
+        virtual void GetSize(int32_t& width, int32_t& height) const = 0;
 
         // =================================================================
         // 位置
         // =================================================================
-        virtual void GetPosition(Vector2D& OutPosition) const = 0;
-        virtual void SetPosition(int32_t X, int32_t Y) = 0;
+        virtual void GetPosition(Vector2D& outPosition) const = 0;
+        virtual void SetPosition(int32_t x, int32_t y) = 0;
 
         // =================================================================
         // 表示・ロック
         // =================================================================
         virtual void Show(bool bShow) = 0;
-        virtual void Lock(const PlatformRect* Bounds) = 0;
+        virtual void Lock(const PlatformRect* bounds) = 0;
 
         // =================================================================
         // カーソル形状オーバーライド
         // =================================================================
 
         /// 指定カーソル種別の形状をプラットフォーム固有ハンドルでオーバーライド
-        virtual void SetTypeShape(MouseCursor::Type InCursorType, void* InCursorHandle) { (void)InCursorType; (void)InCursorHandle; }
+        virtual void SetTypeShape(MouseCursor::Type inCursorType, void* inCursorHandle)
+        {
+            (void)inCursorType;
+            (void)inCursorHandle;
+        }
 
         // =================================================================
         // カスタムカーソル作成
@@ -47,15 +55,15 @@ namespace NS
 
         /// ファイル(.ani/.cur)からカーソルを生成
         /// @return プラットフォーム固有カーソルハンドル (失敗時 nullptr)
-        virtual void* CreateCursorFromFile(const std::wstring& InPath, Vector2D InHotSpot)
+        virtual void* CreateCursorFromFile(const std::wstring& inPath, Vector2D inHotSpot)
         {
-            (void)InPath;
-            (void)InHotSpot;
+            (void)inPath;
+            (void)inHotSpot;
             return nullptr;
         }
 
         /// RGBAバッファからのカーソル生成がサポートされるか
-        virtual bool IsCreateCursorFromRGBABufferSupported() const { return false; }
+        [[nodiscard]] virtual bool IsCreateCursorFromRGBABufferSupported() const { return false; }
 
         /// RGBAピクセルデータからカーソルを生成
         /// @param InPixels RGBA 8bpp ピクセルデータ
@@ -63,12 +71,15 @@ namespace NS
         /// @param InHeight 高さ
         /// @param InHotSpot ホットスポット (0.0-1.0 正規化座標)
         /// @return プラットフォーム固有カーソルハンドル (失敗時 nullptr)
-        virtual void* CreateCursorFromRGBABuffer(const uint8_t* InPixels, int32_t InWidth, int32_t InHeight, Vector2D InHotSpot)
+        virtual void* CreateCursorFromRGBABuffer(const uint8_t* inPixels,
+                                                 int32_t inWidth,
+                                                 int32_t inHeight,
+                                                 Vector2D inHotSpot)
         {
-            (void)InPixels;
-            (void)InWidth;
-            (void)InHeight;
-            (void)InHotSpot;
+            (void)inPixels;
+            (void)inWidth;
+            (void)inHeight;
+            (void)inHotSpot;
             return nullptr;
         }
 
@@ -80,18 +91,17 @@ namespace NS
         /// @param Delta 入力デルタ（変更なしで返ることもある）
         /// @param Sensitivity 感度係数
         /// @return 加速度が適用されたデルタ
-        static float CalculateDeltaWithAcceleration(float Delta, float Sensitivity = 1.0f)
+        static float CalculateDeltaWithAcceleration(float delta, float sensitivity = 1.0F)
         {
-            constexpr float NominalMovement = 20.0f;
-            float absDelta = Delta < 0.0f ? -Delta : Delta;
+            constexpr float kNominalMovement = 20.0F;
+            float const absDelta = delta < 0.0F ? -delta : delta;
 
             // 2次加速度: (delta^2 / nominal) * sign * sensitivity
-            float accelerated = (absDelta * absDelta) / NominalMovement;
-            if (accelerated < absDelta)
-                accelerated = absDelta; // 最低でも元のデルタ以上
+            float accelerated = (absDelta * absDelta) / kNominalMovement;
+            accelerated = std::max(accelerated, absDelta);
 
-            float sign = Delta < 0.0f ? -1.0f : 1.0f;
-            return sign * accelerated * Sensitivity;
+            float const sign = delta < 0.0F ? -1.0F : 1.0F;
+            return sign * accelerated * sensitivity;
         }
     };
 

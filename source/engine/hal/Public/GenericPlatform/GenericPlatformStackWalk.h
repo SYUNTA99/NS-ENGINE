@@ -23,16 +23,16 @@ namespace NS
     /// 文字列が長すぎる場合は切り詰められる。
     struct ProgramCounterSymbolInfo
     {
-        ANSICHAR moduleName[kMaxModuleNameLength];   ///< モジュール名（DLL/EXE）
-        ANSICHAR functionName[kMaxSymbolNameLength]; ///< 関数名（マングル解除済み）
-        ANSICHAR filename[kMaxFilenameLength];       ///< ソースファイル名
-        int32 lineNumber;                            ///< 行番号（0 = 不明、-1 = シンボルなし）
-        int32 columnNumber;                          ///< 列番号（0 = 不明）
-        uint64 programCounter;                       ///< プログラムカウンタ値
-        uint64 offsetInModule;                       ///< モジュール内オフセット
+        ANSICHAR moduleName[kMaxModuleNameLength]{};   ///< モジュール名（DLL/EXE）
+        ANSICHAR functionName[kMaxSymbolNameLength]{}; ///< 関数名（マングル解除済み）
+        ANSICHAR filename[kMaxFilenameLength]{};       ///< ソースファイル名
+        int32 lineNumber{0};                            ///< 行番号（0 = 不明、-1 = シンボルなし）
+        int32 columnNumber{0};                          ///< 列番号（0 = 不明）
+        uint64 programCounter{0};                       ///< プログラムカウンタ値
+        uint64 offsetInModule{0};                       ///< モジュール内オフセット
 
         /// デフォルト初期化
-        ProgramCounterSymbolInfo() : lineNumber(0), columnNumber(0), programCounter(0), offsetInModule(0)
+        ProgramCounterSymbolInfo()  
         {
             moduleName[0] = '\0';
             functionName[0] = '\0';
@@ -40,10 +40,10 @@ namespace NS
         }
 
         /// シンボルが解決されたか
-        bool IsResolved() const { return functionName[0] != '\0'; }
+        [[nodiscard]] bool IsResolved() const { return functionName[0] != '\0'; }
 
         /// ソース位置が利用可能か
-        bool HasSourceInfo() const { return lineNumber > 0; }
+        [[nodiscard]] bool HasSourceInfo() const { return lineNumber > 0; }
     };
 
     /// プラットフォーム非依存のスタックウォークインターフェース
@@ -118,8 +118,8 @@ namespace NS
         {
             return;
         }
-        SIZE_T srcLen = std::strlen(src);
-        SIZE_T copyLen = (srcLen < destSize - 1) ? srcLen : destSize - 1;
+        SIZE_T const srcLen = std::strlen(src);
+        SIZE_T const copyLen = (srcLen < destSize - 1) ? srcLen : destSize - 1;
         std::memcpy(dest, src, copyLen);
         dest[copyLen] = '\0';
     }

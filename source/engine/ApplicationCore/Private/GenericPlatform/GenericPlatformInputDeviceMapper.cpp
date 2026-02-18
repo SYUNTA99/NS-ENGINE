@@ -22,95 +22,95 @@ namespace NS
             m_deviceStates[0] = InputDeviceConnectionState::Connected;
         }
 
-        PlatformUserId GetUserForInputDevice(InputDeviceId DeviceId) const override
+        [[nodiscard]] PlatformUserId GetUserForInputDevice(InputDeviceId deviceId) const override
         {
-            auto it = m_deviceToUser.find(DeviceId.GetId());
+            auto it = m_deviceToUser.find(deviceId.GetId());
             return (it != m_deviceToUser.end()) ? it->second : PlatformUserId(0);
         }
 
-        InputDeviceId GetPrimaryInputDeviceForUser(PlatformUserId UserId) const override
+        [[nodiscard]] InputDeviceId GetPrimaryInputDeviceForUser(PlatformUserId userId) const override
         {
-            for (const auto& [devId, userId] : m_deviceToUser)
+            for (const auto& [devId, mappedUserId] : m_deviceToUser)
             {
-                if (userId == UserId)
+                if (mappedUserId == userId)
                 {
                     return InputDeviceId(devId);
                 }
             }
-            return InputDeviceId::NONE;
+            return InputDeviceId::kNone;
         }
 
-        bool GetAllInputDevicesForUser(PlatformUserId UserId, std::vector<InputDeviceId>& OutDevices) const override
+        bool GetAllInputDevicesForUser(PlatformUserId userId, std::vector<InputDeviceId>& outDevices) const override
         {
-            OutDevices.clear();
-            for (const auto& [devId, userId] : m_deviceToUser)
+            outDevices.clear();
+            for (const auto& [devId, mappedUserId] : m_deviceToUser)
             {
-                if (userId == UserId)
+                if (mappedUserId == userId)
                 {
-                    OutDevices.push_back(InputDeviceId(devId));
+                    outDevices.emplace_back(devId);
                 }
             }
-            return !OutDevices.empty();
+            return !outDevices.empty();
         }
 
-        void GetAllInputDevices(std::vector<InputDeviceId>& OutDevices) const override
+        void GetAllInputDevices(std::vector<InputDeviceId>& outDevices) const override
         {
-            OutDevices.clear();
+            outDevices.clear();
             for (const auto& [devId, userId] : m_deviceToUser)
             {
                 (void)userId;
-                OutDevices.push_back(InputDeviceId(devId));
+                outDevices.emplace_back(devId);
             }
         }
 
-        void GetAllConnectedInputDevices(std::vector<InputDeviceId>& OutDevices) const override
+        void GetAllConnectedInputDevices(std::vector<InputDeviceId>& outDevices) const override
         {
-            OutDevices.clear();
+            outDevices.clear();
             for (const auto& [devId, state] : m_deviceStates)
             {
                 if (state == InputDeviceConnectionState::Connected)
                 {
-                    OutDevices.push_back(InputDeviceId(devId));
+                    outDevices.emplace_back(devId);
                 }
             }
         }
 
-        void GetAllActiveUsers(std::vector<PlatformUserId>& OutUsers) const override
+        void GetAllActiveUsers(std::vector<PlatformUserId>& outUsers) const override
         {
-            OutUsers.clear();
-            OutUsers.push_back(PlatformUserId(0));
+            outUsers.clear();
+            outUsers.emplace_back(0);
         }
 
-        InputDeviceConnectionState GetInputDeviceConnectionState(InputDeviceId DeviceId) const override
+        [[nodiscard]] InputDeviceConnectionState GetInputDeviceConnectionState(InputDeviceId deviceId) const override
         {
-            auto it = m_deviceStates.find(DeviceId.GetId());
+            auto it = m_deviceStates.find(deviceId.GetId());
             return (it != m_deviceStates.end()) ? it->second : InputDeviceConnectionState::Unknown;
         }
 
-        bool IsValidInputDevice(InputDeviceId DeviceId) const override
+        [[nodiscard]] bool IsValidInputDevice(InputDeviceId deviceId) const override
         {
-            return m_deviceToUser.find(DeviceId.GetId()) != m_deviceToUser.end();
+            return m_deviceToUser.find(deviceId.GetId()) != m_deviceToUser.end();
         }
 
     protected:
-        void Internal_MapInputDeviceToUser(InputDeviceId DeviceId, PlatformUserId UserId) override
+        void InternalMapInputDeviceToUser(InputDeviceId deviceId, PlatformUserId userId) override
         {
-            m_deviceToUser[DeviceId.GetId()] = UserId;
+            m_deviceToUser[deviceId.GetId()] = userId;
         }
 
-        void Internal_ChangeInputDeviceUserMapping(InputDeviceId DeviceId,
-                                                   PlatformUserId NewUserId,
-                                                   PlatformUserId OldUserId) override
+        void InternalChangeInputDeviceUserMapping(InputDeviceId deviceId,
+                                                  PlatformUserId newUserId,
+                                                  PlatformUserId oldUserId) override
         {
-            m_deviceToUser[DeviceId.GetId()] = NewUserId;
-            BroadcastPairingChange(DeviceId, NewUserId, OldUserId);
+            m_deviceToUser[deviceId.GetId()] = newUserId;
+            BroadcastPairingChange(deviceId, newUserId, oldUserId);
         }
 
-        void Internal_SetInputDeviceConnectionState(InputDeviceId DeviceId, InputDeviceConnectionState State) override
+        void InternalSetInputDeviceConnectionState(InputDeviceId deviceId, InputDeviceConnectionState state) override
         {
-            m_deviceStates[DeviceId.GetId()] = State;
-            PlatformUserId userId = GetUserForInputDevice(DeviceId);
-            BroadcastConnectionChange(State, userId, DeviceId);
+            m_deviceStates[deviceId.GetId()] = state;
+            PlatformUserId const userId = GetUserForInputDevice(deviceId);
+            BroadcastConnectionChange(state, userId, deviceId);
         }
 
         PlatformUserId AllocateNewUserId() override { return PlatformUserId(m_nextUserId++); }
@@ -130,8 +130,8 @@ namespace NS
 
     IPlatformInputDeviceMapper& IPlatformInputDeviceMapper::Get()
     {
-        static GenericPlatformInputDeviceMapper s_instance;
-        return s_instance;
+        static GenericPlatformInputDeviceMapper sInstance;
+        return sInstance;
     }
 
 } // namespace NS

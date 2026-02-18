@@ -22,43 +22,43 @@ namespace NS
 {
     int32 GenericPlatformString::Strlen(const ANSICHAR* str)
     {
-        return str ? static_cast<int32>(std::strlen(str)) : 0;
+        return (str != nullptr) ? static_cast<int32>(std::strlen(str)) : 0;
     }
 
     int32 GenericPlatformString::Strlen(const WIDECHAR* str)
     {
-        return str ? static_cast<int32>(std::wcslen(str)) : 0;
+        return (str != nullptr) ? static_cast<int32>(std::wcslen(str)) : 0;
     }
 
     int32 GenericPlatformString::Strcmp(const ANSICHAR* a, const ANSICHAR* b)
     {
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
         return std::strcmp(a, b);
     }
 
     int32 GenericPlatformString::Strcmp(const WIDECHAR* a, const WIDECHAR* b)
     {
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
         return std::wcscmp(a, b);
     }
 
     int32 GenericPlatformString::Stricmp(const ANSICHAR* a, const ANSICHAR* b)
     {
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
 
-        while (*a && *b)
+        while ((*a != 0) && (*b != 0))
         {
-            ANSICHAR ca = CharAnsi::ToLower(*a);
-            ANSICHAR cb = CharAnsi::ToLower(*b);
+            ANSICHAR const ca = CharAnsi::ToLower(*a);
+            ANSICHAR const cb = CharAnsi::ToLower(*b);
             if (ca != cb)
             {
                 return ca - cb;
@@ -71,15 +71,15 @@ namespace NS
 
     int32 GenericPlatformString::Stricmp(const WIDECHAR* a, const WIDECHAR* b)
     {
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
 
-        while (*a && *b)
+        while ((*a != 0U) && (*b != 0U))
         {
-            WIDECHAR ca = CharWide::ToLower(*a);
-            WIDECHAR cb = CharWide::ToLower(*b);
+            WIDECHAR const ca = CharWide::ToLower(*a);
+            WIDECHAR const cb = CharWide::ToLower(*b);
             if (ca != cb)
             {
                 return ca - cb;
@@ -96,9 +96,9 @@ namespace NS
         {
             return 0;
         }
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
         return std::strncmp(a, b, count);
     }
@@ -109,16 +109,16 @@ namespace NS
         {
             return 0;
         }
-        if (!a || !b)
+        if ((a == nullptr) || (b == nullptr))
         {
-            return a ? 1 : (b ? -1 : 0);
+            return (a != nullptr) ? 1 : ((b != nullptr) ? -1 : 0);
         }
         return std::wcsncmp(a, b, count);
     }
 
     ANSICHAR* GenericPlatformString::Strcpy(ANSICHAR* dest, SIZE_T destSize, const ANSICHAR* src)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
@@ -134,7 +134,7 @@ namespace NS
 
     WIDECHAR* GenericPlatformString::Strcpy(WIDECHAR* dest, SIZE_T destSize, const WIDECHAR* src)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
@@ -150,12 +150,12 @@ namespace NS
 
     ANSICHAR* GenericPlatformString::Strncpy(ANSICHAR* dest, SIZE_T destSize, const ANSICHAR* src, SIZE_T count)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
 
-        SIZE_T copyLen = (count < destSize - 1) ? count : destSize - 1;
+        SIZE_T const copyLen = (count < destSize - 1) ? count : destSize - 1;
 
 #if PLATFORM_WINDOWS
         strncpy_s(dest, destSize, src, copyLen);
@@ -168,12 +168,12 @@ namespace NS
 
     WIDECHAR* GenericPlatformString::Strncpy(WIDECHAR* dest, SIZE_T destSize, const WIDECHAR* src, SIZE_T count)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
 
-        SIZE_T copyLen = (count < destSize - 1) ? count : destSize - 1;
+        SIZE_T const copyLen = (count < destSize - 1) ? count : destSize - 1;
 
 #if PLATFORM_WINDOWS
         wcsncpy_s(dest, destSize, src, copyLen);
@@ -186,7 +186,7 @@ namespace NS
 
     ANSICHAR* GenericPlatformString::Strcat(ANSICHAR* dest, SIZE_T destSize, const ANSICHAR* src)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
@@ -205,7 +205,7 @@ namespace NS
 
     WIDECHAR* GenericPlatformString::Strcat(WIDECHAR* dest, SIZE_T destSize, const WIDECHAR* src)
     {
-        if (!dest || !src || destSize == 0)
+        if ((dest == nullptr) || (src == nullptr) || destSize == 0)
         {
             return dest;
         }
@@ -224,7 +224,7 @@ namespace NS
 
     const ANSICHAR* GenericPlatformString::Strstr(const ANSICHAR* str, const ANSICHAR* find)
     {
-        if (!str || !find)
+        if ((str == nullptr) || (find == nullptr))
         {
             return nullptr;
         }
@@ -233,7 +233,7 @@ namespace NS
 
     const WIDECHAR* GenericPlatformString::Strstr(const WIDECHAR* str, const WIDECHAR* find)
     {
-        if (!str || !find)
+        if ((str == nullptr) || (find == nullptr))
         {
             return nullptr;
         }
@@ -242,7 +242,7 @@ namespace NS
 
     const ANSICHAR* GenericPlatformString::Strchr(const ANSICHAR* str, ANSICHAR c)
     {
-        if (!str)
+        if (str == nullptr)
         {
             return nullptr;
         }
@@ -251,7 +251,7 @@ namespace NS
 
     const WIDECHAR* GenericPlatformString::Strchr(const WIDECHAR* str, WIDECHAR c)
     {
-        if (!str)
+        if (str == nullptr)
         {
             return nullptr;
         }
@@ -260,7 +260,7 @@ namespace NS
 
     const ANSICHAR* GenericPlatformString::Strrchr(const ANSICHAR* str, ANSICHAR c)
     {
-        if (!str)
+        if (str == nullptr)
         {
             return nullptr;
         }
@@ -269,7 +269,7 @@ namespace NS
 
     const WIDECHAR* GenericPlatformString::Strrchr(const WIDECHAR* str, WIDECHAR c)
     {
-        if (!str)
+        if (str == nullptr)
         {
             return nullptr;
         }

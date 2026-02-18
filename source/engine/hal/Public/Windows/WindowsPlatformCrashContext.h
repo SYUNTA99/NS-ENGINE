@@ -21,16 +21,16 @@ namespace NS
         void CaptureContext() override;
 
         /// キャプチャされたスタックトレースを取得
-        const uint64* GetStackTrace() const { return m_stackTrace; }
+        [[nodiscard]] const uint64* GetStackTrace() const { return m_stackTrace; }
 
         /// キャプチャされたスタック深度を取得
-        int32 GetStackDepth() const { return m_stackDepth; }
+        [[nodiscard]] int32 GetStackDepth() const { return m_stackDepth; }
 
         /// 例外コードを取得
         uint32 GetExceptionCode() const { return m_exceptionCode; }
 
         /// 例外アドレスを取得
-        uint64 GetExceptionAddress() const { return m_exceptionAddress; }
+        [[nodiscard]] uint64 GetExceptionAddress() const { return m_exceptionAddress; }
 
         /// Windowsの未処理例外フィルターを設定
         static void SetUnhandledExceptionFilter();

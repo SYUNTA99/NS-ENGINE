@@ -29,16 +29,16 @@ namespace NS
     /// モニター情報
     struct MonitorInfo
     {
-        std::wstring Name;
-        std::wstring ID;
-        int32_t NativeWidth = 0;
-        int32_t NativeHeight = 0;
-        int32_t MaxResolutionWidth = 0;
-        int32_t MaxResolutionHeight = 0;
-        PlatformRect DisplayRect;
-        PlatformRect WorkArea;
+        std::wstring name;
+        std::wstring id;
+        int32_t nativeWidth = 0;
+        int32_t nativeHeight = 0;
+        int32_t maxResolutionWidth = 0;
+        int32_t maxResolutionHeight = 0;
+        PlatformRect displayRect;
+        PlatformRect workArea;
         bool bIsPrimary = false;
-        int32_t DPI = 96;
+        int32_t dpi = 96;
     };
 
     // =========================================================================
@@ -48,30 +48,30 @@ namespace NS
     /// ディスプレイメトリクス
     struct DisplayMetrics
     {
-        int32_t PrimaryDisplayWidth = 0;
-        int32_t PrimaryDisplayHeight = 0;
-        std::vector<MonitorInfo> MonitorInfoArray;
-        PlatformRect PrimaryDisplayWorkAreaRect;
-        PlatformRect VirtualDisplayRect;
-        Vector4 TitleSafePaddingSize; // X=left, Y=top, Z=right, W=bottom
-        Vector4 ActionSafePaddingSize;
+        int32_t primaryDisplayWidth = 0;
+        int32_t primaryDisplayHeight = 0;
+        std::vector<MonitorInfo> monitorInfoArray;
+        PlatformRect primaryDisplayWorkAreaRect;
+        PlatformRect virtualDisplayRect;
+        Vector4 titleSafePaddingSize; // X=left, Y=top, Z=right, W=bottom
+        Vector4 actionSafePaddingSize;
 
         /// メトリクスを再構築
-        static void RebuildDisplayMetrics(DisplayMetrics& OutMetrics);
+        static void RebuildDisplayMetrics(DisplayMetrics& outMetrics);
 
         /// 座標からモニターワークエリアを取得
-        static PlatformRect GetMonitorWorkAreaFromPoint(int32_t X, int32_t Y);
+        static PlatformRect GetMonitorWorkAreaFromPoint(int32_t x, int32_t y);
 
         /// デバッグ用タイトルセーフゾーン比率 (0.0 = 無し, 1.0 = 最大)
         static float GetDebugTitleSafeZoneRatio() { return s_debugTitleSafeZoneRatio; }
-        static void SetDebugTitleSafeZoneRatio(float Ratio) { s_debugTitleSafeZoneRatio = Ratio; }
+        static void SetDebugTitleSafeZoneRatio(float ratio) { s_debugTitleSafeZoneRatio = ratio; }
 
         /// デバッグ用アクションセーフゾーン比率
         static float GetDebugActionSafeZoneRatio() { return s_debugActionSafeZoneRatio; }
-        static void SetDebugActionSafeZoneRatio(float Ratio) { s_debugActionSafeZoneRatio = Ratio; }
+        static void SetDebugActionSafeZoneRatio(float ratio) { s_debugActionSafeZoneRatio = ratio; }
 
         /// デフォルトセーフゾーンの適用
-        static void ApplyDefaultSafeZones(DisplayMetrics& OutMetrics);
+        static void ApplyDefaultSafeZones(DisplayMetrics& outMetrics);
 
     private:
         static float s_debugTitleSafeZoneRatio;
@@ -88,33 +88,33 @@ namespace NS
         using Callback = std::function<void(Args...)>;
         using Handle = uint64_t;
 
-        Handle Add(Callback Fn)
+        Handle Add(Callback fn)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             Handle id = m_nextId++;
-            m_listeners.push_back({id, std::move(Fn)});
+            m_listeners.push_back({id, std::move(fn)});
             return id;
         }
 
-        void Remove(Handle InHandle)
+        void Remove(Handle inHandle)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_listeners.erase(std::remove_if(m_listeners.begin(),
                                              m_listeners.end(),
-                                             [InHandle](const Entry& e) { return e.Id == InHandle; }),
+                                             [inHandle](const Entry& e) { return e.id == inHandle; }),
                               m_listeners.end());
         }
 
-        void Broadcast(Args... InArgs) const
+        void Broadcast(Args... inArgs) const
         {
             std::vector<Entry> snapshot;
             {
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> const lock(m_mutex);
                 snapshot = m_listeners;
             }
             for (const auto& entry : snapshot)
             {
-                entry.Fn(InArgs...);
+                entry.fn(inArgs...);
             }
         }
 
@@ -127,8 +127,8 @@ namespace NS
     private:
         struct Entry
         {
-            Handle Id;
-            Callback Fn;
+            Handle id;
+            Callback fn;
         };
         std::vector<Entry> m_listeners;
         Handle m_nextId = 1;
@@ -143,32 +143,34 @@ namespace NS
     class GenericApplication
     {
     public:
-        explicit GenericApplication(const std::shared_ptr<ICursor>& InCursor);
+        explicit GenericApplication(const std::shared_ptr<ICursor>& inCursor);
         virtual ~GenericApplication() = default;
+        NS_DISALLOW_COPY_AND_MOVE(GenericApplication);
 
+    public:
         // =================================================================
         // メッセージハンドラ
         // =================================================================
-        void SetMessageHandler(const SharedRef<GenericApplicationMessageHandler>& InMessageHandler);
+        void SetMessageHandler(const SharedRef<GenericApplicationMessageHandler>& inMessageHandler);
         const SharedRef<GenericApplicationMessageHandler>& GetMessageHandler() const;
 
         // =================================================================
         // メッセージ処理
         // =================================================================
-        virtual void PumpMessages(float TimeDelta);
-        virtual void PollGameDeviceState(float TimeDelta);
-        virtual void ProcessDeferredEvents(float TimeDelta);
-        virtual void Tick(float TimeDelta);
+        virtual void PumpMessages(float timeDelta);
+        virtual void PollGameDeviceState(float timeDelta);
+        virtual void ProcessDeferredEvents(float timeDelta);
+        virtual void Tick(float timeDelta);
 
         // =================================================================
         // ウィンドウ管理
         // =================================================================
         virtual std::shared_ptr<GenericWindow> MakeWindow();
-        virtual void InitializeWindow(const std::shared_ptr<GenericWindow>& Window,
-                                      const GenericWindowDefinition& Definition,
-                                      const std::shared_ptr<GenericWindow>& Parent,
+        virtual void InitializeWindow(const std::shared_ptr<GenericWindow>& window,
+                                      const GenericWindowDefinition& definition,
+                                      const std::shared_ptr<GenericWindow>& parent,
                                       bool bShowImmediately);
-        virtual void SetCapture(const std::shared_ptr<GenericWindow>& Window);
+        virtual void SetCapture(const std::shared_ptr<GenericWindow>& window);
         virtual void* GetCapture() const;
         virtual std::shared_ptr<GenericWindow> GetWindowUnderCursor() const;
 
@@ -176,7 +178,7 @@ namespace NS
         // 入力状態
         // =================================================================
         virtual ModifierKeysState GetModifierKeys() const;
-        virtual void SetHighPrecisionMouseMode(bool bEnable, const std::shared_ptr<GenericWindow>& Window);
+        virtual void SetHighPrecisionMouseMode(bool bEnable, const std::shared_ptr<GenericWindow>& window);
         virtual bool IsMouseAttached() const;
         virtual bool IsGamepadAttached() const;
         virtual bool IsCursorDirectlyOverSlateWindow() const;
@@ -190,7 +192,7 @@ namespace NS
         // =================================================================
         virtual IInputInterface* GetInputInterface();
         virtual ITextInputMethodSystem* GetTextInputMethodSystem();
-        virtual void GetInitialDisplayMetrics(DisplayMetrics& OutMetrics) const;
+        virtual void GetInitialDisplayMetrics(DisplayMetrics& outMetrics) const;
 
         // =================================================================
         // イベント
@@ -203,14 +205,14 @@ namespace NS
         // =================================================================
         // ユーティリティ・クエリ
         // =================================================================
-        virtual PlatformRect GetWorkArea(const PlatformRect& CurrentWindow) const;
+        virtual PlatformRect GetWorkArea(const PlatformRect& currentWindow) const;
         virtual WindowTitleAlignment GetWindowTitleAlignment() const;
         virtual WindowTransparency GetWindowTransparencySupport() const;
-        virtual bool TryCalculatePopupWindowPosition(const PlatformRect& InAnchor,
-                                                     const Vector2D& InSize,
-                                                     const PlatformRect& ProposedPlacement,
-                                                     PopUpOrientation Orientation,
-                                                     Vector2D& OutCalculatedPosition) const;
+        virtual bool TryCalculatePopupWindowPosition(const PlatformRect& inAnchor,
+                                                     const Vector2D& inSize,
+                                                     const PlatformRect& proposedPlacement,
+                                                     PopUpOrientation orientation,
+                                                     Vector2D& outCalculatedPosition) const;
 
         // =================================================================
         // ライフサイクル
@@ -220,14 +222,14 @@ namespace NS
         virtual bool IsAllowedToRender() const;
         virtual bool SupportsSystemHelp() const;
         virtual void ShowSystemHelp();
-        virtual void SendAnalytics(IAnalyticsProvider* Provider);
+        virtual void SendAnalytics(IAnalyticsProvider* provider);
 
         // =================================================================
         // Console
         // =================================================================
         using ConsoleCommandDelegate = std::function<void(const std::wstring&)>;
-        virtual void RegisterConsoleCommandListener(ConsoleCommandDelegate Delegate);
-        virtual void AddPendingConsoleCommand(const std::wstring& Command);
+        virtual void RegisterConsoleCommandListener(ConsoleCommandDelegate delegate);
+        virtual void AddPendingConsoleCommand(const std::wstring& command);
 
         // =================================================================
         // カーソル
@@ -235,7 +237,7 @@ namespace NS
         const std::shared_ptr<ICursor>& GetCursor() const { return m_cursor; }
 
     protected:
-        void BroadcastDisplayMetricsChanged(const DisplayMetrics& InMetrics);
+        void BroadcastDisplayMetricsChanged(const DisplayMetrics& inMetrics);
 
         SharedRef<GenericApplicationMessageHandler> m_messageHandler;
 

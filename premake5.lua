@@ -72,7 +72,9 @@ workspace "NS-ENGINE"
     defines {
         "_WIN32_WINNT=0x0A00",
         "WIN32_LEAN_AND_MEAN",
-        "NOMINMAX"
+        "NOMINMAX",
+        "UNICODE",
+        "_UNICODE"
     }
 
 -- 出力ディレクトリ (build/配下に統一)
@@ -239,6 +241,12 @@ project "engine"
     -- halプロジェクトのファイルは除外（別プロジェクトでビルド）
     removefiles {
         "source/engine/hal/**"
+    }
+
+    -- RHI Private/Internalは未完成のため一時的に除外（ヘッダーのみ使用）
+    removefiles {
+        "source/engine/RHI/Private/**",
+        "source/engine/RHI/Internal/**"
     }
 
     includedirs {

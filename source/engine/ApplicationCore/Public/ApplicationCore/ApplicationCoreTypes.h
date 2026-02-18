@@ -30,13 +30,13 @@ namespace NS
         };
 
         /// int32 をWindowMode::Typeに変換（範囲外はWindowed）
-        inline Type ConvertIntToWindowMode(int32_t InWindowMode)
+        inline Type ConvertIntToWindowMode(int32_t inWindowMode)
         {
-            if (InWindowMode < 0 || InWindowMode >= NumWindowModes)
+            if (inWindowMode < 0 || inWindowMode >= NumWindowModes)
             {
                 return Windowed;
             }
-            return static_cast<Type>(InWindowMode);
+            return static_cast<Type>(inWindowMode);
         }
     } // namespace WindowMode
 
@@ -172,12 +172,12 @@ namespace NS
     /// ウィンドウ注目要求パラメータ
     struct WindowDrawAttentionParameters
     {
-        WindowDrawAttentionRequestType RequestType;
+        WindowDrawAttentionRequestType requestType;
 
-        WindowDrawAttentionParameters() : RequestType(WindowDrawAttentionRequestType::UntilActivated) {}
+        WindowDrawAttentionParameters() : requestType(WindowDrawAttentionRequestType::UntilActivated) {}
 
-        explicit WindowDrawAttentionParameters(WindowDrawAttentionRequestType InRequestType)
-            : RequestType(InRequestType)
+        explicit WindowDrawAttentionParameters(WindowDrawAttentionRequestType inRequestType)
+            : requestType(inRequestType)
         {}
     };
 
@@ -284,20 +284,20 @@ namespace NS
     /// プラットフォーム矩形
     struct PlatformRect
     {
-        int32_t Left   = 0;
-        int32_t Top    = 0;
-        int32_t Right  = 0;
-        int32_t Bottom = 0;
+        int32_t left   = 0;
+        int32_t top    = 0;
+        int32_t right  = 0;
+        int32_t bottom = 0;
 
-        bool operator==(const PlatformRect& Other) const
+        bool operator==(const PlatformRect& other) const
         {
-            return Left == Other.Left && Top == Other.Top
-                && Right == Other.Right && Bottom == Other.Bottom;
+            return left == other.left && top == other.top
+                && right == other.right && bottom == other.bottom;
         }
 
-        bool operator!=(const PlatformRect& Other) const
+        bool operator!=(const PlatformRect& other) const
         {
-            return !(*this == Other);
+            return !(*this == other);
         }
     };
 
@@ -309,15 +309,15 @@ namespace NS
     class WindowSizeLimits
     {
     public:
-        WindowSizeLimits& SetMinWidth(std::optional<float> InMinWidth)   { m_minWidth  = InMinWidth;  return *this; }
-        WindowSizeLimits& SetMinHeight(std::optional<float> InMinHeight) { m_minHeight = InMinHeight; return *this; }
-        WindowSizeLimits& SetMaxWidth(std::optional<float> InMaxWidth)   { m_maxWidth  = InMaxWidth;  return *this; }
-        WindowSizeLimits& SetMaxHeight(std::optional<float> InMaxHeight) { m_maxHeight = InMaxHeight; return *this; }
+        WindowSizeLimits& SetMinWidth(std::optional<float> inMinWidth)   { m_minWidth  = inMinWidth;  return *this; }
+        WindowSizeLimits& SetMinHeight(std::optional<float> inMinHeight) { m_minHeight = inMinHeight; return *this; }
+        WindowSizeLimits& SetMaxWidth(std::optional<float> inMaxWidth)   { m_maxWidth  = inMaxWidth;  return *this; }
+        WindowSizeLimits& SetMaxHeight(std::optional<float> inMaxHeight) { m_maxHeight = inMaxHeight; return *this; }
 
-        std::optional<float> GetMinWidth()  const { return m_minWidth; }
-        std::optional<float> GetMinHeight() const { return m_minHeight; }
-        std::optional<float> GetMaxWidth()  const { return m_maxWidth; }
-        std::optional<float> GetMaxHeight() const { return m_maxHeight; }
+        [[nodiscard]] std::optional<float> GetMinWidth()  const { return m_minWidth; }
+        [[nodiscard]] std::optional<float> GetMinHeight() const { return m_minHeight; }
+        [[nodiscard]] std::optional<float> GetMaxWidth()  const { return m_maxWidth; }
+        [[nodiscard]] std::optional<float> GetMaxHeight() const { return m_maxHeight; }
 
     private:
         std::optional<float> m_minWidth;
@@ -335,17 +335,17 @@ namespace NS
     class SharedRef
     {
     public:
-        explicit SharedRef(std::shared_ptr<T> InPtr)
-            : m_ptr(std::move(InPtr))
+        explicit SharedRef(std::shared_ptr<T> inPtr)
+            : m_ptr(std::move(inPtr))
         {
             NS_CHECK(m_ptr != nullptr);
         }
 
         T* operator->() const { return m_ptr.get(); }
         T& operator*()  const { return *m_ptr; }
-        T* Get()         const { return m_ptr.get(); }
+        [[nodiscard]] T* Get()         const { return m_ptr.get(); }
 
-        std::shared_ptr<T> ToSharedPtr() const { return m_ptr; }
+        [[nodiscard]] std::shared_ptr<T> ToSharedPtr() const { return m_ptr; }
 
     private:
         std::shared_ptr<T> m_ptr;
@@ -359,25 +359,25 @@ namespace NS
     /// 2Dベクトル（Mathモジュール実装後に差し替え）
     struct Vector2D
     {
-        float X = 0.0f;
-        float Y = 0.0f;
+        float x = 0.0F;
+        float y = 0.0F;
     };
 
     /// 3Dベクトル（Mathモジュール実装後に差し替え）
     struct Vector3D
     {
-        float X = 0.0f;
-        float Y = 0.0f;
-        float Z = 0.0f;
+        float x = 0.0F;
+        float y = 0.0F;
+        float z = 0.0F;
     };
 
     /// 4Dベクトル（セーフゾーン用）
     struct Vector4
     {
-        float X = 0.0f;
-        float Y = 0.0f;
-        float Z = 0.0f;
-        float W = 0.0f;
+        float x = 0.0F;
+        float y = 0.0F;
+        float z = 0.0F;
+        float w = 0.0F;
     };
 #endif // NS_MATH_VECTOR_H
 

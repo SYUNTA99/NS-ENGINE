@@ -37,10 +37,13 @@ namespace NS
     class IWindowsMessageHandler
     {
     public:
+        IWindowsMessageHandler() = default;
         virtual ~IWindowsMessageHandler() = default;
+        NS_DISALLOW_COPY_AND_MOVE(IWindowsMessageHandler);
 
+    public:
         /// @return true: メッセージ処理済み、falseで通常処理続行
-        virtual bool ProcessMessage(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam, int32_t& OutResult) = 0;
+        virtual bool ProcessMessage(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam, int32_t& outResult) = 0;
     };
 
     // =========================================================================
@@ -49,14 +52,14 @@ namespace NS
 
     struct DeferredWindowsMessage
     {
-        std::weak_ptr<WindowsWindow> NativeWindow;
+        std::weak_ptr<WindowsWindow> nativeWindow;
         HWND hWnd = nullptr;
-        uint32_t Msg = 0;
+        uint32_t msg = 0;
         WPARAM wParam = 0;
         LPARAM lParam = 0;
-        int32_t X = 0;
-        int32_t Y = 0;
-        uint32_t RawInputFlags = 0;
+        int32_t x = 0;
+        int32_t y = 0;
+        uint32_t rawInputFlags = 0;
     };
 
     // =========================================================================
@@ -70,10 +73,12 @@ namespace NS
         /// ファクトリ
         static std::shared_ptr<WindowsApplication> CreateWindowsApplication(HINSTANCE hInstance, HICON hIcon);
         ~WindowsApplication() override;
+        NS_DISALLOW_COPY_AND_MOVE(WindowsApplication);
 
+    public:
         /// 外部メッセージハンドラ管理
-        void AddMessageHandler(IWindowsMessageHandler& Handler);
-        void RemoveMessageHandler(IWindowsMessageHandler& Handler);
+        void AddMessageHandler(IWindowsMessageHandler& handler);
+        void RemoveMessageHandler(IWindowsMessageHandler& handler);
 
         /// インスタンスハンドル
         HINSTANCE GetInstanceHandle() const { return m_hInstance; }
@@ -84,52 +89,52 @@ namespace NS
         // =================================================================
         // GenericApplication overrides
         // =================================================================
-        void PumpMessages(float TimeDelta) override;
-        void PollGameDeviceState(float TimeDelta) override;
-        void ProcessDeferredEvents(float TimeDelta) override;
-        void Tick(float TimeDelta) override;
+        void PumpMessages(float timeDelta) override;
+        void PollGameDeviceState(float timeDelta) override;
+        void ProcessDeferredEvents(float timeDelta) override;
+        void Tick(float timeDelta) override;
 
         std::shared_ptr<GenericWindow> MakeWindow() override;
-        void InitializeWindow(const std::shared_ptr<GenericWindow>& Window,
-                              const GenericWindowDefinition& Definition,
-                              const std::shared_ptr<GenericWindow>& Parent,
+        void InitializeWindow(const std::shared_ptr<GenericWindow>& window,
+                              const GenericWindowDefinition& definition,
+                              const std::shared_ptr<GenericWindow>& parent,
                               bool bShowImmediately) override;
 
-        void SetCapture(const std::shared_ptr<GenericWindow>& Window) override;
+        void SetCapture(const std::shared_ptr<GenericWindow>& window) override;
         void* GetCapture() const override;
         std::shared_ptr<GenericWindow> GetWindowUnderCursor() const override;
 
         ModifierKeysState GetModifierKeys() const override;
-        void SetHighPrecisionMouseMode(bool bEnable, const std::shared_ptr<GenericWindow>& Window) override;
+        void SetHighPrecisionMouseMode(bool bEnable, const std::shared_ptr<GenericWindow>& window) override;
         bool IsMouseAttached() const override;
         bool IsGamepadAttached() const override;
         bool IsUsingHighPrecisionMouseMode() const override;
 
         void DestroyApplication() override;
-        PlatformRect GetWorkArea(const PlatformRect& CurrentWindow) const override;
+        PlatformRect GetWorkArea(const PlatformRect& currentWindow) const override;
         WindowTransparency GetWindowTransparencySupport() const override;
 
         /// テキスト入力メソッドシステム (IME)
         ITextInputMethodSystem* GetTextInputMethodSystem() override;
 
         /// Force Feedback (XInput)
-        void SetForceFeedbackChannelValue(int32_t ControllerId, int32_t ChannelType, float Value);
-        void SetForceFeedbackChannelValues(int32_t ControllerId, const ForceFeedbackValues& Values);
+        void SetForceFeedbackChannelValue(int32_t controllerId, int32_t channelType, float value);
+        void SetForceFeedbackChannelValues(int32_t controllerId, const ForceFeedbackValues& values);
 
     private:
         explicit WindowsApplication(HINSTANCE hInstance, HICON hIcon);
 
         /// メッセージルーティング
         int32_t ProcessMessage(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam);
-        void DeferMessage(const std::shared_ptr<WindowsWindow>& Window,
+        void DeferMessage(const std::shared_ptr<WindowsWindow>& window,
                           HWND hWnd,
-                          uint32_t Msg,
+                          uint32_t msg,
                           WPARAM wParam,
                           LPARAM lParam,
-                          int32_t X = 0,
-                          int32_t Y = 0,
-                          uint32_t RawInputFlags = 0);
-        void ProcessDeferredMessage(const DeferredWindowsMessage& Msg);
+                          int32_t x = 0,
+                          int32_t y = 0,
+                          uint32_t rawInputFlags = 0);
+        void ProcessDeferredMessage(const DeferredWindowsMessage& msg);
 
         /// ウィンドウ検索
         std::shared_ptr<WindowsWindow> FindWindowByHWND(HWND hwnd) const;
@@ -141,7 +146,7 @@ namespace NS
         void PollXInput();
 
         /// Raw Input (13-01)
-        void ProcessRawMouseInput(const RAWMOUSE& MouseData);
+        void ProcessRawMouseInput(const RAWMOUSE& mouseData);
 
         // メンバ
         HINSTANCE m_hInstance = nullptr;
@@ -178,16 +183,16 @@ namespace NS
         bool m_bRawMouseFirstMove = true;
 
         // XInput
-        float m_lastTimeDelta = 1.0f / 60.0f;
-        static constexpr int32_t MaxXInputControllers = 4;
+        float m_lastTimeDelta = 1.0F / 60.0F;
+        static constexpr int32_t kMaxXInputControllers = 4;
         struct XInputControllerState
         {
-            XINPUT_STATE LastState = {};
-            XINPUT_VIBRATION LastVibration = {};
+            XINPUT_STATE lastState = {};
+            XINPUT_VIBRATION lastVibration = {};
             bool bConnected = false;
-            float DisconnectedCooldown = 0.0f;
+            float disconnectedCooldown = 0.0F;
         };
-        std::array<XInputControllerState, MaxXInputControllers> m_xinputStates = {};
+        std::array<XInputControllerState, kMaxXInputControllers> m_xinputStates = {};
         bool m_bGamepadEnabled = true;
 
         // IME

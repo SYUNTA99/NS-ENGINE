@@ -42,15 +42,17 @@ namespace NS
     public:
         WindowsTextInputMethodSystem();
         ~WindowsTextInputMethodSystem() override;
+        NS_DISALLOW_COPY_AND_MOVE(WindowsTextInputMethodSystem);
 
+    public:
         // =================================================================
         // ITextInputMethodSystem overrides
         // =================================================================
         std::shared_ptr<ITextInputMethodChangeNotifier> RegisterContext(
-            const std::shared_ptr<ITextInputMethodContext>& Context) override;
-        void UnregisterContext(const std::shared_ptr<ITextInputMethodContext>& Context) override;
-        void ActivateContext(const std::shared_ptr<ITextInputMethodContext>& Context) override;
-        void DeactivateContext(const std::shared_ptr<ITextInputMethodContext>& Context) override;
+            const std::shared_ptr<ITextInputMethodContext>& context) override;
+        void UnregisterContext(const std::shared_ptr<ITextInputMethodContext>& context) override;
+        void ActivateContext(const std::shared_ptr<ITextInputMethodContext>& context) override;
+        void DeactivateContext(const std::shared_ptr<ITextInputMethodContext>& context) override;
 
         // =================================================================
         // Windows メッセージ処理
@@ -58,13 +60,13 @@ namespace NS
 
         /// WM_IME_* メッセージをルーティング
         /// @return true: メッセージ処理済み
-        bool ProcessMessage(HWND hWnd, uint32_t Msg, WPARAM wParam, LPARAM lParam, int32_t& OutResult);
+        bool ProcessMessage(HWND hWnd, uint32_t msg, WPARAM wParam, LPARAM lParam, int32_t& outResult);
 
     private:
         /// 内部コンテキスト
         struct InternalContext
         {
-            std::shared_ptr<ITextInputMethodContext> Owner;
+            std::shared_ptr<ITextInputMethodContext> owner;
             HWND hWnd = nullptr;
             bool bIsComposing = false;
         };
@@ -73,7 +75,7 @@ namespace NS
         class ChangeNotifier : public ITextInputMethodChangeNotifier
         {
         public:
-            explicit ChangeNotifier(WindowsTextInputMethodSystem& InOwner) : m_owner(InOwner) {}
+            explicit ChangeNotifier(WindowsTextInputMethodSystem& inOwner) : m_owner(inOwner) {}
             void NotifyLayoutChanged() override;
             void NotifySelectionChanged() override;
             void NotifyTextChanged() override;
@@ -93,7 +95,7 @@ namespace NS
         InternalContext* FindContextByHWND(HWND hWnd);
 
         InternalContext* GetActiveContext();
-        const InternalContext* GetActiveContext() const;
+        [[nodiscard]] const InternalContext* GetActiveContext() const;
 
         std::vector<InternalContext> m_contexts;
         int32_t m_activeContextIndex = -1; // -1 = no active context

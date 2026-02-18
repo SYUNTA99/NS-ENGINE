@@ -22,32 +22,34 @@ namespace NS
     public:
         WindowsCursor();
         ~WindowsCursor() override;
+        NS_DISALLOW_COPY_AND_MOVE(WindowsCursor);
 
+    public:
         // =================================================================
         // ICursor overrides
         // =================================================================
-        MouseCursor::Type GetType() const override;
-        void SetType(MouseCursor::Type InType) override;
-        void GetSize(int32_t& Width, int32_t& Height) const override;
-        void GetPosition(Vector2D& OutPosition) const override;
-        void SetPosition(int32_t X, int32_t Y) override;
+        [[nodiscard]] MouseCursor::Type GetType() const override;
+        void SetType(MouseCursor::Type inType) override;
+        void GetSize(int32_t& width, int32_t& height) const override;
+        void GetPosition(Vector2D& outPosition) const override;
+        void SetPosition(int32_t x, int32_t y) override;
         void Show(bool bShow) override;
-        void Lock(const PlatformRect* Bounds) override;
+        void Lock(const PlatformRect* bounds) override;
 
-        void SetTypeShape(MouseCursor::Type InCursorType, void* InCursorHandle) override;
-        void* CreateCursorFromFile(const std::wstring& InPath, Vector2D InHotSpot) override;
-        bool IsCreateCursorFromRGBABufferSupported() const override;
-        void* CreateCursorFromRGBABuffer(const uint8_t* InPixels,
-                                         int32_t InWidth,
-                                         int32_t InHeight,
-                                         Vector2D InHotSpot) override;
+        void SetTypeShape(MouseCursor::Type inCursorType, void* inCursorHandle) override;
+        void* CreateCursorFromFile(const std::wstring& inPath, Vector2D inHotSpot) override;
+        [[nodiscard]] bool IsCreateCursorFromRGBABufferSupported() const override;
+        void* CreateCursorFromRGBABuffer(const uint8_t* inPixels,
+                                         int32_t inWidth,
+                                         int32_t inHeight,
+                                         Vector2D inHotSpot) override;
 
     private:
         /// IDC_* マッピング初期化
         void InitializeDefaultCursors();
 
         /// カスタム .cur ファイルの読み込み
-        HCURSOR LoadCursorFromFile(const wchar_t* InPath);
+        HCURSOR LoadCursorFromFile(const wchar_t* inPath);
 
         // カーソルハンドル配列
         HCURSOR m_cursorHandles[MouseCursor::TotalCursorCount] = {};
