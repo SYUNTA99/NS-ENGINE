@@ -14,214 +14,222 @@
 #include <mutex>
 #include <string>
 
-namespace NS { namespace RHI {
-    //=========================================================================
-    // ERHIResourceType
-    //=========================================================================
-
-    /// RHIリソースタイプ
-    enum class ERHIResourceType : uint8
+namespace NS
+{
+    namespace RHI
     {
-        Unknown = 0,
+        //=========================================================================
+        // ERHIResourceType
+        //=========================================================================
 
-        // GPU リソース
-        Buffer,
-        Texture,
+        /// RHIリソースタイプ
+        enum class ERHIResourceType : uint8
+        {
+            Unknown = 0,
 
-        // ビュー
-        ShaderResourceView,
-        UnorderedAccessView,
-        RenderTargetView,
-        DepthStencilView,
-        ConstantBufferView,
+            // GPU リソース
+            Buffer,
+            Texture,
 
-        // サンプラー
-        Sampler,
+            // ビュー
+            ShaderResourceView,
+            UnorderedAccessView,
+            RenderTargetView,
+            DepthStencilView,
+            ConstantBufferView,
 
-        // シェーダー・パイプライン
-        Shader,
-        GraphicsPipelineState,
-        ComputePipelineState,
-        RootSignature,
+            // サンプラー
+            Sampler,
 
-        // コマンド
-        CommandList,
-        CommandAllocator,
+            // シェーダー・パイプライン
+            Shader,
+            GraphicsPipelineState,
+            ComputePipelineState,
+            RootSignature,
 
-        // 同期
-        Fence,
-        SyncPoint,
+            // コマンド
+            CommandList,
+            CommandAllocator,
 
-        // ディスクリプタ
-        DescriptorHeap,
+            // 同期
+            Fence,
+            SyncPoint,
 
-        // クエリ
-        QueryHeap,
+            // ディスクリプタ
+            DescriptorHeap,
 
-        // スワップチェーン
-        SwapChain,
+            // クエリ
+            QueryHeap,
 
-        // レイトレーシング
-        AccelerationStructure,
-        RayTracingPSO,
-        ShaderBindingTable,
+            // スワップチェーン
+            SwapChain,
 
-        // メモリ
-        Heap,
+            // レイトレーシング
+            AccelerationStructure,
+            RayTracingPSO,
+            ShaderBindingTable,
 
-        // その他
-        InputLayout,
-        ShaderLibrary,
-        ResourceCollection,
+            // メッシュシェーダー
+            MeshPipelineState,
 
-        Count
-    };
+            // メモリ
+            Heap,
 
-    /// 前方宣言
-    class RHIDeferredDeleteQueue;
+            // その他
+            InputLayout,
+            ShaderLibrary,
+            ResourceCollection,
 
-    //=========================================================================
-    // IRHIResource
-    //=========================================================================
+            Count
+        };
 
-    /// RHIリソース基底クラス
-    /// 全てのRHIリソースはこのクラスを継承する
-    class RHI_API IRHIResource
-    {
-    public:
-        virtual ~IRHIResource();
+        /// 前方宣言
+        class RHIDeferredDeleteQueue;
 
-        NS_DISALLOW_COPY(IRHIResource);
+        //=========================================================================
+        // IRHIResource
+        //=========================================================================
 
-        //=====================================================================
-        // 参照カウント
-        //=====================================================================
+        /// RHIリソース基底クラス
+        /// 全てのRHIリソースはこのクラスを継承する
+        class RHI_API IRHIResource
+        {
+        public:
+            virtual ~IRHIResource();
 
-        /// 参照カウント増加（スレッドセーフ）
-        /// @return 増加後の参照カウント
-        uint32 AddRef() const noexcept;
+            NS_DISALLOW_COPY(IRHIResource);
 
-        /// 参照カウント減少（スレッドセーフ）
-        /// @return 減少後の参照カウント（0なら削除された）
-        uint32 Release() const noexcept;
+        public:
+            //=====================================================================
+            // 参照カウント
+            //=====================================================================
 
-        /// 現在の参照カウント取得
-        uint32 GetRefCount() const noexcept;
+            /// 参照カウント増加（スレッドセーフ）
+            /// @return 増加後の参照カウント
+            uint32 AddRef() const noexcept;
 
-        //=====================================================================
-        // リソース識別
-        //=====================================================================
+            /// 参照カウント減少（スレッドセーフ）
+            /// @return 減少後の参照カウント（0なら削除された）
+            uint32 Release() const noexcept;
 
-        /// リソースタイプ取得
-        ERHIResourceType GetResourceType() const noexcept { return m_resourceType; }
+            /// 現在の参照カウント取得
+            uint32 GetRefCount() const noexcept;
 
-        /// リソースID取得
-        ResourceId GetResourceId() const noexcept { return m_resourceId; }
+            //=====================================================================
+            // リソース識別
+            //=====================================================================
 
-        //=====================================================================
-        // デバッグ
-        //=====================================================================
+            /// リソースタイプ取得
+            ERHIResourceType GetResourceType() const noexcept { return m_resourceType; }
 
-        /// デバッグ名設定（スレッドセーフ）
-        /// @param name UTF-8文字列
-        virtual void SetDebugName(const char* name);
+            /// リソースID取得
+            ResourceId GetResourceId() const noexcept { return m_resourceId; }
 
-        /// デバッグ名取得（スレッドセーフ）
-        /// @param outBuffer 出力バッファ
-        /// @param bufferSize バッファサイズ
-        /// @return 書き込まれた文字数
-        size_t GetDebugName(char* outBuffer, size_t bufferSize) const;
+            //=====================================================================
+            // デバッグ
+            //=====================================================================
 
-        /// デバッグ名があるか
-        bool HasDebugName() const;
+            /// デバッグ名設定（スレッドセーフ）
+            /// @param name UTF-8文字列
+            virtual void SetDebugName(const char* name);
 
-        //=====================================================================
-        // 遅延削除
-        //=====================================================================
+            /// デバッグ名取得（スレッドセーフ）
+            /// @param outBuffer 出力バッファ
+            /// @param bufferSize バッファサイズ
+            /// @return 書き込まれた文字数
+            size_t GetDebugName(char* outBuffer, size_t bufferSize) const;
 
-        /// 遅延削除としてマーク
-        void MarkForDeferredDelete() const noexcept;
+            /// デバッグ名があるか
+            bool HasDebugName() const;
 
-        /// 遅延削除待ちか
-        bool IsPendingDelete() const noexcept;
+            //=====================================================================
+            // 遅延削除
+            //=====================================================================
 
-        //=====================================================================
-        // マーカー（型判定）
-        //=====================================================================
+            /// 遅延削除としてマーク
+            void MarkForDeferredDelete() const noexcept;
 
-        /// バッファか
-        virtual bool IsBuffer() const { return false; }
+            /// 遅延削除待ちか
+            bool IsPendingDelete() const noexcept;
 
-        /// テクスチャか
-        virtual bool IsTexture() const { return false; }
+            //=====================================================================
+            // マーカー（型判定）
+            //=====================================================================
 
-        /// ビューか
-        virtual bool IsView() const { return false; }
+            /// バッファか
+            virtual bool IsBuffer() const { return false; }
 
-        //=====================================================================
-        // GPU常駐状態（Residency対応用）
-        //=====================================================================
+            /// テクスチャか
+            virtual bool IsTexture() const { return false; }
 
-        /// GPUメモリに常駐しているか
-        virtual bool IsResident() const { return true; }
+            /// ビューか
+            virtual bool IsView() const { return false; }
 
-        /// 常駐優先度設定
-        virtual void SetResidencyPriority(uint32 priority) { (void)priority; }
+            //=====================================================================
+            // GPU常駐状態（Residency対応用）
+            //=====================================================================
 
-    protected:
-        /// 派生クラスのみ構築可能
-        explicit IRHIResource(ERHIResourceType type);
+            /// GPUメモリに常駐しているか
+            virtual bool IsResident() const { return true; }
 
-        /// 参照カウントが0になった時の処理
-        /// デフォルトでは即座に削除。遅延削除が必要な場合はオーバーライド。
-        virtual void OnZeroRefCount() const;
+            /// 常駐優先度設定
+            virtual void SetResidencyPriority(uint32 priority) { (void)priority; }
 
-    private:
-        mutable std::atomic<uint32> m_refCount{1};
-        ResourceId m_resourceId;
-        ERHIResourceType m_resourceType;
-        mutable std::atomic<bool> m_pendingDelete{false};
+        protected:
+            /// 派生クラスのみ構築可能
+            explicit IRHIResource(ERHIResourceType type);
 
-        std::string m_debugName;
-        mutable std::mutex m_debugNameMutex;
+            /// 参照カウントが0になった時の処理
+            /// デフォルトでは即座に削除。遅延削除が必要な場合はオーバーライド。
+            virtual void OnZeroRefCount() const;
 
-        friend class RHIDeferredDeleteQueue;
+        private:
+            mutable std::atomic<uint32> m_refCount{1};
+            ResourceId m_resourceId;
+            ERHIResourceType m_resourceType;
+            mutable std::atomic<bool> m_pendingDelete{false};
 
-        /// 遅延削除キューから呼び出し
-        void ExecuteDeferredDelete() const;
-    };
+            std::string m_debugName;
+            mutable std::mutex m_debugNameMutex;
 
-    //=========================================================================
-    // RHIResourceLocation
-    //=========================================================================
+            friend class RHIDeferredDeleteQueue;
 
-    /// リソースメモリロケーション
-    /// GPUリソースの実際のメモリ位置を示す
-    struct RHI_API RHIResourceLocation
-    {
-        /// 基盤リソースへの参照
-        IRHIResource* resource = nullptr;
+            /// 遅延削除キューから呼び出し
+            void ExecuteDeferredDelete() const;
+        };
 
-        /// リソース内オフセット（サブアロケーション時）
-        uint64 offset = 0;
+        //=========================================================================
+        // RHIResourceLocation
+        //=========================================================================
 
-        /// 割り当てサイズ
-        uint64 size = 0;
+        /// リソースメモリロケーション
+        /// GPUリソースの実際のメモリ位置を示す
+        struct RHI_API RHIResourceLocation
+        {
+            /// 基盤リソースへの参照
+            IRHIResource* resource = nullptr;
 
-        /// GPU仮想アドレス
-        uint64 gpuVirtualAddress = 0;
+            /// リソース内オフセット（サブアロケーション時）
+            uint64 offset = 0;
 
-        /// 有効か
-        bool IsValid() const { return resource != nullptr; }
+            /// 割り当てサイズ
+            uint64 size = 0;
 
-        /// GPU仮想アドレス取得（オフセット適用済み）
-        uint64 GetGPUVirtualAddress() const { return gpuVirtualAddress + offset; }
-    };
+            /// GPU仮想アドレス
+            uint64 gpuVirtualAddress = 0;
 
-    //=========================================================================
-    // リソースタイプ別RefCountPtrエイリアス
-    //=========================================================================
+            /// 有効か
+            bool IsValid() const { return resource != nullptr; }
 
-    using RHIResourceRef = TRefCountPtr<IRHIResource>;
+            /// GPU仮想アドレス取得（オフセット適用済み）
+            uint64 GetGPUVirtualAddress() const { return gpuVirtualAddress + offset; }
+        };
 
-}} // namespace NS::RHI
+        //=========================================================================
+        // リソースタイプ別RefCountPtrエイリアス
+        //=========================================================================
+
+        using RHIResourceRef = TRefCountPtr<IRHIResource>;
+
+    } // namespace RHI
+} // namespace NS

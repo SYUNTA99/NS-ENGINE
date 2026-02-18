@@ -170,6 +170,9 @@ namespace NS { namespace RHI {
     /// フレーム内の使い捨てリソースを効率的に管理
     class RHI_API IRHITransientResourceAllocator
     {
+        friend class RHITransientBuffer;
+        friend class RHITransientTexture;
+
     public:
         virtual ~IRHITransientResourceAllocator() = default;
 
@@ -240,6 +243,24 @@ namespace NS { namespace RHI {
 
         /// ハンドルからテクスチャ取得（内部用）
         virtual IRHITexture* GetTextureInternal(uint32 handle) const = 0;
+
+        /// ハンドル構築ヘルパー（派生クラスから使用）
+        /// @note friendは継承されないため、基底クラスで設定を代行する
+        static void SetupBufferHandle(RHITransientBuffer& buf, IRHITransientResourceAllocator* alloc,
+                                      uint32 handle, const RHITransientBufferDesc& desc)
+        {
+            buf.m_allocator = alloc;
+            buf.m_handle = handle;
+            buf.m_desc = desc;
+        }
+
+        static void SetupTextureHandle(RHITransientTexture& tex, IRHITransientResourceAllocator* alloc,
+                                       uint32 handle, const RHITransientTextureDesc& desc)
+        {
+            tex.m_allocator = alloc;
+            tex.m_handle = handle;
+            tex.m_desc = desc;
+        }
     };
 
     //=========================================================================

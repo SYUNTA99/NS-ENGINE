@@ -1018,6 +1018,9 @@ namespace NS { namespace RHI {
 
         /// マップ可能か
         bool CanMap() const { return IsCPUReadable() || IsCPUWritable(); }
+
+    protected:
+        IRHITexture() : IRHIResource(ERHIResourceType::Texture) {}
     };
 
     /// テクスチャ参照カウントポインタ

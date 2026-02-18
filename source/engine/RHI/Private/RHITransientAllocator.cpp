@@ -37,13 +37,10 @@ namespace NS::RHI
 
     IRHIBuffer* RHITransientBuffer::GetBuffer() const
     {
-        if (m_allocator == nullptr) {
+        if (m_allocator == nullptr)
             return nullptr;
-}
 
-        // バックエンド実装: アロケーターがハンドルからバッファを解決
-        // GetBufferInternalはprotectedのため、アロケーター側で直接設定するパスが必要
-        return nullptr;
+        return m_allocator->GetBufferInternal(m_handle);
     }
 
     //=========================================================================
@@ -52,12 +49,10 @@ namespace NS::RHI
 
     IRHITexture* RHITransientTexture::GetTexture() const
     {
-        if (m_allocator == nullptr) {
+        if (m_allocator == nullptr)
             return nullptr;
-}
 
-        // バックエンド実装: アロケーターがハンドルからテクスチャを解決
-        return nullptr;
+        return m_allocator->GetTextureInternal(m_handle);
     }
 
 } // namespace NS::RHI
